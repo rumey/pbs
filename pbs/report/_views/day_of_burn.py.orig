@@ -1,0 +1,118 @@
+
+#!/usr/bin/env python
+"""
+Module: day_of_burn.py
+Package: pbs.report._views
+Description: Local views for the report app
+
+"""
+from __future__ import print_function, division, unicode_literals, absolute_import
+### Imports
+import datetime
+
+from django.http import HttpResponse
+from django.template.response import TemplateResponse
+from django.utils.translation import ugettext as _
+from django.contrib import messages
+
+from pbs.forms import ( EndorseAuthoriseSummaryForm, )
+# from pbs.report.forms import (
+#     DayOfBurnForm, DayOfBurnFormBasic)
+
+from django.forms.formsets import formset_factory
+from pbs.report._models.day_of_burn import daily_burns, daily_report_details
+### Constants
+
+
+### Views
+def index(request):
+    return HttpResponse( "All ur reportz r belong to me" )
+
+def day_of_burn(request, extra_context=None):
+    """
+    Build the changelist for the Day of Burn Report
+
+
+    1. Get the prescription info for the day's burns; models -> get_daily_burns
+    2. Get the read/approved info from DayOfBurn report; models -> get_burn_reads
+       Approved info will come from Prescription so we just need reads
+    3. Build a sequence of forms; forms -> as_columns
+    4. Substitute data for text tags if necessary views -> substitute_text
+    4. Zip columns and forms together for delivery to template; views -> zip_data
+    5. Build columns into inline table cells; templatetags -> columns
+    6. Build button set with post urls to each report
+
+
+    """
+    #messages.success(request, "We have messages!")
+    # form = DayOfBurnFormBasic()
+    _day_of_burn = True
+    title = _("Day of Burn Review")
+    queryset = None
+    ### Day of burn will always be current date
+    curr_date = datetime.date.today()
+
+    # Get the prescription info for todays' burns
+    burns = daily_burns(curr_date)
+    reports = daily_report_details(burns)
+    row_set = agg_columns(burns, reports)
+
+    # DayOfBurnBasicFormSet = formset_factory(DayOfBurnFormBasic, extra=len(burns))
+    # formset = DayOfBurnBasicFormSet()
+    # for burn, form in zip(burns, formset):
+    #     burn['form'] = form
+    context = {
+        'title': title,
+        'prescriptions': queryset,
+        # 'form': form,
+        'approvals': False,
+        'bomb': True,
+        'ignitions': False,
+        'day_of_burn': True,
+        # 'burns': burns,
+        'row_set': row_set,
+        'fromDate': curr_date,
+        'toDate': curr_date,
+    }
+    context.update(extra_context or {})
+    return TemplateResponse(request, "report/day_of_burn.html", context,
+                            current_app=None)
+
+### Functions
+def agg_columns(burns, reports):
+    """
+    Merge and filter the burn and report dicts
+    """
+    req_keys = [
+        'burn_id',
+        'name',
+        'region',
+        'district',
+        'aerial_text',
+        'area',
+        'contentious_text',
+        'approval_status_text',
+        'read_by_text',
+        'reviewed_by_text',
+    ]
+    columns_set = []
+    for b, r in zip(burns, reports):
+        assert b['prescription_id'] == r['prescription_id']
+        b.update(r)
+        stripped_d = {k: b[k] for k in req_keys}
+        columns_set.append(stripped_d)
+    return columns_set
+
+
+def my_form():
+    form = """
+    <form action="/report/day-of-burn/read/?read_by='gav'" method="post">
+    <input id=
+    """
+    return form
+
+### Tests
+
+if __name__ == "__main__":
+
+    print("Done __main__")

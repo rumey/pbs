@@ -1,0 +1,30 @@
+{% load pbs_tags %}
+{% attached_documents prescription as documents %}
+\section{Section D3 - Uploaded Documents}
+{% if documents %}
+\fancyfoot[L]{SECTION D3 - UPLOADED DOCUMENTS\newline\textbf{Section D3 last modified}\textit{ {{ prescription.modified|default:"" }}}\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\begin{longtabu} to \linewidth { | X[0.3] | X | }
+\hline
+\textbf{Class of Document} & \textbf{File Name} \\
+\endhead
+\hline
+{% document_names_by_category prescription as document_names %}
+{% for category, documents in document_names.items %}
+{% if documents %}
+{{ category }} & {% for document in documents %}{{ document|texify|safe }}\newline {% endfor %} \\
+\hline
+{% endif %}
+{% endfor %}
+\end{longtabu}
+{% if embed %}
+\clearpage
+{% for document in documents %}
+  {% if document %}
+    {% include "latex/pdf.tex" %}
+  {% endif %}
+{% endfor %}
+\clearpage
+{% endif %}
+{% else %}
+No Documents Uploaded
+{% endif %}

@@ -1,0 +1,10 @@
+.. _quickstart:
+
+Quickstart
+==========
+
+.. module:: {{ project_name }}
+
+TODO
+----
+

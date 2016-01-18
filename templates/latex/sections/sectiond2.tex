@@ -1,0 +1,19 @@
+\section{Section D2 - Record of Public Contacts}
+\fancyfoot[L]{ SECTION D2 - RECORD OF PUBLIC CONTACTS\newline\textbf{Section D2 last modified}\textit{ {{ prescription.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\begin{longtabu} to \linewidth { | X[1.3] | X | X | X[l] | X | }
+\hline
+\textbf{Date} & \textbf{Name} & \textbf{Organisation} & \textbf{DPaW Person} & \textbf{Comments} \\
+\endhead
+\hline
+{% if prescription.publiccontact_set.count %}
+{% for contact in prescription.publiccontact_set.all %}
+{{ prescription.modified|date }} & {{ contact.name|texify|safe }} & {{ contact.organisation|texify|safe }} & {{ contact.person|texify|safe }} & {{ contact.comments|wordwrap:12|texify|safe }} \\
+\hline
+{% endfor %}
+{% else %}
+No public contacts have been recorded. & & & &
+\hline
+{% endif %}
+\end{longtabu}
+\clearpage
+

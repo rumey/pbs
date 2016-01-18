@@ -1,0 +1,38 @@
+[
+{
+  "pk": 1, 
+  "model": "auth.user", 
+  "fields": {
+    "username": "admin", 
+    "first_name": "", 
+    "last_name": "", 
+    "is_active": true, 
+    "is_superuser": true, 
+    "is_staff": true, 
+    "last_login": "2012-11-02T03:29:09.445Z", 
+    "groups": [], 
+    "user_permissions": [], 
+    "password": "pbkdf2_sha256$10000$mPUpFVqtkHdO$2rn85bA4mBju5obsU/ttgXcmDX35awe9jlwxtkDZyYU=", 
+    "email": "issapps@dec.wa.gov.au", 
+    "date_joined": "2012-11-02T03:29:09.445Z"
+  }
+},
+{
+  "pk": 2, 
+  "model": "auth.user", 
+  "fields": {
+    "username": "test", 
+    "first_name": "", 
+    "last_name": "", 
+    "is_active": true, 
+    "is_superuser": true, 
+    "is_staff": true, 
+    "last_login": "2012-11-02T03:29:09.445Z", 
+    "groups": [], 
+    "user_permissions": [], 
+    "password": "pbkdf2_sha256$10000$mPUpFVqtkHdO$2rn85bA4mBju5obsU/ttgXcmDX35awe9jlwxtkDZyYU=", 
+    "email": "issapps2@dec.wa.gov.au", 
+    "date_joined": "2012-11-02T03:29:09.445Z"
+  }
+}
+]

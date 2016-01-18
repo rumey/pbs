@@ -1,0 +1,6 @@
+Authors
+-------
+
+The current authors of {{ project_name }} have been:
+
+- **TODO**

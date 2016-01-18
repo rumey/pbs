@@ -1,0 +1,44 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script>
+  {% if not current.is_draft and not current.is_closed %}
+  (function($) {
+    $(function() {
+      $("#result_list tbody tr").tabularFormset({
+        prefix: "{{ cl.formset.prefix }}",
+        adminStaticPrefix: '{% static "admin/" %}',
+        addText: '<i class="icon-plus"></i> Add another lesson'
+      });
+    });
+  })(django.jQuery);
+  {% endif %}
+  </script>
+{% endblock %}
+
+{% block object-tools %}{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_post_summary' current.id %}">Part C</a> <span class="divider">/</span></li>
+  <li>Section C3 &#x2010; Burn evaluation &#x2010; Lessons learned</li>
+</ul>
+{% endblock %}
+
+{% block content_title %}
+<h1>Burn Evaluation &#x2010; Lessons Learned</h1>
+{% endblock %}
+
+{% block content %}
+{% if current.is_approved %}
+{{ block.super }}
+{% else %}
+<div class="alert clearfix">
+    <strong>Warning!</strong> In order to edit this section, the ePFP needs to be approved.
+</div>
+{% endif %}
+{% endblock %}

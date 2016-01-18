@@ -1,0 +1,16 @@
+{% load pbs_tags %}
+{% filter_by_tag_name current.document_set "operations officer day of burn checklist" as checklists %}
+{% if checklists %}
+\phantomsection
+\addcontentsline{toc}{section}{Section B9 - Operations Officer's Day of Burn Checklist}
+\fancyfoot[L]{ Section B9\newline\textbf{Section B9 last modified}\textit{ {{ docs.tag_operations_officer_day_of_burn_checklist.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+{% for document in checklists %}
+  {% if not document.is_zipped %}
+    {% include "latex/pdf.tex" with section="Section B9 - Operations Officer's Day of Burn Checklist" %}
+  {% endif %}
+{% endfor %}
+\clearpage
+{% else %}
+\section{Section B9 - Operations Officer's Day of Burn Checklist}
+{ No Documents Uploaded }
+{% endif %}

@@ -1,0 +1,38 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block extrahead %}
+{{ block.super }}
+  <style>
+  #car {
+    margin-bottom: 2px;
+  }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_post_summary' current.id %}">Part C</a> <span class="divider">/</span></li>
+  <li>Section C1 &#x2010; Post-burn actions</li>
+</ul>
+{% endblock %}
+
+{% block pretitle %}
+<ul id="car" class="nav nav-tabs">
+    <li><a href="{% url 'admin:risk_context_changelist' current.id %}"><i class="icon-legal"></i> Risk management context statement</a></li>
+    <li><a href="{% url 'admin:stakeholder_criticalstakeholder_changelist' current.id %}"><i class="icon-user"></i> Critical stakeholders</a></li>
+    <li class="active"><a href="{% url 'admin:risk_action_changelist' current.id %}"><i class="icon-legal"></i> Actions</a></li>
+    <li><a href="{% url 'admin:risk_register_changelist' current.id %}"><i class="icon-warning-sign"></i> Risk register</a></li>
+</ul>
+<ul class="nav nav-pills">
+    <li><a href="{% url 'admin:report_preburnaction_changelist' current.id %}"><i class="icon-tasks"></i> Pre&#x2010;burn actions</a></li>
+    <li><a href="{% url 'admin:report_dayofburnaction_changelist' current.id %}"><i class="icon-legal"></i> Day of burn actions</a></li>
+    <li class="active"><a href="{% url 'admin:report_postburnaction_changelist' current.id %}"><i class="icon-warning-sign"></i> Post&#x2010;burn actions</a></li>
+</ul>
+{% endblock %}
+
+{% block content_title %}
+<h1>Post&#x2010;burn Actions</h1>
+{% endblock %}

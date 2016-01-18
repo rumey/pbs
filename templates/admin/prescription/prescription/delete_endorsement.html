@@ -1,0 +1,40 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load admin_urls %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+<li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+<li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+<li><a href="{% url 'admin:prescription_prescription_endorse' current.id %}">Endorse this ePFP</a> <span class="divider">/</span></li>
+<li>{% trans 'Delete endorsement' %}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<p>Are you sure you wish to delete the endorsement for the role "{{ endorsement.role }}"? This will make the endorsement available to be endorsed again by another user.</p>
+<h4>Endorsement details</h4>
+<table class="table">
+  <tbody>
+    <tr>
+      <th>Role</th>
+      <td>{{ endorsement.role }}</td>
+    </tr>
+    <tr>
+      <th>Reviewer</th>
+      <td>{% firstof endorsement.creator.get_full_name endorsement.creator %}</td>
+    </tr>
+    <tr>
+      <th>Reviewed on</th>
+      <td>{{ endorsement.created|date }}</td>
+    </tr>
+  </tbody>
+</table>
+    <form action="" method="post">{% csrf_token %}
+    <div class="form-actions">
+    <input type="hidden" name="post" value="yes" />
+    <input type="submit" class="btn" value="{% trans "Yes, I'm sure" %}" />
+    <a id="id_cancel_button" href="javascript: history.go(-1)" class="btn btn-danger">Cancel</a>
+    </div>
+    </form>
+{% endblock %}

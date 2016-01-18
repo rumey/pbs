@@ -1,0 +1,64 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list %}
+{% load pbs_tags %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script src="{% static 'pbs/js/auto-resize-text-input.js' %}"></script>
+  <script>
+  $(function() {
+    $('table#result_list').on("keyup", "input[id$=name]", function() {
+        $(this).keyup(resizeInput).each(resizeInput);
+    });
+  });
+  {% if current.is_draft or perms.prescription.can_admin %}
+  (function($) {
+    $(function() {
+      $("#result_list tbody tr").tabularFormset({
+        prefix: "{{ cl.formset.prefix }}",
+        adminStaticPrefix: '{% static "admin/" %}',
+        addText: '<i class="icon-plus"></i> Add another road segment'
+      });
+    });
+  })(django.jQuery);
+  {% endif %}
+  </script>
+  <style type="text/css">
+      a.add-another {
+          display: none;
+      }
+  </style>
+{% endblock %}
+
+{% block object-tools %}{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_day_summary' current.id %}">Part B</a> <span class="divider">/</span></li>
+  <li>Section B3 &#x2010; Identification of roads associated with the burn plan</li>
+</ul>
+{% endblock %}
+
+{% block content_title %}
+{% load risk_tags %}
+{% show_treatments "Traffic Management Plan" %}
+<h1>Roads Associated With the Burn Plan</h1>
+<p>You can find the standard traffic control diagrams on the <a class="btn btn-small btn-info" href="https://fmsb.dpaw.wa.gov.au/doctrine/manuals" target="_blank"><b>ePFP website</b></a></p>
+{% endblock %}
+
+{% block pre-submit-line %}
+<h1>Traffic Control Diagrams<h1>
+<h4>Standard</h4>
+{% if current.ways.standard_traffic_diagrams %}
+{% for document in current.ways.standard_traffic_diagrams %}
+<a href="{{ document.path.url }}" target="_blank"><i class="icon-file"></i> {{ document.name }}</a> &#x2010; {{ document.path.size|filesizeformat }}</br>
+{% endfor %}
+{% else %}
+<p>There are no standard traffic control diagrams selected.
+{% endif %}
+<h4>Custom<a href="{{ upload_document }}?tag={{ "Traffic Diagrams"|tag_id }}&next={{ request.get_full_path }}" class="pull-right btn btn-small btn-info"><i class="icon-plus"></i> Upload Custom Traffic Control Diagram</a></h4>
+{% filter_by_tag_name current.document_set "Traffic Diagrams" as document_set %}
+{% include "admin/document_list.html" with document_type="Traffic Control Diagrams" %}
+{% endblock %}

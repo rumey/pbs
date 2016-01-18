@@ -1,0 +1,39 @@
+\fancyfoot[L]{ SECTION B - CONTENTS\leftmark\newline\textbf{Section B last modified}\textit{ {{ prescription.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\part{Part B - Burn Implementation Plan}
+\subsubsection{Part B Stage of Completion}
+{\textsc \textbf{NOTE:} The District Duty Officer should check the issues list to ensure that all works that are required to be completed prior to the ignition of the burn have been actioned.}
+\newline\newline
+\begin{tabu} to \linewidth { | X[l] | X[c] | }
+\hline
+\textbf{Contents} & \textbf{Status} \\
+\hline
+\textbf{Operational Overview} & {{ prescription.day_state.get_overview_display }} \\
+\textbf{Pre-Burn Actions} & {{ prescription.day_state.get_pre_actions_display }} \\
+\textbf{Day of Burn Actions} & {{ prescription.day_state.get_actions_display }} \\
+\textbf{Roads} & {{ prescription.day_state.get_roads_display }} \\
+\textbf{Traffic Control Diagrams} & {{ prescription.day_state.get_traffic_display }} \\
+\textbf{Tracks and Trails} & {{ prescription.day_state.get_tracks_display }} \\
+\textbf{Burning Prescription} & {{ prescription.day_state.get_burning_prescription_display }} \\
+\textbf{Edging Plan} & {{ prescription.day_state.get_edging_plan_display }} \\
+\textbf{Lighting Sequence} & {{ prescription.day_state.get_lighting_sequence_display }} \\
+\textbf{Areas to be Excluded from Ignition} & {{ prescription.day_state.get_exclusion_areas_display }} \\
+\textbf{Contingency Plan} & {{ prescription.day_state.get_contingency_plan_display }} \\
+\textbf{Organisational Structure and Communications Plan} & {{ prescription.day_state.get_organisational_structure_display }} \\
+\textbf{Briefing Checklist} & {{ prescription.day_state.get_briefing_display }} \\
+\textbf{Maps: Operations} & {{ prescription.day_state.get_operation_maps_display }} \\
+\textbf{Maps: Aerial} & {{ prescription.day_state.get_aerial_maps_display }} \\
+\hline
+\end{tabu}
+\clearpage
+{% include "latex/sections/sectionb1.tex" %}
+{% include "latex/sections/sectionb2.tex" %}
+{% include "latex/sections/sectionb3.tex" %}
+{% include "latex/sections/sectionb5.tex" %}
+{% include "latex/sections/sectionb6.tex" %}
+{% include "latex/sections/sectionb7.tex" %}
+{% include "latex/sections/sectionb8.tex" %}
+{% include "latex/sections/sectionb9.tex" %}
+{% include "latex/sections/sectionb10.tex" %}
+{% include "latex/sections/sectionb11.tex" %}
+{% include "latex/sections/sectionb12.tex" %}
+{% include "latex/sections/sectionb13.tex" %}

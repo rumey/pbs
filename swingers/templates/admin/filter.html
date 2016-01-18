@@ -1,0 +1,7 @@
+{% load i18n %}
+<h5>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
+{% for choice in choices %}
+  <span class="pull-right"></span>
+  <input id="id_{{ spec.field.name }}_{{ choice.display|lower }}" type="checkbox"{% if choice.selected %} checked="checked"{% endif %}>
+  <label for="id_{{ spec.field.name }}_{{ choice.display|lower }}">{{ choice.display }}</label>
+{% endfor %}

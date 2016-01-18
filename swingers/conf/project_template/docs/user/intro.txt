@@ -1,0 +1,20 @@
+.. _introduction:
+
+Introduction
+============
+
+.. _`bsd-3-clause`:
+
+BSD 3-Clause License
+--------------------
+
+{{ project_name }} is released under terms of `BSD 3-Clause License`_.
+
+.. _`BSD 3-Clause License`: http://opensource.org/licenses/BSD-3-Clause
+
+
+{{ project_name }} License
+--------------------------
+
+    .. include:: ../../LICENSE
+

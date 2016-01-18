@@ -1,0 +1,13 @@
+{% extends "admin/base_modal_btn.html" %}
+
+{% block modal_id %}id_submit_for_epfp_approval{% endblock %}
+
+{% block modal_trigger_label %}
+{% if current.approval_status == current.APPROVAL_SUBMITTED %}
+<i class="icon-ok"></i> Approve this ePFP
+{% elif current.approval_status == current.APPROVAL_DRAFT %}
+<i class="icon-ok"></i> Submit for approval
+{% elif current.current_approval.extension_count < 3 and not current.is_closed %}
+<i class="icon-double-angle-right"></i> Extend Approval
+{% endif %}
+{% endblock %}

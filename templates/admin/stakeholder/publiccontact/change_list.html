@@ -1,0 +1,43 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block extrahead %}
+{{ block.super }}
+  <script src="{% static 'pbs/js/auto-resize-text-input.js' %}"></script>
+  <script>
+  $(function() {
+    $('table#result_list').on("keyup", "input[id$=name]", function() {
+        $(this).keyup(resizeInput).each(resizeInput);
+    });
+    $('input[id$=name]').keyup();
+  });
+
+  // The Public Contact section is always editable, even after a burn is approved/closed.
+  (function($) {
+    $(function() {
+      $("#result_list tbody tr").tabularFormset({
+        prefix: "{{ cl.formset.prefix }}",
+        adminStaticPrefix: '{% static "admin/" %}',
+        addText: '<i class="icon-plus"></i> Add another public contact'
+      });
+    });
+  })(django.jQuery);
+  </script>
+{% endblock %}
+
+{% block object-tools-items %}
+<a value="Section D2 &#x2010; Public Contacts" class="btn-small btn" href="{{ download_pdf }}?template=sectiond2"><i class="icon-print"></i> Download</a>
+{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li>Section D2 &#x2010; Public Contacts</li>
+</ul>
+{% endblock %}
+
+{% block content_title %}
+<h1>Public Contacts</h1>
+
+{% endblock %}

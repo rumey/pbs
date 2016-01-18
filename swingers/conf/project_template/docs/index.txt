@@ -1,0 +1,46 @@
+.. {{ project_name }} documentation master file
+
+{{ project_name }}: TODO
+***********************
+
+Release v\ |version|. (:ref:`Installation <install>`)
+
+{{ project_name }} is an :ref:`BSD 3-Clause Licensed <bsd-3-clause>`
+library of ... **TODO**.
+
+
+Feature Support
+===============
+
+{{ project_name }}'s feature list:
+
+- **TODO**
+
+
+User Guide
+==========
+
+This part of the documentation focuses on getting the user up to speed with
+what's available as part of {{ project_name }} and how to get the most out of it.
+
+.. toctree::
+   :maxdepth: 2
+
+   user/intro
+   user/install
+   user/quickstart
+
+
+Contributor Guide
+=================
+
+If you want to contribute to the project, this part of the documentation is for
+you.
+
+.. toctree::
+   :maxdepth: 1
+
+   dev/contribute
+   dev/todo
+   dev/changelog
+   dev/authors

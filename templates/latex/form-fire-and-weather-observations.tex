@@ -1,0 +1,121 @@
+{% extends "latex/base.tex" %}
+{% block titlepage %}
+{% endblock %}
+{% block content %}
+{% include "latex/form-footer.tex" %}
+\section{Section B10 - Fire \& Weather Observations}
+This record must be completed for each ignition undertaken in a burn, including edging operations and then incorporated int \textbf{PART D} including operational diaries, annotations on maps, resource summaries and weather from days operations.
+\subsection{Fire Behaviour}
+Lighting Number: \hfill Date: \hfill \quad\newline\newline
+\begin{tabu} to \linewidth { | X[2] | X[0.5] | X | X | X[2] | X[1.5] | X[3] | }
+\hline
+\rowcolor{infobg}
+Time of Lighting(s) (from - to) & SDI & FFDI Forecast & FFDI Actual & Strip \& Spot Spacing (m x m) & Operations Officer & Comments\\
+\hline
+& & & & & & \\
+& & & & & & \\
+\hline
+& & & & & & \\
+& & & & & & \\
+\hline
+& & & & & & \\
+& & & & & & \\
+\hline
+& & & & & & \\
+& & & & & & \\
+\hline
+& & & & & & \\
+& & & & & & \\
+\hline
+& & & & & & \\
+& & & & & & \\
+\hline
+\end{tabu}
+\vfill\noindent
+\begin{tabu} to \linewidth { | X | X | X | X | X | X | }
+\hline
+\rowcolor{infobg}
+& & \multicolumn{2}{X|}{Hourly Fire Behaviour} & Comments & \\ \cline{3-4}
+\rowcolor{infobg}
+Time & Location & \cellcolor{grey!5}Flame Height (range) & \cellcolor{grey!5}Flame Length (range) & (consistency, increasing, decreasing, fuel types) & Estimated ROS \\
+\hline
+& & & & & \\
+& & & & & \\
+\hline
+& & & & & \\
+& & & & & \\
+\hline
+& & & & & \\
+& & & & & \\
+\hline
+& & & & & \\
+& & & & & \\
+\hline
+& & & & & \\
+& & & & & \\
+\hline
+& & & & & \\
+& & & & & \\
+\hline
+& & & & & \\
+& & & & & \\
+\hline
+& & & & & \\
+& & & & & \\
+\hline
+\end{tabu}
+\subsection{Weather Observations}
+\fboxsep=2mm \fboxrule=0.2mm \raisebox{1.5mm}{\fcolorbox{black}{white}{\null}} Available from BoM Automatic Weather Station \textbf{OR} \raisebox{1.5mm}{\fcolorbox{black}{white}{\null}} Field Observations
+\clearpage
+\subsection{Field Weather Observations}
+\begin{tabu} to \linewidth { | X | X | X | X | X | X | X | X | X | X | }
+\hline
+\rowcolor{infobg}
+& & & & \multicolumn{3}{X|}{Wind} & \multicolumn{3}{X|}{Fuel Moisture} \\ \cline{5-10}
+\rowcolor{infobg}
+Time & Cloud Cover (X/8) & Temp $^\circ$C & RH(\%) & Dir & Speed & Gusts & Predicted & Actual & Estimate \\
+\hline
+& & & & & & & & & \\
+& & & & & & & & & \\
+& & & & & & & & & \\
+\hline
+& & & & & & & & & \\
+& & & & & & & & & \\
+& & & & & & & & & \\
+\hline
+& & & & & & & & & \\
+& & & & & & & & & \\
+& & & & & & & & & \\
+\hline
+& & & & & & & & & \\
+& & & & & & & & & \\
+& & & & & & & & & \\
+\hline
+& & & & & & & & & \\
+& & & & & & & & & \\
+& & & & & & & & & \\
+\hline
+& & & & & & & & & \\
+& & & & & & & & & \\
+& & & & & & & & & \\
+\hline
+\end{tabu}
+\vfill
+\subsection{Comments}
+\HRule\\\\
+\HRule\\\\
+\HRule\\\\
+\HRule\\\\
+\HRule\\\\
+\HRule\\\\
+\HRule\\\\
+\HRule\\\\
+\HRule\\\\
+\HRule\\\\
+\HRule\\\\
+\noindent
+\newline
+Signature: \line(1,0){150}
+{% endblock %}
+
+

@@ -1,0 +1,123 @@
+\begin{landscape}
+\section{Section B5 - Burn Implementation Plan}
+\fancyfoot[L]{ SECTION B5 - BURN IMPLEMENTATION PLAN\newline\textbf{Section B5 last modified}\textit{ {{ prescription.sectionb5_modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+
+
+
+
+\subsection{Burning Prescription}
+{% if prescription.burningprescription_set.all %}
+\begin{longtable}{|p{7cm}|p{15cm}|}
+\hline
+{} & \textbf{ Desirable Conditions } \\*  % \\* prevents page break with row
+\hline
+\endhead
+{% for bp in prescription.burningprescription_set.all %}
+\textbf{Fuel Type}                               & \textbf{ {{ bp.fuel_type|texify }} } \\*  % \\* prevents page break with row
+\rowfont{\small}{Max Scorch Height (m)}          & {{ bp.scorch|texify }} \\*
+\rowfont{\small}{Area to be Burnt (\%)}          & {{ bp.area|texify }} \\*
+\rowfont{\small}{ROS Range (m/h)}                & {{ bp.ros|texify }} \\*
+\rowfont{\small}{FFDI Range}                     & {{ bp.ffdi|texify }} \\*
+\rowfont{\small}{GFDI Range}                     & {{ bp.gfdi|texify }} \\*
+\rowfont{\small}{Temp Range ($^\circ$C)}         & {{ bp.temp|texify }} \\*
+\rowfont{\small}{Relative Humidity (\%)}         & {{ bp.rh|texify }} \\*
+\rowfont{\small}{Grassland Curing (\%)}          & {{ bp.grassland_curing|texify }} \\*
+\rowfont{\small}{Indicative SDI Range}           & {{ bp.sdi|texify }} \\*
+\rowfont{\small}{Surface Moisture Content (\%)}  & {{ bp.smc|texify }} \\*
+\rowfont{\small}{Profile Moisture Content (\%)}  & {{ bp.pmc|texify }} \\*
+\rowfont{\small}{Wind Speed Range (km/h)}        & {{ bp.wind|texify }} \\*
+\rowfont{\small}{Wind Direction}                 & {{ bp.wind_dir|texify }} \\*
+\hline
+{% endfor %}
+\end{longtable}
+{% else %}
+  {% if current.day_state.fuel_assessment %}
+    { No burning prescriptions have been prepared for the burn. }
+  {% else %}
+    Not Applicable
+  {% endif %}
+{% endif %}
+\clearpage
+
+
+
+\subsection{Edging Plan}
+{% if prescription.edgingplan_set.all %}
+\begin{longtable}{|p{7cm}|p{15cm}|}
+\hline
+{} & \textbf{ Desirable Conditions } \\*  % \\* prevents page break with row
+\hline
+\endhead % the above is repeated on every page
+{% for ep in prescription.edgingplan_set.all %}
+\textbf{Edge Description Location}                  & \textbf{ {{ ep.location|texify }} } \\* % \\* prevents page break with row
+\rowfont{\small}{Fuel Type}                         & {{ ep.fuel_type|texify }} \\*
+\rowfont{\small}{Desirable Season}                  & {{ ep.get_desirable_season_display|texify }} \\*
+\rowfont{\small}{Strategies}                        & {{ ep.strategies|texify }} \\*
+\rowfont{\small}{Desirable FFDI Range}              & {{ ep.ffdi|texify }} \\*
+\rowfont{\small}{GFDI Range}                        & {{ ep.gfdi|texify }} \\*
+\rowfont{\small}{RoS Range (m/h)}                   & {{ ep.ros|texify }} \\*
+\rowfont{\small}{Desirable SDI Range}               & {{ ep.sdi|texify }} \\*
+\rowfont{\small}{Desirable Grassland Curing Range}  & {{ ep.grassland_curing|texify }} \\*
+\rowfont{\small}{Desirable Wind Speed (km/h)}       & {{ ep.wind|texify }} \\*
+\rowfont{\small}{Desirable Wind Direction}          & {{ ep.wind_dir|texify }} \\*
+\hline
+{% endfor %}
+\end{longtable}
+{% else %}
+  {% if current.day_state.edging_plan %}
+    { No edging plans have been prepared for the burn. }
+  {% else %}
+    Not Applicable
+  {% endif %}
+{% endif %}
+\clearpage
+
+
+\subsection{Lighting Sequence}
+{% if prescription.lightingsequence_set.all %}
+\begin{longtable}{|p{7cm}|p{15cm}|}
+\hline
+{} & \textbf{ Desirable Conditions } \\*  % \\* prevents page break with row
+\hline
+\endhead % the above is repeated on every page
+{% for ls in prescription.lightingsequence_set.all %}
+\textbf{Cell Name}                                  & \textbf{ {{ ls.cellname|texify|safe }} } \\* % \\* prevents page break with row
+\rowfont{\small}{Sequence #}                        & {{ ls.seqno }} \\*
+\rowfont{\small}{Strategies}                        & {{ ls.strategies|texify|safe }} \\*
+\rowfont{\small}{Fuel Description}                  & {{ ls.fuel_description|texify|safe }} \\*
+\rowfont{\small}{Fuel Age (years)}                  & {% if ls.fuel_age %}{{ ls.fuel_age }}{% else %}Unknown{% endif %} \\*
+\rowfont{\small}{Planned Core Ignition Type}        & {% if ls.ignition_types.all %}{{ ls.ignition_types.all|join:", " }}{% else %}No ignition types{% endif %} \\*
+\rowfont{\small}{Preferred FFDI}                    & {{ ls.ffdi }} \\*
+\rowfont{\small}{Preferred ROS Range}               & {{ ls.ros }} \\*
+\rowfont{\small}{Preferred Wind Speed Range (km/h)} & {{ ls.wind_speed }} \\*
+\rowfont{\small}{Preferred Wind Direction}          & {{ ls.wind_dir }} \\*
+\rowfont{\small}{Specialist Resources Required}     & {{ ls.resources|texify }} \\*
+\hline
+{% endfor %}
+\end{longtable}
+{% else %}
+{ No lighting sequences have been prepared for the burn. }
+{% endif %}
+\clearpage
+
+
+\subsection{Areas to be Excluded from Ignition}
+{% if prescription.exclusionarea_set.all %}
+\begin{longtabu}{ | X | X | X | }
+\hline
+\textbf{Description} & \textbf{Location} & \textbf{How will fire be excluded?} \\
+\hline
+{% for ea in prescription.exclusionarea_set.all %}
+{{ ea.description|texify }} & {{ ea.location|texify }} & {{ ea.detail|texify }} \\
+\hline
+{% endfor %}
+\end{longtabu}
+{% else %}
+  {% if current.day_state.exclusion_areas %}
+    { No exclusion areas have been identified for the burn }
+  {% else %}
+    Not Applicable
+  {% endif %}
+{% endif %}
+
+\end{landscape}

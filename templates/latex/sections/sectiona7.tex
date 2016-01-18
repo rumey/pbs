@@ -1,0 +1,49 @@
+\section{Section A7 - Endorsements}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section A7 last modified}\textit{ {{prescription.endorsement_status_modified|default:""}}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+{This endorsement is current for \textbf{ {{ prescription.season|texify }}}}
+\newline
+{% for endorsement in prescription.endorsement_set.all %}
+\begin{tabu} to \linewidth { | X | X | }
+\hline
+\multicolumn{2}{|l|}{\textbf{% templatetag openbrace %}{{ endorsement.role.name }}}} \\
+\hline
+\multicolumn{2}{|p{17cm}|}{% templatetag openbrace %}{{ endorsement.role.disclaimer|texify|safe }}} \\
+\hline
+\textbf{% templatetag openbrace %}{{ endorsement }}} & \textbf{% templatetag openbrace %}{{ endorsement.modified }}} \\
+\hline
+\end{tabu}
+\newline
+\newline
+{% empty %}
+{% for role in prescription.endorsing_roles.all %}
+\begin{tabu} to \linewidth { | X | X | }
+\hline
+\multicolumn{2}{|l|}{\textbf{% templatetag openbrace %}{{ role.name }}}} \\
+\hline
+\multicolumn{2}{|p{17cm}|}{% templatetag openbrace %}{{ role.disclaimer|texify|safe }}} \\
+\hline
+\textbf{Endorsed by} & \\
+\hline
+\end{tabu}
+\newline
+\newline
+{% empty %}
+This burn has no endorsing roles determined yet.
+{% endfor %}
+{% endfor %}
+{% if prescription.carried_over %}
+\begin{tabu} to \linewidth { | X | X | }
+\hline
+\multicolumn{2}{|l|}{\textbf{Prescribing Officer} } \\
+\hline
+\multicolumn{2}{|p{17cm}|}
+{I, the Prescribing Officer, have reviewed the content of this re-scheduled ePFP
+including the objectives, context, risk register and burn implementation plan and certify they are accurate.} \\
+\hline
+\textbf{Endorsed by {{ prescription.prescribing_officer.get_full_name }}} & {% if prescription.prescribing_officer.get_full_name %}\textbf{ {{ prescription.modified }} } {% endif %} \\
+\hline
+\end{tabu}
+\newline
+\newline
+{% endif %}
+\clearpage

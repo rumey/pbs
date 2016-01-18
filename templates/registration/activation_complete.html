@@ -1,0 +1,10 @@
+{% extends "registration/base.html" %}
+{% load pbs_utils %}
+
+{% block title %}Activation complete{% endblock %}
+
+{% block content_title %}<h1>Congratulations!</h1>{% endblock %}
+
+{% block content %}
+        <p>Your registration is now complete, you can <a href="{% login_url %}">log in</a>.</p>
+{% endblock %}

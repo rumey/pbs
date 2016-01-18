@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_summary' current.id %}">Part A</a> <span class="divider">/</span></li>
+  <li>Section A2 &#x2010; Regional Fire Management Plan Objectives</li>
+</ul>
+{% endblock %}
+
+{% block content_title %}
+<h4>Select Regional Fire Management Plan Objectives</h4>
+{% endblock %}
+{% block content %}
+<form action="" method="post">{% csrf_token %}
+<table class="table table-bordered table-striped table-condensed">
+  <thead>
+    <tr>
+      <th width="1%">&nbsp;</th>
+      <th>Region</th>
+      <th>Scale of Application</th>
+      <th>Fire Management Areas</th>
+      <th>Burn objectives</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for objective in current.regional_objectives.all %}
+    <tr>
+      <td><input type="checkbox" name="objectives" value="{{ objective.id }}" checked="true"></td>
+      <td>{{ objective.region }}</td>
+      <td>{{ objective.get_impact_display }}</td>
+      <td>{% if objective.fma_names %}{{ objective.fma_names }}{% else %}None{% endif %}</td>
+      <td>{{ objective.objectives }}</td>
+    </tr>
+    {% endfor %}
+    {% for objective in objectives %}
+    <tr>
+      <td><input type="checkbox" name="objectives" value="{{ objective.id }}"></td>
+      <td>{{ objective.region }}</td>
+      <td>{{ objective.get_impact_display }}</td>
+      <td>{% if objective.fma_names %}{{ objective.fma_names }}{% else %}None{% endif %}</td>
+      <td>{{ objective.objectives }}</td>
+    </tr>
+    {% endfor %}
+    {% if not objectives and not current.regional_objectives.all %}
+    <tr>
+        <td colspan="5">There are no Regional Fire Management Plan objectives for the selected region.</td>
+    </tr>
+    {% endif %}
+  </tbody>
+</table>
+{% load i18n admin_urls %}
+{% if objectives or current.regional_objectives.all %}
+<div class="form-actions">
+    <div class="navbar navbar-fixed-bottom">
+      <div class="navbar-inner">
+        <div class="container">
+          <input type="submit" name="_save" class="btn pull-right btn-success" value="{% trans 'Save' %}"/>
+        </div>
+      </div>
+    </div>
+</div>
+</form>
+{% endif %}
+{% endblock %}

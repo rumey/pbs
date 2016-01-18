@@ -1,0 +1,2 @@
+
+from swingers import models

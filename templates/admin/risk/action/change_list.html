@@ -1,0 +1,109 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list pbs_list pbs_tags %}
+
+{% block extrahead %}
+{{ block.super }}
+  <style>
+  #car {
+    margin-bottom: 2px;
+  }
+  .column-details {
+    {% if 'pre_burn' in request.GET %}width: 20%;{% endif %}
+    {% if 'day_of_burn' in request.GET %}width: 25%;{% endif %}
+    {% if 'post_burn' in request.GET %}width: 35%;{% endif %}
+  }
+  .column-pre_burn_explanation {
+    width: 20%;
+  }
+  .column-pre_burn_completer, .column-day_of_burn_completer, .column-post_burn_completer {
+    width: 15%;
+  }
+  </style>
+  <script>
+    $(function() {
+        var changelist = $("table#result_list");
+        var actionnav = $("ul#actionnav");
+
+        $('input[id$=include]').change(function() {
+            // TODO: this seems to be DEAD code ???
+            if ($(this).is(':checked')) {
+                $(this).parents('tr').find('input').not('input[id$=include]')
+                    .not('input.vTimeField').not('input.vDateField')
+                    .prop('disabled', false);
+            } else {
+                $(this).parents('tr').find('input').not('input[id$=include]')
+                    .not('input.vTimeField').not('input.vDateField')
+                    .prop('disabled', true);
+            }
+        }).change();
+    });
+  </script>
+{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li>
+    {% if 'pre_burn' in request.GET or 'day_of_burn' in request.GET %}
+        <a href="{% url 'admin:prescription_prescription_day_summary' current.id %}">Part B</a>
+    {% elif 'post_burn' in request.GET %}
+        <a href="{% url 'admin:prescription_prescription_post_summary' current.id %}">Part C</a>
+        {% else %} {# Plan actions page #}
+        <a href="{% url 'admin:prescription_prescription_day_summary' current.id %}">Part B</a>
+    {% endif %}
+    <span class="divider">/</span>
+  </li>
+  <li>
+    {% if 'pre_burn' in request.GET %}Pre-burn actions{% elif 'day_of_burn' in request.GET %}Day of burn actions{% elif 'post_burn' in request.GET %}Post-burn actions{% else %}Plan actions{% endif %}
+  </li>
+</ul>
+{% endblock %}
+
+{% block pretitle %}
+<ul id="car" class="nav nav-tabs">
+    <li><a href="{% url 'admin:risk_context_changelist' current.id %}"><i class="icon-legal"></i> Risk management context statement</a></li>
+    <li><a href="{% url 'admin:stakeholder_criticalstakeholder_changelist' current.id %}"><i class="icon-user"></i> Critical stakeholders</a></li>
+    <li class="active"><a href="{% url 'admin:risk_action_changelist' current.id %}"><i class="icon-legal"></i> Actions</a></li>
+    <li><a href="{% url 'admin:risk_register_changelist' current.id %}"><i class="icon-warning-sign"></i> Risk register</a></li>
+</ul>
+<ul id="actionnav" class="nav nav-pills">
+    <li{% if not 'pre_burn' in request.GET and not 'day_of_burn' in request.GET and not 'post_burn' in request.GET %} class="active"{% endif %}><a href="{% url 'admin:risk_action_changelist' current.id %}"><i class="icon-list-ol"></i>Plan actions</a></li>
+    <li{% if 'pre_burn' in request.GET %} class="active"{% endif %}><a href="?pre_burn=true"><i class="icon-tasks"></i>Pre-burn actions</a></li>
+    <li{% if 'day_of_burn' in request.GET %} class="active"{% endif %}><a href="?day_of_burn=true"><i class="icon-legal"></i>Day of burn actions</a></li>
+    <li{% if 'post_burn' in request.GET %} class="active"{% endif %}><a href="?post_burn=true"><i class="icon-warning-sign"></i>Post-burn actions</a></li>
+</ul>
+{% endblock %}
+
+{% block object-tools %}{% endblock %}
+
+{% block content_title %}
+{% load risk_tags %}
+{% if 'pre_burn' in request.GET %}
+  {% setvar "Pre Burn Actions List" as actions_form_name %}
+  {% show_treatments "Pre-Burn Action" %}
+{% elif 'day_of_burn' in request.GET %}
+  {% setvar "Day of Burn Actions List" as actions_form_name %}
+  {% show_treatments "Day of Burn Action" %}
+{% elif 'post_burn' in request.GET %}
+  {% setvar "Post Burn Actions List" as actions_form_name %}
+  {% show_treatments "Post Burn Action" %}
+{% endif %}
+
+{% if not current.can_corporate_approve %}
+<div class="alert clearfix">
+    <strong>Warning!</strong> In order to edit this section, you need to complete all information.
+</div>
+{% endif %}
+
+{% if 'pre_burn' in request.GET or 'day_of_burn' in request.GET or 'post_burn' in request.GET %}
+<h1>Actions Report <a href="{{ upload_document }}?tag={{ actions_form_name|tag_id }}&next={{ request.get_full_path }}" class="pull-right btn btn-small btn-info"><i class="icon-plus"></i> Upload {{ actions_form_name }}</a></h1>
+<h5><a class="btn btn-small btn-info" href="{{ download_pdf }}?template=form-{{ actions_form_name|slugify }}&download=true"><i class="icon-download-alt"></i> Download the {{ actions_form_name }} template</a></h5>
+
+{% document_list %}
+{% endif %}
+<h1>
+  {% if 'pre_burn' in request.GET %}Pre-burn Actions{% elif 'day_of_burn' in request.GET %}Day of Burn Actions{% elif 'post_burn' in request.GET %}Post Burn Actions{% else %}Plan Actions{% endif %}
+  {% if current.endorsement_status == current.ENDORSEMENT_DRAFT and not 'pre_burn' in request.GET and not 'day_of_burn' in request.GET and not 'post_burn' in request.GET or perms.prescription.can_admin %}<a href="{% url 'admin:risk_risk_add' current.id %}?prescription={{ current.id }}&next={{ request.get_full_path }}" class="pull-right btn btn-small btn-info"><i class="icon-plus"></i> Add source of risk</a>{% endif %}
+</h1>
+{% endblock %}

@@ -1,0 +1,21 @@
+\section{Section A3 - Burn Objectives \& Success Criteria}
+\fancyfoot[L]{ SECTION A3 - BURN OBJECTIVES\newline\textbf{Section A3 last modified}\textit{ {{ prescription.sectiona3_modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\subsubsection{Objectives}
+\begin{flushleft}
+{% for objective in prescription.objective_set.all %}
+\noindent
+{{ objective.objectives|texify|safe }} \\
+\end{flushleft}
+{% empty %}
+No Objectives
+{% endfor %}
+\subsubsection{Success Criteria}
+\begin{flushleft}
+{% for sc in prescription.successcriteria_set.all %}
+\noindent
+{{ sc.criteria|texify|safe }} \\
+\end{flushleft}
+{% empty %}
+No Success Criteria
+{% endfor %}
+\clearpage

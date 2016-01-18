@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li>Burn closure</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<p>Do you want to close this burn? No further edits will be permitted.</p>
+<h5>Closure Declaration (District Fire Coordinator or District Manager)</h5>
+<blockquote>
+I am satisfied that all the applicable post-burn required actions have been completed, documented, signed where required, and inserted into Part D and that details of observations from debriefs etc. have been documented in Part C.</blockquote>
+<form action="" method="post">{% csrf_token %}
+{% load i18n admin_urls %}
+<div class="form-actions">
+  <input type="submit" value="{% trans 'Close' %}" class="btn btn-danger" name="_save"/>
+  <input type="submit" value="{% trans 'Go back' %}" class="btn" name="_cancel"/>
+</div>
+</form>
+{% endblock %}

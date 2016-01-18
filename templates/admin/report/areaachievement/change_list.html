@@ -1,0 +1,118 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% if current.is_approved %}
+{% block extrahead %}
+{{ block.super }}
+  <style type="text/css">
+    #s2id_id_form-0-ignition_types { width: 40px; }
+  </style>
+  <script>
+  {% if not current.is_closed and current.is_approved or perms.prescription.can_admin %}
+  (function($) {
+    $(function() {
+      $("#result_list tbody tr").tabularFormset({
+        prefix: "{{ cl.formset.prefix }}",
+        adminStaticPrefix: '{% static "admin/" %}',
+        addText: '<i class="icon-plus"></i> Add another ignition'
+      });
+    });
+  })(django.jQuery);
+  {% endif %}
+    var planned_edged = {{ current.perimeter }};
+    var planned_burnt_area = {{ current.area }};
+    $(function() {
+      // add totals to the bottom of the result list.
+      var total_treated = 0.0, total_burnt = 0.0, total_edged = 0.0;
+      {% if current.is_closed %}
+        if ($('tbody td input[id$="area_treated"]').length) {
+          $('tbody td input[id$="area_treated"]').each(function(item) {
+            total_treated += parseFloat($(this).val());
+          });
+          $('tbody td input[id$="area_estimate"]').each(function(item) {
+            total_burnt += parseFloat($(this).val());
+          });
+          $('tbody td input[id$="edging_length"]').each(function(item) {
+            total_edged += parseFloat($(this).val());
+          });
+        } else {
+           $('tbody td[class$="area_treated"]').each(function(item) {
+            total_treated += parseFloat($(this).text());
+          });
+          $('tbody td[class$="area_estimate"]').each(function(item) {
+            total_burnt += parseFloat($(this).text());
+          });
+          $('tbody td[class$="edging_length"]').each(function(item) {
+            total_edged += parseFloat($(this).text());
+          });
+        }
+      {% else %}
+        $('input[id$="area_treated"]').each(function(item) {
+          total_treated += parseFloat($(this).val());
+        });
+        $('input[id$="area_estimate"]').each(function(item) {
+          total_burnt += parseFloat($(this).val());
+        });
+        $('input[id$="edging_length"]').each(function(item) {
+          total_edged += parseFloat($(this).val());
+        });
+      {% endif %}
+      $('#result_list tbody').append(
+        $('<tr>').append(
+          $('<th>').text('Totals'),
+          $('<td>'),
+          $('<td>').attr('id', 'total_burnt').text(total_burnt.toFixed(1)),
+          $('<td>').attr('id', 'total_treated').text(total_treated.toFixed(1)),
+          $('<td>').attr('id', 'total_edged').text(total_edged.toFixed(1)),
+          $('<td>'), $('<td>'), $('<td>'), $('<td>'), $('<td>')
+        )
+      );
+      $('<tr>').appendTo('#result-list tbody');
+      // Unhide the alert div if total_edged exceeds planned prescription perimeter.
+      if (total_edged > planned_edged) {
+          $('div#id_div_edged_alert').removeClass('hidden');
+      }
+      // Unhide the alert div if total_area exceeds planned prescription area.
+      if (total_treated > planned_burnt_area) {
+          $('div#id_div_burnt_area_alert').removeClass('hidden');
+      }
+    });
+
+    $(document).ready(function() {
+      {% if not current.is_closed and current.is_approved or perms.prescription.can_admin %}
+        $('.btn').show()
+      {% else %}
+        $('.btn').hide()
+      {% endif %}
+    });
+
+  </script>
+{% endblock %}
+{% endif %}
+
+{% block object-tools %}{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_day_summary' current.id %}">Part B</a> <span class="divider">/</span></li>
+  <li>Section B11 &#x2010; Day of burn achievement update</li>
+</ul>
+{% endblock %}
+
+{% block content_title %}
+<h1>Day of Burn Achievement Update</h1>
+<div id="id_div_burnt_area_alert" class="alert alert-info hidden"><i class="icon-exclamation-sign"></i> <strong>Notice:</strong> Total treatment area exceeds the planned burn area ({{ current.area }} ha). If this is valid for this burn, please ignore this message.</div>
+<div id="id_div_edged_alert" class="alert alert-info hidden"><i class="icon-exclamation-sign"></i> <strong>Notice:</strong> The successful length of edging exceeds the planned burn perimeter ({{ current.perimeter }} km). If this is valid for this burn, please ignore this message.</div>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+{% endblock %}
+
+{% block extra-forms-bottom %}
+<div class="pull-right">
+{{ ignition_completed_date_form.as_p }}
+</div>
+{% endblock %}

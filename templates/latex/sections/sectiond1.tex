@@ -1,0 +1,18 @@
+\section{Section D1 - List of Notifications}
+\fancyfoot[L]{ SECTION D1 - LIST OF NOTIFICATIONS\newline\textbf{Section D1 last modified}\textit{ {{ prescription.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\begin{longtabu} to \linewidth { | X[1.3] | X | X | X[l] | X | }
+\hline
+\textbf{Date of Notification} & \textbf{Person Contacted} & \textbf{Organisation Type} & \textbf{Address} & \textbf{Phone Number} \\
+\hline
+\endhead
+{% if prescription.notification_set.count %}
+{% for notification in prescription.notification_set.all %}
+{{ notification.notified|date }} & {{ notification.contacted|texify|safe }} & {{ notification.get_organisation_display }} & {{ notification.address|texify|safe }} & {{ notification.phone|texify|safe }} \\
+\hline
+{% endfor %}
+{% else %}
+No notifications have been recorded. &  &  &  &
+\hline
+{% endif %}
+\end{longtabu}
+\clearpage

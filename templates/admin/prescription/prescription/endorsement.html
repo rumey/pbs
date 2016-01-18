@@ -1,0 +1,94 @@
+{% extends "admin/base_site.html" %}
+{% load i18n staticfiles admin_list admin_urls guardian_tags %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li>{{ title }}</li>
+</ul>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+{% if current.endorsement_status == current.ENDORSEMENT_DRAFT %}
+{% if not current.can_endorse %}
+<div class="alert alert-error">
+    <strong>Warning!</strong> Please ensure all areas have been completed before seeking endorsement. <a href="{% url 'admin:prescription_prescription_summary' current.pk %}">Edit Prescription.</a>
+</div>
+{% else %}
+<p>Are you sure you wish to submit this ePFP for endorsement?</p>
+<form action="" method="post">{% csrf_token %}
+<div class="form-actions">
+  <input type="submit" value="{% trans 'Submit' %}" class="btn btn-primary" name="_save"/>
+  <input type="submit" value="{% trans 'Go back' %}" class="btn" name="_cancel"/>
+</div>
+</form>
+{% endif %}
+{% else %}
+<h4>All Endorsements</h4>
+<table class="table table-striped table-compressed">
+    <thead>
+        <tr>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Reviewer</th>
+            <th>Reviewed on</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {# should always be at least one endorsing role (either endorsed or not) #}
+        {% for endorsing_role in endorsed_endorsing_roles %}
+        {% get_obj_perms user for endorsing_role as "endorsing_perms" %}
+        <tr>
+            <td>{{ endorsing_role.role.name }}</td>
+            <td>{{ endorsing_role.get_endorsed_display }}</td>
+            <td>{% firstof endorsing_role.creator.get_full_name endorsing_role.creator.username %}</td>
+            <td>{{ endorsing_role.created }}</td>
+            <td>{% if 'delete_endorsement' in endorsing_perms %}<a href="{% url 'admin:prescription_prescription_delete_endorsement' current.id endorsing_role.id %}" class="btn btn-mini alert-error" title="Delete endorsement"><i class="icon-trash"></i></a>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        {% for endorsing_role in not_endorsed_endorsing_roles %}
+        <tr>
+            <td>{{ endorsing_role.name }}</td>
+            <td>Not endorsed</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if not obj.all_endorsed %}
+    <h4>Endorse this ePFP</h4>
+    <form action="" method="post">{% csrf_token %}
+        {{ form.as_p }}
+    <div id="endorsement_disclaimer"><blockquote><em></em></blockquote></div>
+    <div class="form-actions">
+    <input type="submit" value="{% trans 'Endorse' %}" class="btn btn-primary" name="_save"/>
+    <input type="submit" value="{% trans 'Reviewed and not endorsed' %}" class="btn btn-danger" name="_dont_endorse"/>
+    </div>
+    </form>
+    <script type="text/javascript">
+        var not_endorsed_endorsing_roles = {
+            {% for endorsing_role in not_endorsed_endorsing_roles %}
+                {{ endorsing_role.id }} : '{{ endorsing_role.disclaimer }}',{% endfor %}
+        };
+
+        (function() {
+            $('select#id_role').change(function() {
+                if ($(this).val()) {
+                    $('div#endorsement_disclaimer > blockquote > em').html(
+                        not_endorsed_endorsing_roles[$(this).val()]);
+                } else {
+                    $('div#endorsement_disclaimer > blockquote > em').html('');
+                }
+            });
+            $('select#id_role').change();
+        })();
+    </script>
+{% endif %}
+{% endif %}
+{% endblock %}

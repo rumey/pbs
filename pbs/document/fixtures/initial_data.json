@@ -1,0 +1,713 @@
+[
+{
+  "pk": 46, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Maps ",
+    "order": 1
+  }
+},
+{
+  "pk": 47, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Fuels",
+    "order": 2
+
+  }
+},
+{
+  "pk": 48, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Weather",
+    "order": 3
+
+  }
+},
+{
+  "pk": 49, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Burn Preparation",
+    "order": 4
+
+  }
+},
+{
+  "pk": 50, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Fauna",
+    "order": 5
+
+  }
+},
+{
+  "pk": 51, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Flora",
+    "order": 6
+
+  }
+},
+{
+  "pk": 52, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Works Agreements and Contracts",
+    "order": 7
+
+  }
+},
+{
+  "pk": 53, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Hygiene Plans",
+    "order": 8
+
+  }
+},
+{
+  "pk": 54, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Diaries",
+    "order": 9
+
+  }
+},
+{
+  "pk": 55, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Day of Burn Documents",
+    "order": 10
+
+  }
+},
+{
+  "pk": 56, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Post Burn",
+    "order": 11
+
+  }
+},
+{
+  "pk": 57, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Stakeholder Notifications",
+    "order": 12
+
+  }
+},
+{
+  "pk": 58, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Public Consultation",
+    "order": 13
+
+  }
+},
+{
+  "pk": 59, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Traffic Trail and Track Management",
+    "order": 14
+
+  }
+},
+{
+  "pk": 60, 
+  "model": "document.documentcategory", 
+  "fields": {
+    "name": "Miscellaneous",
+    "order": 15
+
+  }
+},
+{
+  "pk": 61,
+  "model": "document.documentcategory",
+  "fields": {
+    "name": "Endorsements & Approvals History",
+    "order": 16
+
+  }
+},
+{
+  "pk": 148, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Context Map"
+  }
+},
+{
+  "pk": 149, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Operations Map"
+  }
+},
+{
+  "pk": 150, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Aerial Burn Map"
+  }
+},
+{
+  "pk": 151, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Track Trail Diversion Map"
+  }
+},
+{
+  "pk": 152, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Aerial Burnt Unburnt Plot Map"
+  }
+},
+{
+  "pk": 153, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Satellite Imagery Burnt Unburnt Map"
+  }
+},
+{
+  "pk": 154, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "UXO Map"
+  }
+},
+{
+  "pk": 155, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "SILREC Map"
+  }
+},
+{
+  "pk": 156, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Fuel Age Map"
+  }
+},
+{
+  "pk": 157, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Fuel Sample Map"
+  }
+},
+{
+  "pk": 158, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Orthophotography Map"
+  }
+},
+{
+  "pk": 159, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "API Map"
+  }
+},
+{
+  "pk": 160, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Flora Map"
+  }
+},
+{
+  "pk": 161, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Fauna Map"
+  }
+},
+{
+  "pk": 162, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "TEC Map"
+  }
+},
+{
+  "pk": 163, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "LCU Map"
+  }
+},
+{
+  "pk": 164, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Helicopter Landing Site Map"
+  }
+},
+{
+  "pk": 165, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 47, 
+    "name": "Fuel Assessment Summary_FIRE 872"
+  }
+},
+{
+  "pk": 166, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 47, 
+    "name": "Fuel Assessment Record_FIRE 871"
+  }
+},
+{
+  "pk": 167, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 47, 
+    "name": "Fire Behaviour Calculation"
+  }
+},
+{
+  "pk": 168, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 48, 
+    "name": "Fire and Weather Observations"
+  }
+},
+{
+  "pk": 169, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 48, 
+    "name": "Forecast"
+  }
+},
+{
+  "pk": 170, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 48, 
+    "name": "Spot Forecast"
+  }
+},
+{
+  "pk": 171, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 49, 
+    "name": "Pre Burn Actions List"
+  }
+},
+{
+  "pk": 172, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 49, 
+    "name": "Boundary Preparation Record"
+  }
+},
+{
+  "pk": 173, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 50, 
+    "name": "Fauna Monitoring Sites"
+  }
+},
+{
+  "pk": 174, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 51, 
+    "name": "Permit to take"
+  }
+},
+{
+  "pk": 175, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 52, 
+    "name": "Works Agreements and Contracts"
+  }
+},
+{
+  "pk": 176, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 53, 
+    "name": "Hygiene Plan"
+  }
+},
+{
+  "pk": 177, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 54, 
+    "name": "Duty Officer Incident Management Diary"
+  }
+},
+{
+  "pk": 178, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 54, 
+    "name": "Operations Officer Incident Management Diary"
+  }
+},
+{
+  "pk": 179, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 54, 
+    "name": "Burn Controller Incident Management Diary"
+  }
+},
+{
+  "pk": 180, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 54, 
+    "name": "Sector Commander Diary"
+  }
+},
+{
+  "pk": 181, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Prescribed Burning Organisational Structure and Communications Plan"
+  }
+},
+{
+  "pk": 182, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Briefing Checklist"
+  }
+},
+{
+  "pk": 183, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Operations Officer Day of Burn Checklist"
+  }
+},
+{
+  "pk": 184, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Day of Burn Actions List"
+  }
+},
+{
+  "pk": 185, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Fire Behaviour Observations"
+  }
+},
+{
+  "pk": 186, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Resource Summary"
+  }
+},
+{
+  "pk": 187, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Burn Attendance"
+  }
+},
+{
+  "pk": 188, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Helicopter Landing Site Details"
+  }
+},
+{
+  "pk": 189, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 56, 
+    "name": "Post Burn Actions List"
+  }
+},
+{
+  "pk": 190, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 57, 
+    "name": "List of Notification"
+  }
+},
+{
+  "pk": 191, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 57, 
+    "name": "Neighbor Notification"
+  }
+},
+{
+  "pk": 192, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 57, 
+    "name": "Beekeeper Notification"
+  }
+},
+{
+  "pk": 193, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 57, 
+    "name": "Flora Picker Notification"
+  }
+},
+{
+  "pk": 194, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 57, 
+    "name": "Commercial Operator Notification"
+  }
+},
+{
+  "pk": 195, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 58, 
+    "name": "Record of Public Contacts"
+  }
+},
+{
+  "pk": 196, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 58, 
+    "name": "Radio Statio Notification"
+  }
+},
+{
+  "pk": 197, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 58, 
+    "name": "Public Inquiries"
+  }
+},
+{
+  "pk": 198, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 59, 
+    "name": "Sign Inspection and Surveillance Form"
+  }
+},
+{
+  "pk": 199, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 59, 
+    "name": "Traffic Diagrams"
+  }
+},
+{
+  "pk": 200, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 60, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 201, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Prescribed Burning SMEAC Checklist"
+  }
+},
+{
+  "pk": 202, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 59, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 203, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 58, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 204, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 57, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 205, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 56, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 206, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 55, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 207, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 54, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 208, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 53, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 209, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 52, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 210, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 51, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 211, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 50, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 212, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 49, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 213, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 48, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 214, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 47, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 215, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 46, 
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 216,
+  "model": "document.documenttag",
+  "fields": {
+    "category": 46,
+    "name": "Day of Burn Achievement Map"
+  }
+},
+{
+  "pk": 217, 
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 61,
+    "name": "Other (free text)"
+  }
+},
+{
+  "pk": 218,
+  "model": "document.documenttag", 
+  "fields": {
+    "category": 61,
+    "name": "PDF's"
+  }
+}
+]

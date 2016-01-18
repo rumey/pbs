@@ -1,0 +1,92 @@
+{% extends "admin/base_site.html" %}
+{% load i18n staticfiles admin_list %}
+{% load counter_tags %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  {% url 'admin:prescription_priorityjustification_changelist' as priority_justification %}
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li>Archive Documents</li>
+</ul>
+{% endblock %}
+
+{% block extrahead %}{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/widgets.css" %}">
+{% endblock %}
+
+{% block contentwrapper %}
+
+<button id="delete-button" type="button" style="float: right;">Delete Selected</button>
+
+<h1>Archive Documents for {{ current.burn_id }}</h1>
+<table class="table table-bordered table-striped table-condensed">
+  <thead>
+    <tr>
+      <td><input type="checkbox" name ="check_all" onClick=toggle(this) /></td>
+      <th scope="col">Category</th>
+      <th scope="col">Tag</th>
+      <th scope="col">Filename</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for doc in docs %}
+    <tr>
+      <td><input type="checkbox" name="chkbox" value={{ doc.id }}  /></td>
+      <td>{{ doc.category.name }}</td>
+      <td>{{ doc.tag.name }}</td>
+      <td>{% if doc.filename %} {{ doc.filename }} {% else %}N/A{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+
+$('#delete-button1').click(function(){
+  console.log('Checked List');
+});
+
+function toggle(source) {
+  checkboxes = document.getElementsByName('chkbox');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        checkboxes[i].checked = source.checked;
+    }
+}
+
+function list(source) {
+  checkboxes = document.getElementsByName('chkbox');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        // checkboxes[i].checked = source.checked;
+        console.log('Checked ' + source.checked);
+    }
+}
+
+function remove_rows() {
+  $("#tradeTable tr:has(td > input[type=checkbox]:checked)").remove();
+}
+
+$('#delete-button').click(function(){
+  checkboxes = document.getElementsByName('chkbox');
+  checked_list = []
+  for(var i=0, n=checkboxes.length;i<n;i++) {
+    if (checkboxes[i].checked) {
+      checked_list.push(parseInt(checkboxes[i].value))
+    }
+  }
+  console.log('Checked List' + checked_list);
+
+  $.ajax({
+    type: 'POST',
+    //url: 'http://localhost:8002/api/v1/trade/?id__in=' + checked_list.join(','),
+    url: 'http://localhost:8000/prescription/prescription/5/archive/documents/',
+    data: {'doc_list': checked_list.join(',')},
+    success: remove_rows(),
+    accepts: "application/json",
+    //crossDomain: "True",
+    dataType: "jsonp",
+  })
+});
+
+</script>
+{% endblock %}

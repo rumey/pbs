@@ -1,0 +1,107 @@
+{% autoescape off %}
+{% load pbs_tags %}
+\begin{landscape}
+\section{Section B3 - Sign Management Planning and Monitoring - Roads}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section B3 last modified}\textit{ {{ prescription.ways.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\subsubsection{Identification of Roads associated with the Prescribed Burn}
+{% if prescription.ways.roads %}
+\begin{longtabu} to \linewidth { | X | X[2] | X[4] | X | X | X | }
+\hline
+\textbf{Road Name} & \textbf{Road Type} & \textbf{Special Traffic\newline Conditions} & \textbf{Traffic Control Diagram} & \textbf{Date Signs\newline Installed} & \textbf{Date Signs\newline Removed} \\
+\endhead
+\hline
+{% for road in prescription.ways.roads %}
+{{ road.name|texify|safe }} & {{ road.road_type|texify|safe }} & {{ road.traffic_considerations|texify|safe }} & {{ road.traffic_diagram }} & {% if road.signs_installed %}{{ road.signs_installed }}{% endif %} & {% if road.signs_removed %}{{ road.signs_removed }}{% endif %} \\
+\hline
+{% endfor %}
+\end{longtabu}
+{% else %}
+  {% if current.day_state.roads %}
+    No roads associated with the burn.
+  {% else %}
+    Not Applicable
+  {% endif %}
+{% endif %}
+{% filter_by_tag_name current.document_set "traffic diagrams" as custom_traffic_diagrams %}
+{% if prescription.ways.standard_traffic_diagrams or custom_traffic_diagrams %}
+\section{Section B4 - Traffic Control Diagrams}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section B4 last modified}\textit{ {{ prescription.ways.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+All traffic control diagrams associated with the burn have been inserted on the following pages.
+{% else %}
+  {% if current.day_state.traffic %}
+    No Document Uploaded
+  {% else %}
+    Not Applicable
+  {% endif %}
+{% endif %}
+\end{landscape}
+
+{% if prescription.ways.standard_traffic_diagrams or custom_traffic_diagrams %}
+
+{% for document in prescription.ways.standard_traffic_diagrams %}
+  {% if document %}
+    {% include "latex/pdf.tex" %}
+  {% endif %}
+{% endfor %}
+
+{% for document in custom_traffic_diagrams %}
+  {% if document %}
+    {% include "latex/pdf.tex" %}
+  {% endif %}
+{% endfor %}
+\clearpage
+{% endif %}
+
+\begin{landscape}
+\section{Section B3 - Sign Management Planning \& Monitoring - Tracks and Trails}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section B3 last modified}\textit{ {{ prescription.ways.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\subsubsection{Identification of Tracks and Trails associated with the Prescribed Burn}
+{% if prescription.ways.trails %}
+\begin{longtabu} to \linewidth { | X | X | X | X | X | X | X | X | }
+\hline
+\textbf{Name of\newline Track/Trail} & \textbf{Is there a\newline Diversion Map?} & \textbf{Start Location} & \textbf{Start Signage\newline Required} & \textbf{Stop Location} & \textbf{Stop Signage\newline Required} & \textbf{Date Signs\newline Installed} & \textbf{Date Signs\newline Removed} \\
+\endhead
+\hline
+{% for trail in prescription.ways.trails %}
+{{ trail.name|texify|safe }} & {% if trail.diversion %}Yes{% else %}No{% endif %} & {{ trail.start|texify|safe }} & {{ trail.start_signage }} & {{ trail.stop }} & {{ trail.stop_signage }} & {% if trail.signs_installed %}{{ trail.signs_installed }}{% endif %} & {% if trail.signs_removed %}{{ trail.signs_removed }}{% endif %} \\
+\hline
+{% endfor %}
+\end{longtabu}
+{% else %}
+No tracks or trails associated with the burn.
+{% endif %}
+{% filter_by_tag_name current.document_set "track trail diversion map" as diversion_maps %}
+\subsubsection{Diversion Maps}
+{% if diversion_maps %}
+All diversion maps associated with the burn have been inserted on the following pages.
+{% else %}
+  {% if current.day_state.tracks %}
+    No Document Uploaded
+  {% else %}
+    Not Applicable
+  {% endif %}
+{% endif %}
+\end{landscape}
+
+{% if diversion_maps %}
+{% for document in diversion_maps %}
+  {% if document %}
+    {% include "latex/pdf.tex" %}
+  {% endif %}
+{% endfor %}
+\clearpage
+{% endif %}
+
+\begin
+{% filter_by_tag_name current.document_set "sign inspection and surveillance form" as sign_inspections %}
+{% if sign_inspections %}
+{% for document in sign_inspections %}
+  {% if document %}
+    {% include "latex/pdf.tex" %}
+  {% endif %}
+{% endfor %}
+\clearpage
+{% endif %}
+\end
+\clearpage
+{% endautoescape %}

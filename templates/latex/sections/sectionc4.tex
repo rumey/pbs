@@ -1,0 +1,34 @@
+{% load prescription_tags %}
+{% get_required_role prescription as required_role %}
+\section{Section C4 - Post Burn Checklist}
+\fancyfoot[L]{ SECTION C4 - POST BURN CHECKLIST\newline\textbf{Section C4 last modified}\textit{ {{ prescription.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\begin{longtabu} to \linewidth { | X[5] | X | X | X |}
+\hline
+Action & Relevant\newline to burn? & Date\newline Completed & Completed By \\
+\hline
+\endhead
+{% for item in prescription.postburnchecklist_set.all %}
+{{ item.action|texify|safe }} & {% if item.relevant %}Yes{% else %}No{% endif %} & {% if item.completed_on %}{{ item.completed_on|date }}{% else %}{% if item.relevant %}Incomplete{% endif %}{% endif %} & {% if item.completed_by %}{{ item.completed_by }}{% else %}{% if item.relevant %}Incomplete{% endif %}{% endif %}\\
+\hline
+{% endfor %}
+\end{longtabu}
+\subsubsection{Closure Declaration}
+\begin{tabu} to \linewidth { | X | X | }
+\hline
+\multicolumn{2}{|l|}\textbf{District Manager} \\
+\hline
+\multicolumn{2}{|p{17cm}|}{
+I am satisfied that all the applicable post-burn actions for this Prescribed Fire Plan have been completed and that required documents have been filed in Part D and the
+hard copy Burn File.
+} \\
+\hline
+{% if prescription.status == prescription.STATUS_CLOSED %}
+{% with prescription.approval_set.latest as approval %}
+\textbf{Closed by {{ prescription.closure_officer.get_full_name }}} & \textbf{Date {{ prescription.status_modified }}} \\
+{% endwith %}
+{% else %}
+\textbf{Closed by} & \textbf{Date} \\
+{% endif %}
+\hline
+\end{tabu}\\[\baselineskip]
+\clearpage

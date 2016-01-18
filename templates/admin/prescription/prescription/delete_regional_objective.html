@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load admin_urls %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+<li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+<li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+<li><a href="{% url 'admin:risk_context_changelist' current.id %}">Regional Objectives</a> <span class="divider">/</span></li>
+<li>{% trans 'Delete regional objective' %}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<p>Are you sure you wish to delete the regional objective?</p>
+<h4>Regional objective details</h4>
+<table class="table">
+  <tbody>
+    <tr>
+      <th>Region</th>
+      <td>{{ regional_objective.region }}</td>
+    </tr>
+    <tr>
+      <th>Scale of Application</th>
+      <td>{{ regional_objective.get_impact_display }}</td>
+    </tr>
+    <tr>
+      <th>Fire Management Areas</th>
+      <td>{% if regional_objective.fma_names %}{{ objective.fma_names }}{% else %}None{% endif %}</td>
+    </tr>
+    <tr>
+      <th>Objectives</th>
+      <td>{{ regional_objective.objectives }}</td>
+    </tr>
+  </tbody>
+</table>
+    <form action="" method="post">{% csrf_token %}
+    <div class="form-actions">
+    <input type="hidden" name="post" value="yes" />
+    <input type="submit" class="btn" value="{% trans "Delete" %}" />
+    <a id="id_cancel_button" href="javascript: history.go(-1)" class="btn btn-danger">Cancel</a>
+    </div>
+    </form>
+{% endblock %}
+

@@ -1,0 +1,13 @@
+{% if docs.tag_fire_and_weather_observations %}
+\phantomsection
+\addcontentsline{toc}{section}{Section B10 - Fire Behaviour and Weather Observations}
+%\fancyfoot[L]{Section B10\newline\textbf{Section B10 last modified}\textit{ {{ docs.tag_fire_and_weather_observations.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+{% for document in docs.tag_fire_and_weather_observations %}
+  {% if not document.is_zipped %}
+    {% include "latex/pdf.tex" with section="Section B10 - Fire Behaviour and Weather Observations" %}
+  {% endif %}
+{% endfor %}
+{% else %}
+\section{Section B10 - Fire Behaviour and Weather Observations}
+{ No Documents Uploaded }
+{% endif %}

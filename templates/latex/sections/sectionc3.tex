@@ -1,0 +1,14 @@
+\section{Section C3 - Lessons Learned}
+\fancyfoot[L]{ Section C3\newline\textbf{Section C3 last modified}\textit{ {{ prescription.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\begin{longtabu} to \linewidth { | X | X | }
+\hline
+Observations Identified & Proposed Action \\
+\hline
+{% for item in prescription.proposedaction_set.all %}
+{{ item.observations|texify|safe }} & {{ item.action|texify|safe }} \\
+\hline
+{% empty %}
+\multicolumn{2}{|X|}{No Lessons Identified} \\
+{% endfor %}
+\hline
+\end{longtabu}

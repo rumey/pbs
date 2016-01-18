@@ -1,0 +1,41 @@
+\section{Section B1 - Operational Overview}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section B1 last modified}\textit{ {{ prescription.pre_burn_modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+{% if prescription.operationaloverview_set.exists %}
+\begin{flushleft}
+{% for oo in prescription.operationaloverview_set.all %}
+{{ oo.overview|texify|safe }}\\
+{% endfor %}
+\end{flushleft}
+{% else %}
+Not defined.\\
+{% endif %}
+\vfill
+\clearpage
+\begin{landscape}
+\section{Section B1 - Pre-Burn Actions}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section B1 last modified}\textit{ {{ prescription.pre_burn_modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+{% if prescription.pre_burn_actions %}
+  \begin{longtabu} to \linewidth { | X[3] | X[3] | X | X[3] | X[l] | X[l] | }
+\hline
+{\textbf{Action}} & {\textbf{Action Details}} & {\textbf{Issue Resolved}} & {\textbf{Explanation}} & {\textbf{Actioned by Whom}} & {\textbf{Date Actioned}} \\
+\endhead
+\hline
+{% regroup prescription.pre_burn_actions by risk.category as actions %}
+{% for category in actions %}
+\multicolumn{6}{|l|}{% templatetag openbrace %}{\textbf{% templatetag openbrace %}{{ category.grouper|texify|safe }}}}} \\
+\hline
+{% for action in category.list %}
+{{ action|texify|safe }} & {{ action.details|texify|safe }} & {{ action.get_pre_burn_resolved_display }} & {{ action.pre_burn_explanation|texify|safe }} & {{ action.pre_burn_completer|default_if_none:""|texify|safe }} & {{ action.pre_burn_completed|date:"d-M-Y H:i" }} \\{% if not action.pre_burn_completed %}[3ex]{% endif %}
+\hline
+{% endfor %}
+{% endfor %}
+\end{longtabu}
+{% else %}
+  {% if current.day_state.pre_actions %}
+    { No Pre-Burn Actions. }
+  {% else %}
+    Not Applicable
+  {% endif %}
+{% endif %}
+\end{landscape}
+\clearpage

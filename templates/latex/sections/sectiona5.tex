@@ -1,0 +1,19 @@
+\begin{landscape}
+\section{Section A5 - Prescribed Burn Complexity Analysis Summary}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section A5 last modified}\textit{ {{ prescription.complexities.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\begin{longtabu} to \linewidth { | X[2] | X | X[8] | }
+\hline
+\textbf{Factor} & \textbf{Complexity Rating} & \textbf{Complexity Rationale} \\
+\hline
+\endhead
+{% regroup prescription.complexities by factor as complexities %}
+{% for category in complexities %}
+  \multicolumn{3}{|l|}{% templatetag openbrace %}{{ category.grouper|texify|safe }}} \\
+\hline
+{% for complexity in category.list %}
+{{ complexity.sub_factor|texify|safe }} & {{ complexity.get_rating_display }} & {{ complexity.rationale|texify|safe }} \\*
+{% endfor %}
+\hline
+{% endfor %}
+\end{longtabu}
+\end{landscape}

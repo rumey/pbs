@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n %}
+{% load admin_urls %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+<li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+<li><a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst|escape }}</a> <span class="divider">/</span></li>
+<li>Carry over selected burns</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<p>The following Prescribed Fire Plan(s) will be rescheduled for burning in another season:</p>
+<ul>
+{% for obj in queryset %}
+  <li><a href="{% url 'admin:prescription_prescription_detail' obj.id %}">{{ obj.burn_id }} ({{ obj.get_planned_season_display }} {{ obj.financial_year }})</a></li>
+{% endfor %}
+</ul>
+<form action="" method="post">{% csrf_token %}
+<div>
+{% for obj in queryset %}
+    <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}" />
+    {% endfor %}
+    <input type="hidden" name="action" value="{{ action }}" />
+    <input type="hidden" name="post" value="yes" />
+    <input type="submit" class="btn" value="{% trans "Yes, I'm sure" %}" />
+    <a id="id_cancel_button" href="javascript: history.go(-1)" class="btn btn-danger">Cancel</a>
+    </div>
+    </form>
+{% endblock %}

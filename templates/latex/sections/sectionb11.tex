@@ -1,0 +1,20 @@
+{% load pbs_list %}
+{\begin{landscape}
+\section{Section B11 - Day of Burn - Fire System Update}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section B11 last modified}\textit{ {{ prescription.day_of_burn_modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\subsubsection{ Area Achievements }
+\begin{tabu}{ | X | X | X | X | X | X | }
+\hline
+\textbf{Ignition Date} & \textbf{Actual Ignition Type} & \textbf{Area Treated (ha)} & \textbf{Burnt area estimate (ha)} & \textbf{Length of successful edging (kms)} & \textbf{Estimated depth of edging (m)} \\
+\hline
+{% with prescription.areaachievement_set as qs %}
+{% for aa in qs.all %}
+{{ aa.ignition }} & {% if aa.ignition_types.all %}{{ aa.ignition_types.all|join:", " }}{% else %}No ignition types{% endif %} & {{ aa.area_treated }} & {{ aa.area_estimate }} & {{ aa.edging_length }} & {{ aa.edging_depth_estimate }} \\
+\hline
+{% endfor %}
+\textbf{Totals} & & \textbf{% templatetag openbrace %}{% aggregate_sum qs "area_treated" %}} & \textbf{% templatetag openbrace %}{% aggregate_sum qs "area_estimate" %}} & \textbf{% templatetag openbrace %}{% aggregate_sum qs "edging_length" %}} & \\
+{% endwith %}
+\hline
+\end{tabu}
+\end{landscape}}
+\clearpage

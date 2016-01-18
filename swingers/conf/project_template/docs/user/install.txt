@@ -1,0 +1,37 @@
+.. _install:
+
+Installation
+============
+
+This part of the documentation covers installation of {{ project_name }}.
+
+Distribute & Pip
+----------------
+
+Installation is simple with `pip <http://www.pip-installer.org/>`_. ::
+
+    $ pip install {{ project_name }} 
+
+or, with `easy_install <http://pypi.python.org/pypi/setuptools>`_ ::
+
+    $ easy_install {{ project_name }}
+
+
+Get the code
+------------
+
+{{ project_name }} is actively maintained on bitbucket, where the code is
+`always available <https://bitbucket.org/dpaw/{{ project_name }}>`_.
+
+You can clone the repository: ::
+
+    hg clone https://bitbucket.org/dpaw/{{ project_name }}
+
+Once you have a copy of the source, you can embed it in your Python package,
+or install it to your site-packages easily::
+
+    $ python setup.py install
+
+You can run the {{ project_name }}' test suite with::
+
+    $ python setup.py test

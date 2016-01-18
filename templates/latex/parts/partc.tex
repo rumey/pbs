@@ -1,0 +1,25 @@
+\fancyfoot[L]{ SECTION C - CONTENTS\leftmark\newline\textbf{Section C last modified}\textit{ {{ prescription.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\part{Part C - Burn Closure and Evaluation}
+\subsubsection{Part C Stage of Completion}
+\newline\newline
+\begin{tabu} to \linewidth { | X[l] | X[c] | }
+\hline
+\textbf{Contents} & \textbf{Status} \\
+\hline
+\textbf{Post-burn Actions} & {{ prescription.post_state.get_post_actions_display }} \\
+\textbf{Burn Evaluation Summary} & {{ prescription.post_state.get_evaluation_summary_display }} \\
+\textbf{Burn Evaluation - Lessons identified from debriefs and other reviews} & {{ prescription.post_state.get_evaluation_display }} \\
+\textbf{Post-burn Checklist} & {{ prescription.post_state.get_post_burn_checklist_display }} \\
+\textbf{Closure Declaration} & {{ prescription.post_state.get_closure_declaration_display }} \\
+\textbf{Maps of Burn After Each Ignition} & {{ prescription.post_state.get_post_ignitions_display }} \\
+\textbf{Aerial Plot Burnt/Unburnt} & {{ prescription.post_state.get_aerial_intensity_display }} \\
+\textbf{Satellite Imagery Burnt/Unburnt} & {{ prescription.post_state.get_satellite_intensity_display }} \\
+\textbf{Other} & {{ prescription.post_state.get_other_display }} \\
+\hline
+\end{tabu}
+\vfill
+\clearpage
+{% include "latex/sections/sectionc1.tex" %}
+{% include "latex/sections/sectionc2.tex" %}
+{% include "latex/sections/sectionc3.tex" %}
+{% include "latex/sections/sectionc4.tex" %}

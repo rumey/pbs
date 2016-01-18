@@ -1,0 +1,88 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles pbs_list pbs_tags %}
+{% block extrahead %}{{ block.super }}
+<script>
+    $(function() {
+        if ("{{ title }}" != "Documents") {
+            $("form#changelist-search").hide();
+        }
+    });
+</script>
+{% endblock %}
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+{% if tags.count == 1 %}
+    {% if tags.0.name == "Context Map" %}
+        <li><a href="{{ parta }}">{% trans 'Part A' %}</a> <span class="divider">/</span></li>
+        <li>Section A2 - 
+    {% elif tags.0.name == "Sign Inspection and Surveillance Form" %}
+        <li><a href="{{ partb }}">{% trans 'Part B' %}</a> <span class="divider">/</span></li>
+        <li>Section B3 ‐ 
+    {% elif tags.0.name == "Traffic Diagrams" %}
+        <li><a href="{{ partb }}">{% trans 'Part B' %}</a> <span class="divider">/</span></li>
+        <li>Section B4 ‐ 
+    {% elif tags.0.name == "Prescribed Burning Organisational Structure and Communications Plan" %}
+        <li><a href="{{ partb }}">{% trans 'Part B' %}</a> <span class="divider">/</span></li>
+        <li>Section B7 ‐ 
+    {% elif tags.0.name == "Operations Officer Day of Burn Checklist" %}
+        <li><a href="{{ partb }}">{% trans 'Part B' %}</a> <span class="divider">/</span></li>
+        <li>Section B9 ‐ 
+    {% elif tags.0.name == "Fire and Weather Observations" %}
+        <li><a href="{{ partb }}">{% trans 'Part B' %}</a> <span class="divider">/</span></li>
+        <li>Section B10 ‐ 
+    {% elif tags.0.name == "Operations Map" %}
+        <li><a href="{{ partb }}">{% trans 'Part B' %}</a> <span class="divider">/</span></li>
+        <li>Section B12 ‐ 
+    {% elif tags.0.name == "Aerial Burning Map" %}
+        <li><a href="{{ partb }}">{% trans 'Part B' %}</a> <span class="divider">/</span></li>
+        <li>Section B13 ‐ 
+    {% else %}
+        <li>
+    {% endif %}{{ tags.0.name }}</li>
+{% endif %}
+</ul>
+{% endblock %}
+{% block content_title %}
+{{ block.super }}
+{% if tags.0.name and tags.0.name.lower != 'operations map' and tags.0.name.lower != 'aerial burn map' and tags.0.name.lower != 'context map' and tags.0.name.lower != 'prescribed burning organisational structure and communications plan' %}
+<h5><a class="btn btn-small btn-info" href="{{ download_pdf }}?template=form-{{ tags.0.name|slugify }}&download=true"><i class='icon-download-alt'></i> Download the {{ tags.0.name }} template</a></h5>
+{% elif tags.0.name and tags.0.name.lower == 'prescribed burning organisational structure and communications plan' %}
+<h5><a class="btn btn-small btn-info" href="{% static 'pbs/docs/org_chart.pdf' %}"><i class='icon-download-alt'></i> Download the Organisational Structure and Communications Plan template</a></h5>
+{% endif %}
+{% endblock %}
+{% block object-tools-items %}
+{% if tags|length == 1 %}
+<a class="btn btn-small btn-info" href="{{ upload_document }}?tag={{ tags.0.id }}&next={{ request.get_full_path }}">
+    <i class="icon-plus icon-white"></i> Add document
+</a>
+{% else %}
+<a class="btn btn-small btn-info" href="{{ upload_document }}?next={{ request.get_full_path }}">
+    <i class="icon-plus icon-white"></i> Add document
+</a>
+{% endif %}
+{% comment %}
+<!-- Temporarily commented out the "Add document type" list in favour of a selecting the document type on the change form. -->
+<!-- This is a somewhat better UX, because it allows the use of a Select2 widget for the document type. -->
+<!-- Subject to feedback from dev team. -->
+{% if tags.count == 1 %}
+    {% for tag in tags %}
+    <a class="btn btn-small btn-success" href="{% url 'admin:document_document_add' current.id %}?tag={{ tag.id }}&next={{ request.get_full_path }}">
+        <i class="icon-plus icon-white"></i>Add {{ descriptor }}</a>
+    {% endfor %}
+    {% else %}
+    <div class="dropdown">
+        <a class="dropdown-toggle btn btn-small btn-success" id="dLabel" role="button" data-toggle="dropdown" data-target="#" href="/page.html">
+            <i class="icon-plus icon-white"></i> Add <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+        {% for tag in tags %}
+            <li><a href="{% url 'admin:document_document_add' current.id %}?tag={{ tag.id }}&next={{ request.get_full_path }}">{{ descriptor }}</a></li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+{% endcomment %}
+{% endblock %}
+

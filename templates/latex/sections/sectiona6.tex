@@ -1,0 +1,19 @@
+{% autoescape off %}
+\begin{landscape}
+\section{Section A6 - Prescribed Burn Risk Register}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section A6 last modified}\textit{ {{ prescription.risk_registers.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\begin{longtabu} to \linewidth { | X[3] | X[1.2] | X | X[0.7] | X[3] | X[1.2] | X | X[0.7] | }
+\hline
+\rowfont\bfseries
+\endhead
+\hline
+\textbf{Description} & \textbf{Consequence} & \textbf{Likelihood} & \textbf{Level of Risk} & \textbf{Treatments} & \textbf{Consequence} & \textbf{Likelihood} & \textbf{Level of Risk} \\
+\hline
+\endhead
+{% for register in prescription.risk_registers %}
+{{ register.description|texify|safe }} & {{ register.get_draft_consequence_display }} & {{ register.get_draft_likelihood_display }} & {{ register.get_draft_risk_level_display }} & {% for treatment in register.treatment_set.all %}\textcolor{% templatetag openbrace %}{% if treatment.complete %}black{% else %}black{% endif %}}{% templatetag openbrace %} - {{ treatment|texify|safe }} ({{ treatment.location }})}\newline{% endfor %} & {{ register.get_final_consequence_display }} & {{ register.get_final_likelihood_display }} & {{ register.get_final_risk_level_display }} \\
+\hline
+{% endfor %}
+\end{longtabu}
+\end{landscape}
+{% endautoescape %}

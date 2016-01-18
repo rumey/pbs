@@ -1,0 +1,22 @@
+{% load prescription_tags %}
+\begin{landscape}
+\section{Section A4 - Burn Priority Justification}
+\fancyfoot[L]{ SECTION A4 - BURN PRIORITY JUSTIFICATION\newline\textbf{Section A4 last modified}\textit{ {{ prescription.priorities.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\begin{longtabu} to \linewidth { | X[0.4] | X[l] | X[l] | X[0.2] | }
+\hline
+\textbf{Burn Purpose} & \textbf{Criteria} & \textbf{Rationale} & \textbf{Burn Purpose Priority} \\
+\endhead
+\hline
+{% for pj in prescription.priorities %}
+{{ pj.purpose.name|texify|safe }} & {{ pj.criteria|texify|safe }} & {{ pj.rationale|texify|safe }} & {{ pj.get_priority_display|texify|safe }} \\
+\hline
+{% endfor %}
+\end{longtabu}
+\begin{tabu} to \linewidth { | X[0.2] | X[l] | }
+\hline
+\textbf{Overall Priority} & \textbf{Overall Rationale} \\
+\hline
+{{ prescription.get_priority_display|texify|safe }} & {{ prescription.rationale|texify|safe }} \\
+\hline
+\end{tabu}
+\end{landscape}

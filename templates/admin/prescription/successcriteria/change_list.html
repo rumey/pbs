@@ -1,0 +1,89 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script>
+  {% if current.is_draft or perms.prescription.can_admin %}
+  (function($) {
+    $(function() {
+      $("#result_list tbody tr").tabularFormset({
+        prefix: "{{ cl.formset.prefix }}",
+        adminStaticPrefix: '{% static "admin/" %}',
+        addText: '<i class="icon-plus"></i> Add another success criteria'
+      });
+      $("#result_list_objectives_disabled tbody tr").tabularFormset({
+        prefix: "{{ objective_cl.formset.prefix }}",
+        adminStaticPrefix: '{% static "admin/" %}',
+        addText: '<i class="icon-plus"></i> Add another objective'
+      });
+    });
+  })(django.jQuery);
+  {% endif %}
+  </script>
+{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_summary' current.id %}">Part A</a> <span class="divider">/</span></li>
+  <li>Section A3 &#x2010; Success criteria</li>
+</ul>
+{% endblock %}
+
+{% block object-tools %}{% endblock %}
+
+{% block content_title %}
+<h1>Regional Fire Management Plan Objectives</h1>
+<table class="table table-striped table-condensed">
+  <thead>
+    <tr>
+      <th scope="col">Region</th>
+      <th scope="col">Scale of Application</th>
+      <th scope="col">Fire Management Areas</th>
+      <th scope="col">Objectives</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for objective in current.regional_objectives.all %}
+    <tr>
+      <td>{{ objective.region }}</td>
+      <td>{{ objective.get_impact_display }}</td>
+      <td>{% if objective.fma_names %}{{ objective.fma_names }}{% else %}None{% endif %}</td>
+      <td>{{ objective.objectives }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="4">There are no Regional Fire Management Plan objectives.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block extra-forms %}
+<div class="row">
+<div class="span5">
+<h1>Burn Objectives</h1>
+{% if current.objective_set.all.count > 0 %}
+    <ul>
+        {% for objective in current.objective_set.all %}
+        <li>{{ objective }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <span>There are no burn objectives associated with this burn.</span>
+{% endif %}
+</div>
+<div class="span5 offset1">
+<h1>Burn Purposes</h1>
+<ul>
+    {% for purpose in current.purposes.all %}
+    <li>{{ purpose }}</li>
+    {% endfor %}
+</ul>
+</div>
+</div>
+<h1>Success Criteria</h1>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li>Regional Fire Management Plan Objectives</li>
+</ul>
+{% endblock %}
+{% block content_title %}
+<h1>Manage Regional Fire Management Plan Objectives</h1><br>
+{% endblock %}

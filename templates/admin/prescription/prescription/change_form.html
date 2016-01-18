@@ -1,0 +1,242 @@
+{% extends "admin/change_form.html" %}
+{% load i18n staticfiles admin_modify %}
+{% load admin_urls admin_list %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li>{{ title }}</li>
+</ul>
+{% endblock %}
+{% block content_title %}<h1>{{ title }}</h1>{% endblock %}
+{% block extrahead %}{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/widgets.css" %}">
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+
+<script>
+
+$(function() {
+    $('input#id_last_year_unknown').change(function() {
+        /*
+         * if last_year_unknown, disable last_year input.
+         */
+        this.checked ? $(this).siblings('#id_last_year')
+                        .val('').attr('disabled','disabled') :
+                       $(this).siblings('#id_last_year')
+                        .removeAttr('disabled');
+    }).change();
+
+    $('input#id_last_season_unknown').change(function() {
+        /*
+         * if last_season_unknown, disable last_season input.
+         */
+        this.checked ? $(this).siblings('#id_last_season')
+                        .val('').attr('disabled','disabled') :
+                       $(this).siblings('#id_last_season')
+                        .removeAttr('disabled');
+    }).change();
+
+    $('#id_biodiversity_text_div').insertAfter('label[for="id_purposes_0"]');
+    $('#id_bushfire_risk_text_div').insertAfter('label[for="id_purposes_1"]');
+    $('#id_vegetation_text_div').insertAfter('label[for="id_purposes_5"]');
+
+    $('td').children('.text-error').parent().addClass('error');
+    $('div#id_pageerrors').find('.text-error').parents('div#id_pageerrors').addClass('error');
+    $('input[id^=id_purposes]').change();
+});
+</script>
+ {{ media }}
+<style>
+    div#id_pageerrors.error {
+        background-color: #F2DEDE;
+        padding-top: 10px;
+        padding-left: 10px;
+        padding-bottom: 1px;
+        margin-bottom: 10px;
+    }
+    div.collapse textarea {
+        width: 99%;
+    }
+    div.collapse {
+        width: 99%;
+    }
+    hr.id_purposes_hr {
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div>
+{% if errors %}
+    <p class="errornote alert alert-block alert-error fade in">
+    {% blocktrans count counter=errors|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
+    </p>
+    </div>
+{% endif %}
+<div class="row">
+<div class="span12">
+<div id="id_pageerrors"><span id="id__all__">
+    {% if adminform.form.non_field_errors %}
+        {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.non_field_errors %}
+    {% endif %}
+</span></div>
+<form action="" method="post">{% csrf_token %}
+<table class="table table-bordered table-striped table-condensed">
+    <tbody>
+        <tr>
+            <th class="cbas">Name *</th>
+            <td colspan="3" class="cbas">{{ adminform.form.name }}
+                {% if adminform.form.name.errors %}
+                    {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.name.errors %}
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th class="cbas">Planned burn <br>financial year *</th>
+            <td class="cbas">
+                    {{ adminform.form.financial_year }}
+                    {% if adminform.form.financial_year.errors %}
+                        {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.financial_year.errors %}
+                    {% endif %}
+            </td>
+            <th class="cbas">Last burnt season<br><br><br>Financial year</th>
+            <td class="cbas">
+                    {{ adminform.form.last_season }} or last burnt season unknown? {{ adminform.form.last_season_unknown }}
+                    {% if adminform.form.last_season.errors %}
+                        {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.last_season.errors %}
+                    {% endif %}
+                    {% if adminform.form.last_season_unknown.errors %}
+                        {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.last_season_unknown.errors %}
+                    {% endif %}<br>
+                    {{ adminform.form.last_year }} or last burnt year unknown? {{ adminform.form.last_year_unknown }}
+                    {% if adminform.form.last_year.errors %}
+                        {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.last_year.errors %}
+                    {% endif %}
+                    {% if adminform.form.last_year_unknown.errors %}
+                        {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.last_season_unknown.errors %}
+                    {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th class="cbas">Region *</th>
+            <td class="cbas">{{ adminform.form.region }}
+            {% if adminform.form.region.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.region.errors %}
+            {% endif %}
+            </td>
+            <th class="cbas">District *</th>
+            <td class="cbas">{{ adminform.form.district }}
+            {% if adminform.form.district.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.district.errors %}
+            {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Location *</th>
+            <td colspan="3">
+                <span>You must enter/select a value in all fields.<br>Alternatively, if entering only a locality (first input field), location will be stored as "Within the locality of ____"</span><br>
+                {{ adminform.form.location }}
+                {% if adminform.form.location.errors %}
+                    {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.location.errors %}
+                {% endif %}
+                <span id="id_location" class="hidden"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Forest Blocks (if applicable)</th>
+            <td colspan="3">
+                {{ adminform.form.forest_blocks}}
+                {% if adminform.form.forest_blocks.errors %}
+                    {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.forest_blocks.errors %}
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Overall Priority *</th>
+            <td id="id_td_priority">{{ adminform.form.priority }}</td>
+            <th>Overall Rationale *</th>
+            <td id="id_td_rationale">{{ adminform.form.rationale }}</td>
+        </tr>
+        <tr>
+            <th class="cbas">Contentious *</th>
+            <td class="cbas">{{ adminform.form.contentious }}
+            {% if adminform.form.contentious.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.contentious.errors %}
+            {% endif %}
+            </td>
+            <th class="cbas">Contentious Rationale</th>
+            <td class="cbas">{{ adminform.form.contentious_rationale }}
+            {% if adminform.form.contentious_rationale.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.contentious_rationale.errors %}
+            {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Aircraft burn *</th>
+            <td>{{ adminform.form.aircraft_burn }}
+            {% if adminform.form.aircraft_burn.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.aircraft_burn.errors %}
+            {% endif %}
+            </td>
+            <th>Remote sensing priority *</th>
+            <td>{{ adminform.form.remote_sensing_priority }}
+            {% if adminform.form.remote_sensing_priority.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.remote_sensing_priority.errors %}
+            {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Burn Purpose(s) *</th>
+            <td colspan="3">
+                {{ adminform.form.purposes }}<input id="id_purposes" type="hidden"></input>
+                {% if adminform.form.purposes.errors %}
+                    {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.purposes.errors %}
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Program allocation *</th>
+            <td>{{ adminform.form.allocation }}
+            {% if adminform.form.allocation.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.allocation.errors %}
+            {% endif %}
+            </td>
+            <th>Estimate of the planned area<br>that will be treated (%) *</th>
+            <td>{{ adminform.form.treatment_percentage }}
+            {% if adminform.form.treatment_percentage.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.treatment_percentage.errors %}
+            {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Planned Burn Area (ha) *</th>
+            <td>{{ adminform.form.area }}
+            {% if adminform.form.area.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.area.errors %}
+            {% endif %}
+            </td>
+            <th>Perimeter/Length (kms) *</th>
+            <td>{{ adminform.form.perimeter }}
+            {% if adminform.form.perimeter.errors %}
+                {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.perimeter.errors %}
+            {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+{% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+
+{% if adminform.first_field and add %}
+   <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
+{% endif %}
+
+{# JavaScript for prepopulated fields #}
+{% prepopulated_fields_js %}
+
+</div>
+</form>
+{% endblock %}
+</div>
+</div>

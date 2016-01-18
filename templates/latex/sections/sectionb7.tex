@@ -1,0 +1,20 @@
+{% load pbs_tags %}
+\section{Section B7 - Prescribed Burning Organisational Structure and Communications Plan}
+{% filter_by_tag_name current.document_set "prescribed burning organisational structure and communications plan" as org_structures %}
+{% if org_structures %}
+\phantomsection
+\addcontentsline{toc}{section}{Section B7 - Organisational Structure and Communications Plan}
+\fancyfoot[L]{ Section B7\newline\textbf{Section B7 last modified}\textit{ {{ docs.tag_prescribed_burning_organisational_structure_and_communications_plan.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+{% for document in org_structures %}
+  {% if not document.is_zipped %}
+    {% include "latex/pdf.tex" with section="Section B7 - Organisational Structure and Communications Plan" %}
+  {% endif %}
+{% endfor %}
+{% else %}
+  {% if current.day_state.organisational_structure %}
+    No Document Uploaded
+  {% else %}
+    Not Applicable
+  {% endif %}
+{% endif %}
+\clearpage

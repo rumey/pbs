@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block extrahead %}
+{{ block.super }}
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+{{ media }}
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+<style>
+.selector {
+  width: 900px;
+}
+
+.selector-available, .selector-chosen {
+  width: 410px;
+}
+
+.selector select {
+  width: 410px;
+}
+
+.selector-chooseall {
+    display: none !important;
+}
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li>{{ title }}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<p>Please fill in any required endorsing roles for this ePFP.</p>
+{% with current.get_maximum_risk as maximum_risk %}
+{% if maximum_risk.final_risk_level == maximum_risk.LEVEL_MEDIUM %}
+<div class="alert">
+<h4>Level of Risk</h4>
+The maximum level of risk of the ePFP is {{ current.maximum_risk }} and requires that a District Manager endorses it.
+</div>
+{% endif %}
+{% if maximum_risk.final_risk_level == maximum_risk.LEVEL_HIGH %}
+<div class="alert alert-danger">
+<h4>Level of Risk</h4>
+The maximum level of risk of the ePFP is {{ current.maximum_risk }} and requires that a Regional Manager endorses it.
+</div>
+{% endif %}
+{% endwith %}
+{% if current.aircraft_burn %}
+<div class="alert">
+<h4>Aerial Burn</h4>
+  As this is an aerial burn, a Fire Management Services Branch representative will be required to endorse this burn.
+</div>
+{% endif %}
+<h4>Additional Endorsing Roles</h4>
+{% if form.form.endorsing_roles.errors %}<div class="alert alert-error"><p>{% for error in form.form.endorsing_roles.errors %}{{ error }}{% endfor %}</p></div>{% endif %}
+<form action="" method="post">{% csrf_token %}
+  <div>
+    <div class="controls-row control-group">
+      {{ form.form.endorsing_roles }}
+    </div>
+  </div>
+{% load i18n admin_urls %}
+<div class="form-actions">
+  <input type="submit" value="{% trans 'Save' %}" class="btn btn-primary btn-success" name="_save"/>
+  <input type="submit" value="{% trans 'Go back' %}" class="btn" name="_cancel"/>
+</div>
+</form>
+{% endblock %}

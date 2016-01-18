@@ -1,0 +1,18 @@
+{% extends "swingers/layout.html" %}
+
+{% block pagecontent %}
+<div class="row-fluid">
+    <div class="span12">
+        <h1>Log in with your username and password</h1>
+        <div class="well">
+            <form action="" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="actions">                                       
+                  <input class="btn primary" type="submit" value="Log in" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+#regex syntax
+\.svn$
+\.git$
+\.gitignore$
+\.pyc$
+\.swp$
+\.swo$
+\.orig$
+\.wsgi$
+^virtualenv/
+^cover/
+debug$
+DEBUG$
+^tags$
+^\.coverage$
+^django_symlink$
+^nosetests.xml$
+^coverage.xml$
+\.egg
+\.egg-info
+\.tox
+^dist/
+^.idea/
+^docs/_build/
+^build/
+^dist/

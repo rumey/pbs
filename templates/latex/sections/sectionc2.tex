@@ -1,0 +1,31 @@
+\section{Section C2 - Burn Evaluation Summary}
+\subsubsection{Burn Objectives}
+{% for objective in prescription.objective_set.all %}
+\fancyfoot[L]{ SECTION C2 - BURN OBJECTIVES\newline\textbf{Section C2 last modified}\textit{ {{ prescription.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\noindent
+{{ objective.objectives|texify|safe }} \\
+{% empty %}
+No objectives have been associated with the burn.
+{% endfor %}
+\subsubsection{Burn Purposes}
+{% for purpose in prescription.purposes.all %}
+\noindent
+{{ purpose.name|texify|safe }} \\
+{% empty %}
+No purposes have been associated with the burn.
+{% endfor %}
+{% if prescription.evaluations %}
+\begin{longtabu} to \linewidth { | X[0.5] | X[0.25] | X | }
+\hline
+\textbf{Success Criteria} & \textbf{Success Criteria\newline Achieved?} & \textbf{Evaluation} \\
+\endhead
+\hline
+{% for evaluation in prescription.evaluations %}
+{{ evaluation.criteria.criteria|texify|safe }} & {{ evaluation.get_achieved_display|texify|safe }} & {{ evaluation.summary|texify|safe }} \\
+\hline
+{% endfor %}
+\end{longtabu}
+{% else %}
+No success criterias have been identified for the burn.
+{% endif %}
+\clearpage

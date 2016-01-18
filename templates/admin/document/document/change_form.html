@@ -1,0 +1,78 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block extrahead %}
+{{ block.super }}
+<script async>
+    $(function() {
+        // Check for the various File API support.
+        // TODO: client-side validation of required fields and file type.
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            // All the File APIs are supported. Old browser get no warning.
+            $('#id_document').change(function() {
+                $('#id_large_file_alert').hide();
+                var alert_div = '<div id="id_large_file_alert" class="alert alert-error"> ' +
+                                  '<button type="button" class="close" data-dismiss="alert">×</button>' +
+                                  '<i class="icon-exclamation-sign"></i> <strong>Notice:</strong>' +
+                                  ' this is a large file, which take some time to upload.'+
+                                '</div>';
+                var files = this.files; // FileList object
+                var max_filesize = 10485760;  // 10 Mb
+                for (var i = 0, f; f = files[i]; i++) {
+                    if (f.size > max_filesize) {
+                        $('#id_document').closest('.control-group').before(alert_div);
+                    }
+                }
+            });
+        };
+        // monitor tag field for other, show/hide custom_tag if other is visible
+        var tag = $("select#id_tag");
+        var custom_tag = $("input#id_custom_tag").parents("div.controls-row");
+        var show_custom_tag = function() {
+            if (tag.find("option:selected").text() == "Other (free text)") {
+                custom_tag.show();
+            } else {
+                custom_tag.hide();
+            }
+        }
+        show_custom_tag();
+        tag.change(show_custom_tag);
+    });
+</script>
+{% endblock extrahead%}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+    <li>
+        <a href="{% url 'admin:index' %}">
+            {% trans 'Regional Overview' %}
+        </a> <span class="divider">/</span>
+    </li>
+  <li>
+      <a href="{% url 'admin:prescription_prescription_detail' current.id %}">
+      {{ current.burn_id }}
+      </a> <span class="divider">/</span>
+  </li>
+  <li>
+      <a href="{% url 'admin:document_document_all' current.id %}">
+          Documents
+      </a><span class="divider">/</span>
+  </li>
+  <li>Add document</li>
+</ul>
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+<div class="form-actions">
+    <input type="submit"
+           value="{% trans 'Upload' %}"
+           class="btn btn-primary"
+           name="_save"
+           {% firstof onclick_attrib "" %}/>
+    <a id="id_cancel_button"
+       href="javascript: history.go(-1)"
+       class="btn btn-danger">
+        Cancel
+    </a>
+</div>
+{% endblock %}

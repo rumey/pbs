@@ -1,0 +1,43 @@
+\begin{landscape}
+\section{Section B6 - Contingency Plan}
+\fancyfoot[L]{ SECTION B6 - CONTINGENCY PLAN\newline\textbf{Section B6 last modified}\textit{ {{ prescription.contingencies.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}} % http://tex.stackexchange.com/questions/12703/how-to-create-fixed-width-table-columns-with-text-raggedright-centered-raggedlef %
+\begin{longtabu} to \linewidth {|X|X|X[1.5]|X[3]|}
+\hline
+\textbf{Contingency} & \textbf{Trigger} & \textbf{Actions} & \textbf{Notifications}\\
+
+ & & & \text{Name} \hspace{1.0in} \text{Organisation} \hspace{0.3in} \text{Location} \hspace{0.3in} \text{Contact No.}\\
+
+\endhead
+\hline
+{% for contingency in prescription.contingencies %}
+  {{ contingency.description|texify|safe }} & {{ contingency.trigger|texify|safe }} &
+
+    {% if contingency.actions_migrated  %}                   % Migrated Actions %
+      {% for act in contingency.actions.all %}
+        {{ act.action|texify|safe }}
+      {% endfor %} &
+    {% else %}                                               % Old Contigencies %
+      {{ contingency.action|texify|safe }} &
+    {% endif %}
+
+    {% if contingency.notifications_migrated  %}             % Migrated Notifications %
+      {% for notify in contingency.notifications.all %}
+        \begin{tabular}{ L{3.4cm}  L{2cm}  L{1.9cm}  L{2.25cm} }
+          {{ notify.name|texify|safe }} & {{ notify.organisation|texify|safe }} & {{ notify.location|texify|safe }} & {{ notify.contact_number|texify|safe }}
+        \end{tabular}
+        \vspace{2pt}
+        {% endfor %} &
+
+    {% else %}                                               % Old Notifications %
+        \begin{tabular}{ L{3.4cm}  L{2cm}  L{1.9cm}  L{2.25cm} }
+          {{ contingency.notify_name|texify|safe }} & {{ contingency.organisation|texify|safe }} & {{ contingency.location|texify|safe }} & {{ contingency.contact_number|texify|safe }} &
+        \end{tabular}
+        \vspace{2pt}
+    {% endif %}
+
+\hline
+{% endfor %}
+\end{longtabu}
+\end{landscape}
+\clearpage

@@ -1,0 +1,27 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_regionalobjective_changelist' %}">{% trans 'Regional Fire Management Plan Objectives' %}</a> <span class="divider">/</span></li>
+  <li>Add Regional Fire Management Plan Objective</li>
+</ul>
+{% endblock %}
+{% endif %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+    $(function() {
+        $('#id_impact').change(function() {
+            if ($(this).val() == 1) {
+                $('#id_fma_names').prop('disabled', true);
+            } else {
+                $('#id_fma_names').prop('disabled', false);
+            };
+        }).change();
+    });
+</script>
+{% endblock %}

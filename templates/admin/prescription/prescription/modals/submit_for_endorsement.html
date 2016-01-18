@@ -1,0 +1,25 @@
+{% extends "admin/base_modal.html" %}
+{% load i18n %}
+
+{% block modal_id %}id_submit_for_endorsement{% endblock %}
+
+{% block modal_header_text %}Submit for endorsement{% endblock %}
+
+{% block modal_body %}
+  {% if not current.can_endorse %}
+  <div class="alert alert-error">
+      <strong>Warning!</strong> Please ensure all areas have been completed before seeking endorsement. <a href="{% url 'admin:prescription_prescription_summary' current.pk %}">Edit Prescription.</a>
+  </div>
+  {% else %}
+  <p>Are you sure you wish to submit this ePFP for endorsement?</p>
+  <form action="{% url 'admin:prescription_prescription_endorse' current.pk %}" method="post">{% csrf_token %}
+    <input type="submit" id="id_submit_for_endorsement_form_submit" value="{% trans 'Submit' %}" class="btn btn-primary hide" name="_save"/>
+  </form>
+  {% endif %}
+{% endblock %}
+
+{% block modal_btn_close_label %}{% trans 'Cancel' %}{% endblock %}
+
+{% block modal_btn_primary_label %}{% trans 'Submit' %}{% endblock %}
+
+{% block modal_btn_primary_onclick %}return document.getElementById('id_submit_for_endorsement_form_submit').click();{% endblock %}

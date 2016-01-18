@@ -1,0 +1,115 @@
+{% load staticfiles %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="description" content="{% block page_description %}{% endblock %}">
+  <meta name="author" content="{% block page_author %}{% endblock %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static "css/bootstrap.css" %}">
+  <link rel="stylesheet" href="{% static "css/bootstrap-responsive.css" %}">
+  <link rel="stylesheet" href="{% static "css/font-awesome.min.css" %}">
+  <link rel="stylesheet" href="{% static "css/fonts.css" %}">
+  <link rel="stylesheet" href="{% static "css/styles.css" %}">
+  <link rel="stylesheet" href="{% static "css/toastr.css" %}">
+  <link rel="stylesheet" href="{% static "css/fullcalendar.css" %}">
+
+  {% if LANGUAGE_BIDI %}<link rel="stylesheet" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}">{% endif %}
+  <script type="text/javascript">window.__admin_media_prefix__ = "{% filter escapejs %}{% static "admin/" %}{% endfilter %}";</script>
+  <script src="{% static 'js/jquery-1.9.1.min.js' %}"></script>
+  <script src="{% static 'js/jquery-ui.min.js' %}"></script>
+  <script src="{% static 'js/modernizr.js' %}"></script>
+  <script src="{% static 'js/bootstrap.min.js' %}"></script>
+  <script src="{% static 'js/fullcalendar.min.js' %}"></script>
+  <script src="{% static 'js/gcal.js' %}"></script>
+  <script src="{% static 'js/tasks.js' %}"></script>
+  {% block extrahead %}{% endblock %}
+
+</head>
+{% load i18n %}
+
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
+<div id="in-nav">
+  <div class="container">
+    <div class="row">
+      <div class="span12">
+      {% block branding %}{% endblock %}
+      {% if user.is_active and user.is_staff %}
+      <div id="user-tools" class="pull-right">
+            {% trans 'Welcome,' %}
+            <strong>{% filter force_escape %}{% firstof user.get_short_name user.get_username %}{% endfilter %}</strong>.
+            {% block userlinks %}
+                {% url 'django-admindocs-docroot' as docsroot %}
+                {% if docsroot %}
+                    <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /
+                {% endif %}
+                {% if user.has_usable_password %}
+                <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
+                {% endif %}
+                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+            {% endblock %}
+        </div>
+        {% endif %}
+        {% block nav-global %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="page-container">
+    <div class="container">
+    {% if not is_popup %}
+    <div class="row">
+      <div class="span12">
+        {% block breadcrumbs %}
+        <ul class="breadcrumb">
+          {{ breadcrumb_trail|safe }}
+        </ul>
+        {% endblock %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% block messages %}
+    {% if messages %}
+    <div class="row-fluid">
+      <div class="span12">
+        {% for message in messages %}
+        <div class="alert{% if message.tags %} alert-{{ message.tags }}{% endif %}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endblock %}
+    <div class="row">
+      {% block contentwrapper %}
+      {% block content %}
+      <div class="span3">
+        <div class="sidebar">
+        {% block sidebar %}{% endblock %}
+        </div>
+      </div>
+      <div class="span9">
+      </div>
+      {% endblock %}
+      {% endblock %}
+    </div>
+    </div>
+  </div>
+</div>
+{% block footer %}
+<footer class="footer">
+  <div class="container-fluid">
+    <div class="span12">
+    <p class="pull-right">&copy; 2013 Department of Environment and Conservation</p>
+    </div>
+  </div>
+</footer>
+{% endblock %}
+
+</body>
+</html>  

@@ -1,0 +1,272 @@
+[
+{
+  "pk": 1,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:17:06.373Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:22:46.153Z",
+    "completed_by": "",
+    "action": "Inspect, restore/re-open long and short distance trails and other visitor infrastructure",
+    "modifier": 1
+  }
+},
+{
+  "pk": 3,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:19:20.500Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:19:20.503Z",
+    "completed_by": "",
+    "action": "Traffic Management Plan (e.g.signs removed)",
+    "modifier": 1
+  }
+},
+{
+  "pk": 4,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:19:57.787Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:19:57.791Z",
+    "completed_by": "",
+    "action": "Hygiene Management Plan for P.c. (DEC) conditions met",
+    "modifier": 1
+  }
+},
+{
+  "pk": 5,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:20:11.976Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:20:11.981Z",
+    "completed_by": "",
+    "action": "MRWA Road opening Approval attained",
+    "modifier": 1
+  }
+},
+{
+  "pk": 6,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:20:25.278Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:20:25.281Z",
+    "completed_by": "",
+    "action": "Local Government Road opening Approval attained",
+    "modifier": 1
+  }
+},
+{
+  "pk": 7,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:20:35.604Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:20:35.607Z",
+    "completed_by": "",
+    "action": "Declared Rare Flora Permit conditions met",
+    "modifier": 1
+  }
+},
+{
+  "pk": 8,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:20:46.953Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:20:46.957Z",
+    "completed_by": "",
+    "action": "Post Burn Actions List completed",
+    "modifier": 1
+  }
+},
+{
+  "pk": 9,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:21:04.345Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:21:04.348Z",
+    "completed_by": "",
+    "action": "Road and Track rehabilitation completed/planned",
+    "modifier": 1
+  }
+},
+{
+  "pk": 10,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:21:14.985Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:21:14.989Z",
+    "completed_by": "",
+    "action": "Culverts operable",
+    "modifier": 1
+  }
+},
+{
+  "pk": 11,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:21:23.306Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:21:23.310Z",
+    "completed_by": "",
+    "action": "Hazardous trees checked and addressed",
+    "modifier": 1
+  }
+},
+{
+  "pk": 12,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:21:33.822Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:21:33.826Z",
+    "completed_by": "",
+    "action": "Water points operable",
+    "modifier": 1
+  }
+},
+{
+  "pk": 13,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:21:40.886Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:21:40.891Z",
+    "completed_by": "",
+    "action": "Fire and Weather Observations filed in Part D",
+    "modifier": 1
+  }
+},
+{
+  "pk": 14,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:21:49.656Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:21:49.660Z",
+    "completed_by": "",
+    "action": "Incendiary Operator Flight Log filed in Part D",
+    "modifier": 1
+  }
+},
+{
+  "pk": 15,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:22:02.388Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:22:02.391Z",
+    "completed_by": "",
+    "action": "Copies of Fire Diaries filed in Part D",
+    "modifier": 1
+  }
+},
+{
+  "pk": 16,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:22:13.099Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:22:13.103Z",
+    "completed_by": "",
+    "action": "Burn safe in accordance with FOG 24 where applicable to prescribed burn",
+    "modifier": 1
+  }
+},
+{
+  "pk": 17,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:22:21.661Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:22:21.665Z",
+    "completed_by": "",
+    "action": "Map of burn extent filed in Part D",
+    "modifier": 1
+  }
+},
+{
+  "pk": 18,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:22:29.702Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:22:29.706Z",
+    "completed_by": "",
+    "action": "Burn Evaluation complete",
+    "modifier": 1
+  }
+},
+{
+  "pk": 19,
+  "model": "report.postburnchecklist",
+  "fields": {
+    "relevant": true,
+    "prescription": null,
+    "completed_on": null,
+    "created": "2013-07-01T00:22:37.888Z",
+    "creator": 1,
+    "modified": "2013-07-01T00:22:37.892Z",
+    "completed_by": "",
+    "action": "Day of Burn Achievement Updates are complete",
+    "modifier": 1
+  }
+}
+]

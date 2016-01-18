@@ -1,0 +1,510 @@
+{% extends "admin/base_site.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  {% url 'admin:prescription_priorityjustification_changelist' as priority_justification %}
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_summary' current.id %}">Part A</a> <span class="divider">/</span></li>
+  <li>Section A1 &#x2010; Summary &amp; approval</li>
+</ul>
+{% endblock %}
+
+{% block extrahead %}{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/widgets.css" %}">
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+{{ media }}
+<style>
+    div#id_pageerrors.error {
+        background-color: #F2DEDE;
+        padding-top: 10px;
+        padding-left: 10px;
+        padding-bottom: 1px;
+        margin-bottom: 10px;
+    }
+    div.collapse,
+    div.collapse textarea {
+        width: 99%;
+    }
+    hr.id_purposes_hr {
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block contentwrapper %}
+{% url 'admin:prescription_priorityjustification_changelist' current.id as priority_justification %}
+<div class="row">
+<div class="span12">
+<h1>Summary &amp; Approval</h1>
+{% if current.is_draft or perms.prescription.can_admin %}
+<div id="id_pageerrors"><span id="id__all__"></span></div>
+<form action="" method="post">{% csrf_token %}
+<table class="table table-bordered table-striped table-condensed">
+    <tbody>
+        <tr>
+            <th class="cbas">Burn ID *</th>
+            <td colspan="3" class="cbas">{{ current.burn_id }}</td>
+        </tr>
+        <tr>
+            <th class="cbas">Name *</th>
+            <td colspan="3" class="cbas">
+                {% if current.planning_status == current.PLANNING_DRAFT or perms.prescription.can_admin %}
+                    {{ form.form.name }}
+                {% else %}
+                    {{ current.name }}
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th class="cbas">Description <br/>(leave blank to auto-generate)</th>
+            <td colspan="3" class="cbas">
+                {% if current.planning_status == current.PLANNING_DRAFT or perms.prescription.can_admin %}
+                    {{ form.form.description }}
+                {% else %}
+                    {{ current.description }}
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th class="cbas">Planned burn <br>financial year *</th>
+            <td class="cbas">
+            {% if current.planning_status == current.PLANNING_DRAFT or perms.prescription.can_admin %}
+                {{ form.form.financial_year }}
+            {% else %}
+                {{ current.financial_year }}
+            {% endif %}</td>
+            {% if current.planning_status == current.PLANNING_DRAFT or perms.prescription.can_admin %}
+            <th class="cbas">Last burnt season<br><br><br>Last burnt year</th>
+                <td class="cbas">
+                {{ form.form.last_season }} or last burnt season unknown? {{ form.form.last_season_unknown }}<br><br>
+                {{ form.form.last_year }} or last burnt year unknown? {{ form.form.last_year_unknown }}
+            {% else %}
+                <th class="cbas">Last burnt season<br>Last burnt year</th>
+                <td class="cbas">
+                {{ current.last_season_burnt }}<br>{{ current.last_year_burnt }}
+            {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th class="cbas">Region *</th>
+            <td class="cbas">
+              {{ current.region }} {{ form.form.region.as_hidden }}
+            </td>
+            <th class="cbas">District *</th>
+            <td class="cbas">
+              {{ current.district }} {{ form.form.district.as_hidden }}
+            </td>
+        </tr>
+        <tr>
+            <th>Location *</th>
+            <td colspan="3">
+            {% if current.is_draft or perms.prescription.can_admin %}
+                <span>You must enter/select a value in all fields.<br>Alternatively, if entering only a locality (first input field), location will be stored as "Within the locality of ____"</span><br>
+                {{ form.form.location }}
+                <span id="id_location" class="hidden"></span>
+            {% else %}
+                {{ current.location_text }}
+            {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Forest Blocks (if applicable)</th>
+            <td colspan="3">{{ form.form.forest_blocks }}</td>
+        </tr>
+        <tr>
+            <th>Overall Priority *</th>
+            {% if current.planning_status == current.PLANNING_DRAFT or perms.prescription.can_admin %}
+                <td id="id_td_priority">{{ form.form.priority }}</td>
+            {% else %}
+                <td id="id_td_priority">{{ current.priority }}</td>
+            {% endif %}
+            <th>Overall Rationale *</th>
+            {% if current.planning_status == current.PLANNING_DRAFT or perms.prescription.can_admin %}
+                <td id="id_td_rationale">{{ form.form.rationale }}</td>
+            {% else %}
+                <td id="id_td_rationale">{{ current.rationale }}</td>
+            {% endif %}
+        </tr>
+        <tr>
+            <th class="cbas">Contentious *</th>
+            <td class="cbas">
+            {% if current.planning_status == current.PLANNING_DRAFT or perms.prescription.can_admin %}
+                {{ form.form.contentious }}
+            {% else %}
+                {{ current.contentious|yesno:"Yes,No," }}
+            {% endif %}
+            </td>
+            <th class="cbas">Contentious Rationale</th>
+            <td class="cbas">
+            {% if current.planning_status == current.PLANNING_DRAFT or perms.prescription.can_admin %}
+                {{ form.form.contentious_rationale }}
+            {% else %}
+                {{ current.contentious_rationale }}
+            {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Aircraft burn *</th>
+            <td>{{ form.form.aircraft_burn }}</td>
+            <th>Remote sensing priority *</th>
+            <td>{{ form.form.remote_sensing_priority }}</td>
+        </tr>
+        <tr>
+            <th>Burn Purpose(s) *</th>
+            <td colspan="3">
+                <span id="id_burn_purpose_text_note">Burn purpose text must be updated for Biodiversity Management, Bushfire Risk Management and Vegetation Management purposes.
+                    <br>All other purposes will use the default text as per Appendix 4 in the Prescribed Fire Manual.</span>
+                <hr class="id_purposes_hr">
+                {{ form.form.purposes }}<input id="id_purposes" type="hidden"></input>
+            </td>
+        </tr>
+        <tr>
+            <th>Planned Burn Area (ha) *</th>
+            <td>{{ form.form.area }}</td>
+            <th>Perimeter/Length (kms) *</th>
+            <td>{{ form.form.perimeter }}</td>
+        </tr>
+        <tr>
+            <th>Burn Tenure(s)</th>
+            <td colspan="3">{{ form.form.tenures }}<input id="id_tenures" type="hidden"></input></td>
+        </tr>
+        <tr>
+            <th>Fuel Type(s)</th>
+            <td colspan="3">{{ form.form.fuel_types }}<input id="id_fuel_types" type="hidden"></input></td>
+        </tr>
+        <tr>
+            <th>Shire(s)</th>
+            <td colspan="3">{{ form.form.shires }}<input id="id_shires" type="hidden"></input></td>
+        </tr>
+        <tr>
+            <th>Forecast Area(s)</th>
+            <td colspan="3">{{ form.form.forecast_areas }}<input id="id_forecast_areas" type="hidden"></input></td>
+        </tr>
+        <tr>
+            <th>Bushfire Act Zone *</th>
+            <td colspan="1">{{ form.form.bushfire_act_zone }}</td>
+            <th>Estimate of the planned area<br>that will be treated (%) *</th>
+            <td>{{ form.form.treatment_percentage }}</td>
+        </tr>
+        <tr>
+            <th>Prohibited Period</th>
+            <td colspan="3">{{ form.form.prohibited_period }}</td>
+        </tr>
+        <tr>
+            <th>Prescribing Officer</th>
+            <td>{{ form.form.prescribing_officer }}</td>
+            <th>Shortcode</th>
+            <td>{{ form.form.short_code }}</td>
+        </tr>
+    </tbody>
+</table>
+<table class="table table-bordered table-striped table-condensed">
+    <thead>
+        <tr>
+            <th id="id_fundingallocation_set-__all__">Program allocation(s) *</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- This is the new formsets for PBS-1551 -->
+        {{ formset.management_form }}
+        {% for fundform in formset %}
+        <tr>
+            {{ fundform.id  }}
+            <td class="hide"> {{ fundform.prescription }}</td>
+            <th> Allocation code </th>
+            <td >{{ fundform.allocation }}</td>
+            <th> Proportion of funding [%] </th>
+            <td >{{ fundform.proportion }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class="navbar navbar-fixed-bottom">
+  <div class="navbar-inner">
+    <div class="container">
+        <a id="id_save_button" href="#" class="btn pull-right btn-success">{% trans 'Save' %}</a>
+    </div>
+  </div>
+</div>
+</form>
+{% else %}
+<table class="table table-bordered table-striped table-condensed">
+    <tbody>
+        <tr>
+            <th class="cbas">Burn ID *</th>
+            <td colspan="3" class="cbas">{{ current.burn_id }}</td>
+        </tr>
+        <tr>
+            <th class="cbas">Name *</th>
+            <td colspan="3" class="cbas">{{ current.name }}</td>
+        </tr>
+        <tr>
+            <th class="cbas">Description <br/>(leave blank to auto-generate)</th>
+            <td colspan="3" class="cbas">{{ current.description }}</td>
+        </tr>
+        <tr>
+            <th class="cbas">Planned burn <br>financial year *</th>
+            <td class="cbas">{{ current.season }}</td>
+            <th class="cbas">Last burnt season<br>Last burnt year</th>
+            <td class="cbas">{{ current.last_season_burnt }}<br>{{ current.last_year_burnt }}</td>
+        </tr>
+        <tr>
+            <th class="cbas">Region *</th>
+            <td class="cbas">{{ current.region }}</td>
+            <th class="cbas">District *</th>
+            <td class="cbas">{{ current.district }}</td>
+        </tr>
+        <tr>
+            <th>Location *</th>
+            <td colspan="3">{{ current.location_text }}</td>
+        </tr>
+        <tr>
+            <th>Forest Blocks (if applicable)</th>
+            <td colspan="3">{{ current.forest_blocks }}</td>
+        </tr>
+        <tr>
+            <th>Overall Priority *</th>
+            <td id="id_td_priority">{{ current.get_priority_display }}</td>
+            <th>Overall Rationale *</th>
+            <td id="id_td_rationale">{{ current.rationale }}</td>
+        </tr>
+        <tr>
+            <th class="cbas">Contentious *</th>
+            <td class="cbas">{{ current.contentious|yesno:"Yes,No" }}</td>
+            <th class="cbas">Contentious Rationale</th>
+            <td class="cbas">{{ current.contentious_rationale }}</td>
+        </tr>
+        <tr>
+            <th>Aircraft burn *</th>
+            <td>{{ current.aircraft_burn|yesno:"Yes,No" }}</td>
+            <th>Remote sensing priority *</th>
+            <td>{{ current.remote_sensing_priority }}</td>
+        </tr>
+        <tr>
+            <th>Burn Purpose(s) *</th>
+            <td colspan="3">{{ current.purposes.all|join:", " }}</td>
+        </tr>
+        <tr>
+            <th>Program allocations *</th>
+            <td>{{ current.allocations }}</td>
+            <th>Percentage of the planned area<br>that will be treated (%) *</th>
+            <td>{{ current.treatment_percentage }}</td>
+        </tr>
+        <tr>
+            <th>Planned Burn Area (ha) *</th>
+            <td>{{ current.area }}</td>
+            <th>Perimeter/Length (kms) *</th>
+            <td>{{ current.perimeter }}</td>
+        </tr>
+        <tr>
+            <th>Burn Tenure(s)</th>
+            <td colspan="3">{{ current.tenures.all|join:", " }}</tr>
+        <tr>
+            <th>Fuel Type(s)</th>
+            <td colspan="3">{{ current.fuel_types.all|join:", " }}</td>
+        </tr>
+        <tr>
+            <th>Shire(s)</th>
+            <td colspan="3">{{ current.shires.all|join:", " }}</td>
+        </tr>
+        <tr>
+            <th>Forecast Area(s)</th>
+            <td colspan="3">{{ current.forecast_areas.all|join:", " }}</td>
+        </tr>
+        <tr>
+            <th>Bushfire Act Zone *</th>
+            <td colspan="3">{{ current.bushfire_act_zone }}</td>
+        </tr>
+        <tr>
+            <th>Prohibited Period</th>
+            <td colspan="3">{{ current.prohibited_period }}</td>
+        </tr>
+        <tr>
+            <th>Prescribing Officer</th>
+            <td>{{ current.prescribing_officer }}</td>
+            <th>Shortcode</th>
+            <td>{{ current.short_code }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endif %}
+<table class="table table-bordered table-striped table-condensed">
+    <tbody>
+        <tr>
+            <th>Date Created</th>
+            <td>{{ current.created }}</td>
+            <th>Date Last Saved</th>
+            <td>{{ current.modified }}</td>
+        </tr>
+        <tr>
+            <th>Risk Level</th>
+            <td>{{ current.maximum_risk_html }}</td>
+            <th>Complexity Rating</th>
+            <td>{{ current.maximum_complexity }}</td>
+        </tr>
+        <tr>
+            <th>Endorsement Status</th>
+            <td colspan="3">{{ current.get_endorsement_status_display }}</td>
+        </tr>
+        <tr>
+            <th>Approval Status</th>
+            <td colspan="3">{{ current.get_approval_status_display }}</td>
+        </tr>
+        <tr>
+            <th>Planning Status</th>
+            <td colspan="3">{{ current.get_planning_status_display }}</td>
+        </tr>
+        <tr>
+            <th>Ignition Status</th>
+            <td colspan="3">{{ current.get_ignition_status_display }}</td>
+        </tr>
+        <tr>
+            <th>Burn Closure Status</th>
+            <td colspan="3">{{ current.get_status_display }}</td>
+        </tr>
+    </tbody>
+</table>
+</div>
+</div>
+<script>
+
+// Add id attr to error object to link to input field
+function addElementID(error, idx, errors) {
+    var newError = {};
+    var prefix = "id_fundingallocation_set-";
+    for (var field in error) {
+        var text = error[field][0];
+        if (idx > 3) { // These are the non-form errors
+            newError = {
+                id: prefix + "__all__",
+                msg: text
+            };
+        } else {  // GC: Force field because django outputs __all__ for some reason
+            if (field === "__all__") {field = "proportion"};
+            newError = {
+                id: prefix + parseInt(idx) + "-" + field,
+                msg: text
+            };
+        }
+    }
+    return newError;
+}
+
+// Add error styles
+function highlight(error, idx, errors) {
+    if (Object.keys(error).length > 0) {
+        var icon = $("<i>").addClass('icon-warning-sign');
+        var para = $('<p>')  // The order of these operations is important!
+            .text(error.msg)
+            .prepend(icon)
+            .addClass('text-error');
+        $("#" + error.id)
+            .parent()
+            .addClass('error')
+            .append(para);
+    }
+}
+var ajaxPost = function(evt) {
+    // First remove all existing error messages.
+    viewPort.save();
+    $('p').remove('.text-error');
+    $('[id^=id_]').parent().removeClass('error');
+    $('div#id_pageerrors').removeClass('error alert alert-success').text('');
+    $('#id_biodiversity_text').parent().removeClass('alert-error').addClass('alert-info');
+    $('#id_bushfire_risk_text').parent().removeClass('alert-error').addClass('alert-info');
+    $('#id_vegetation_text').parent().removeClass('alert-error').addClass('alert-info');
+    select_to_values();
+    var target = $(evt.target);
+    var request = $.ajax({
+        type: "POST",
+        url: "",
+        dataType: "json",
+        data: $('form').serialize()
+    });
+    request.done(function(data) {
+        if ($('#id_td_rationale').text() == "None ‐ Edit"){
+            $('#id_td_rationale').addClass('error').append($('<p>').text(
+                'Overall rationale must be set. Click the Edit link to navigate ' +
+                'to the Priority Justification page to update it. Note that this will ' +
+                'discard any unsaved changes on this screen.').prepend(
+                    $('<i>').addClass('icon-warning-sign')).addClass('text-error'));
+        }
+        if ($('#id_td_priority').text() == "Unset ‐ Edit"){
+            $('#id_td_priority').addClass('error').append($('<p>').text(
+                'Overall priority must be set. Click the Edit link to navigate ' +
+                'to the Priority Justification page to set it. Note that this will ' +
+                'discard any unsaved changes on this screen.').prepend(
+                    $('<i>').addClass('icon-warning-sign')).addClass('text-error'));
+        }
+        if (data.errors) {
+            console.log(data);
+            $('div#id_pageerrors')
+                .addClass('error')
+                .append($('<p>')
+                        .text('Please correct the errors below.')
+                        .prepend(
+                            $('<i>')
+                                 .addClass('icon-warning-sign'))
+                        .addClass('text-error'));
+            if (data.errors) {
+                for (var error in data.errors) {
+                var errors = [];
+                var targetField = $('[id$=' + error + ']');
+                    errors.push(
+                        $('<p>')
+                            .text(' ' + data.errors[error].join(", "))
+                            .prepend($('<i>')
+                                     .addClass('icon-warning-sign'))
+                            .addClass('text-error'));
+                targetField.parent().addClass('error').append(errors);
+                }
+            };
+            if (data.formset_errors){
+                data.formset_errors.map(addElementID).forEach(highlight);
+            };
+        } else {
+            $('div#id_pageerrors').addClass('alert alert-success').text(
+                ' ' + data.message).prepend($('<i>').addClass('icon-ok'));
+        };
+        viewPort.update();
+    });
+};
+
+$(function() {
+    $('input#id_last_year_unknown').change(function() {
+    this.checked ? $(this).siblings('#id_last_year')
+        .val('').attr('disabled','disabled') :
+    $(this).siblings('#id_last_year')
+        .removeAttr('disabled');
+    }).change();
+
+     $('input#id_last_season_unknown').change(function() {
+    this.checked ? $(this).siblings('#id_last_season')
+        .val('').attr('disabled','disabled') :
+    $(this).siblings('#id_last_season')
+        .removeAttr('disabled');
+    }).change();
+
+    $('a#id_save_button').click(function(e) {
+        ajaxPost(e);
+    });
+});
+
+var select_to_values = function() {
+        $('select').each(function(e) {
+        if ($(this).attr('id').indexOf('_to') != -1) {
+            // We have a filter_horizontal widget - we need to special case
+            // the submit of this.
+            var id = $(this).attr('id').split('_');
+            id = id.splice(1, id.length-2).join('_');
+            $("#id_" + id + "_to").children('option').prop("selected", "selected");
+        }
+    });
+};
+
+ </script>
+<script src="{% static 'js/view-port.js' %}"></script>
+{% endblock %}

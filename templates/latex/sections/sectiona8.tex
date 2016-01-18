@@ -1,0 +1,50 @@
+{% load prescription_tags %}
+{% get_required_role prescription as required_role %}
+{% with prescription.current_approval as approval %}
+\section{Section A8 - Approval}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section A8 last modified} \textit{% templatetag openbrace %}{{prescription.approval_status_modified|default:""}}}\quad\textbf{PDF Created On} \textit{% templatetag openbrace %}{{ timestamp }}}}
+{% if prescription.is_approved %}
+{This approval is current for \textbf{% templatetag openbrace %}{{ prescription.season }}} and valid until \textbf{ {{ prescription.current_approval.valid_to }}}}\\
+{% endif %}
+\begin{tabu} to \linewidth { | X | X | }
+\hline
+\multicolumn{2}{|l|}{\textbf{% templatetag openbrace %}{{ required_role }}}} \\
+\hline
+\multicolumn{2}{|p{17cm}|}{
+{% if prescription.carried_over %}
+I am satisfied that the content of this re-scheduled ePFP has been
+reviewed and is accurate and current.
+
+{% endif %}
+{% if required_role == 'ePFP Application Administrator' %}
+I confirm that I have noted the advice of the District/Regional Manager. I
+have reviewed the assessed level of bushfire-related risk for the area
+concerned, the primary objectives of the burn, the risk register for the burn,
+the burn implementation plan and relevant supporting information and have
+formed the view - that as prescribed, the risk is as low as reasonably
+practicable, and (for other than a scientific, vegetation management or
+silviculture burn) the level of bushfire-related risk for the burn area
+concerned (or for another area to which this burn relates) is likely to
+increase if this burn does not proceed as planned.
+
+Accordingly, I approve the plan for implementation.
+{% else %}
+I confirm that the persons who have prepared this plan and have provided the
+above endorsements are competent and authorised to do so and I confirm that
+the plan has been prepared in accordance with the DPaW procedure for planning
+Prescribed Burns.
+
+The level of risk associated with the plan is within my authority to approve
+and accordingly, I approve the plan for implementation.
+{% endif %}
+} \\
+\hline
+\textbf{Approved by {{ approval.creator.get_full_name }}} & \textbf{Valid to {{ approval.valid_to }}} \\
+\hline
+\end{tabu}
+{% if current_approval.extension_count > 0 %}
+\newline
+This approval has been extended \textbf{% templatetag openbrace %}{{ prescription.current_approval.extension_count }}} time{{ prescription.current_approval.extension_count|pluralize }} from its initial expiry date of \textbf{% templatetag openbrace %}{{ prescription.current_approval.initial_valid_to }}}, with the last extension being done by \textbf{% templatetag openbrace %}{{ prescription.current_approval.modifier.get_full_name }}} on \textbf{% templatetag openbrace %}{{ prescription.current_approval.modified }}}
+{% endif %}
+{% endwith %}
+\clearpage

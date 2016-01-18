@@ -1,0 +1,59 @@
+{% load pbs_tags %}
+\section{Section A2 - Risk Management Context Statement}
+\fancyfoot[L]{ SECTION A2 - RISK MANAGEMENT CONTEXT SUMMARY\newline\textbf{Section A2 last modified}\textit{ {{ prescription.complexities.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\subsection{Description of Burn}
+\begin{flushleft}
+{{ prescription.description|texify }}
+\end{flushleft}
+\subsection{Purposes of Burn}
+\begin{itemize}
+{% for purpose in prescription.purposes.all %}
+\item{% templatetag openbrace %}{{purpose.name}}}
+{% endfor %}
+\end{itemize}
+\subsection{Regional Fire Management Plan Objectives}
+The following objectives of the Regional Fire Management Plan have been considered in preparing this burn plan
+{% for objective in prescription.regional_objectives.all %}
+\paragraph{ {{ objective.region }}\textsl{ {% if objective.impact == 2 %}({{ objective.fma_names }}){% endif %} } }
+{{ objective.objectives|texify }}
+{% empty %}
+No Regional Fire Management Plan Objectives Selected
+{% endfor %}
+\subsection{Context Statement}
+\begin{flushleft}
+{% for context in prescription.context_set.all %}
+\textbf{Statement}
+\quad\textbf{ {{ context.get_category_display }} } \\
+{{ context.statement|texify|safe }} \\
+\end{flushleft}
+{% empty %}
+No context statements have been defined.
+{% endfor %}
+\clearpage
+\subsection{Critical Stakeholders}
+\begin{longtabu} to \linewidth { | X[0.6] | X[0.8] | X | }
+\hline
+\textbf{Name} & \textbf{Organisation} & \textbf{Source of Interest} \\
+\hline
+{% for stakeholder in prescription.criticalstakeholder_set.all %}
+\textbf{ {{ stakeholder.name|texify|safe }}} & {{ stakeholder.organisation|texify|safe }} & {{ stakeholder.interest|texify|safe }} \\
+\hline
+{% empty %}
+\multicolumn{3}{|X|}{No Critical Stakeholders} \\
+\hline
+{% endfor %}
+\end{longtabu}
+{% filter_by_tag_name current.document_set "context map" as context_maps %}
+\subsection{Context Map}
+{% if context_maps %}
+All context maps associated with the burn have been inserted on the following pages.
+\clearpage
+{% for document in context_maps %}
+  {% if document %}
+    {% include "latex/pdf.tex" with topsummary=True %}
+  {% endif %}
+{% endfor %}
+{% else %}
+No Document Uploaded
+{% endif %}
+\clearpage

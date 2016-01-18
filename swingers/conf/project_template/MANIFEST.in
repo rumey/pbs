@@ -1,0 +1,8 @@
+include AUTHORS README.rst LICENSE
+
+recursive-include {{ project_name }} *
+recursive-include docs *
+
+recursive-exclude docs/_build *
+recursive-exclude django_symlink
+recursive-exclude * *.py[co]

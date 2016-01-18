@@ -1,0 +1,56 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_post_summary' current.id %}">Part C</a> <span class="divider">/</span></li>
+  <li>Section C4 &#x2010; Post burn checklist</li>
+</ul>
+{% endblock %}
+
+{% block object-tools %}{% endblock %}
+
+{% block content_title %}
+<h1>Post Burn Checklist</h1>
+{% endblock %}
+
+{% block content %}
+{% if current.is_approved %}
+{{ block.super }}
+{% else %}
+<div class="alert clearfix">
+    <strong>Warning!</strong> In order to edit this section, the ePFP needs to be approved.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block post-pagination %}
+{{ block.super }}
+<script>
+    $(function() {
+    $('#result_list').addClass('table-fixed-header');
+    $('#result_list thead').addClass('header');
+    $('.table-fixed-header').fixedHeader();
+    $('#action-toggle').remove();
+    $('td:contains("Copies of Fire Diaries filed in Part D")').siblings().children('input[id$=relevant]').prop('disabled', true);
+    $('td:contains("Burn safe in accordance with FOG 24 where applicable to prescribed burn")').siblings().children('input[id$=relevant]').prop('disabled', true);
+    $('td:contains("Map of burn extent filed in Part D")').siblings().children('input[id$=relevant]').prop('disabled', true);
+    $('td:contains("Burn Evaluation complete")').siblings().children('input[id$=relevant]').prop('disabled', true);
+    $('td:contains("Day of Burn Achievement Updates are complete")').siblings().children('input[id$=relevant]').prop('disabled', true);
+    $('form').bind('submit', function() {
+        $('td:contains("Copies of Fire Diaries filed in Part D")').siblings().children(
+            'input[id$=relevant]').removeAttr('disabled');
+        $('td:contains("Burn safe in accordance with FOG 24 where applicable to prescribed burn")').siblings().children(
+            'input[id$=relevant]').removeAttr('disabled');
+        $('td:contains("Map of burn extent filed in Part D")').siblings().children(
+            'input[id$=relevant]').removeAttr('disabled');
+        $('td:contains("Burn Evaluation complete")').siblings().children(
+            'input[id$=relevant]').removeAttr('disabled');
+        $('td:contains("Day of Burn Achievement Updates are complete")').siblings().children(
+            'input[id$=relevant]').removeAttr('disabled');
+    });
+  });
+</script>
+{% endblock %}

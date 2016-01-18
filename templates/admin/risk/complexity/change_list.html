@@ -1,0 +1,58 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block extrahead %}
+{{ block.super }}
+  <script>
+    $(function() {
+      {% if cl.result_list and 'factor' not in request.GET %}
+      Array.max = function(array) {
+        return Math.max.apply(Math, array);
+      };
+
+      function displayMaxComplexity() {
+        var complexities = $('select').map(function() {
+          return $(this).val();
+        }).get();
+        var names = {
+          '0': 'Unrated',
+          '1': 'Not applicable',
+          '2': 'Low',
+          '3': 'Medium',
+          '4': 'High'
+        };
+        return names[Array.max(complexities)];
+      }
+
+      $('select').change(function() {
+          $('p#max_complexity > strong').text(displayMaxComplexity());
+      });
+
+      $('h1#title').after(
+          '<p id="max_complexity">Maximum rating: <strong>' +
+          displayMaxComplexity() +
+          '</strong></p>');
+      {% endif %}
+    });
+  </script>
+  <style>
+      #result_list tbody tr td:first-child {
+          padding-left: 30px;
+      }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_summary' current.id %}">Part A</a> <span class="divider">/</span></li>
+  <li>Section A5 &#x2010; Prescribed Burn Complexity Analysis Summary</li>
+</ul>
+{% endblock %}
+
+{% block content_title %}
+<h1 id="title">Prescribed Burn Complexity Analysis Summary</h1>
+{% endblock %}
+
+{% block object-tools %}{% endblock %}

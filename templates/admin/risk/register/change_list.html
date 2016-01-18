@@ -1,0 +1,185 @@
+{% extends "admin/change_list.html" %}
+{% load i18n staticfiles admin_list pbs_list %}
+
+{% block extrahead %}
+{{ block.super }}
+  <script>
+    $(function() {
+        var changelist = $("table#result_list");
+        var actionnav = $("ul#actionnav");
+        window.draftRisks = function() {
+            $("span#currentPresOverallRisk").html("{{ current.max_risk_draft|capfirst }}");
+            $("span#currentLevelOfRiskLabel").html("Draft");
+        };
+        window.finalRisks = function() {
+            $("span#currentPresOverallRisk").html("{{ current.max_risk }}");
+            $("span#currentLevelOfRiskLabel").html("Overall");
+        };
+        // add label to the .empty-form row
+        $('tr#form-empty td select[id$=likelihood]').parent().next().append('<span class="label label-very-high">Very High</span>');
+        // make sure new row's risk calculates
+        $('table#result_list').on('click', 'tr.add-row a', function() {
+            console.log('test');
+            $('tr#form-empty').prev().find('select').change();
+        });
+
+        var max_risk = 1;
+        var calc_max_risk_val = function() {
+            var max_risk_val = 1;
+            var max_risk_span = $('span#id_max_risk');
+            max_risk_span.removeClass("label-very-low label-low label-medium label-high label-very-high");
+            // get all rows except for .empty-form row
+            var rowspans = $('table#result_list > tbody > tr:not(.empty-form) > td > span.label');
+            rowspans.each(function(index,span){
+                var spanobj = $(span);
+                var label = spanobj.text();
+                if (label == risk_labels[0][1]) {
+                    if (risk_labels[0][0] > max_risk_val){
+                        max_risk_val = risk_labels[0][0];
+                    };
+                } else if (label == risk_labels[1][1]) {
+                    if (risk_labels[1][0] > max_risk_val){
+                        max_risk_val = risk_labels[1][0];
+                    };
+                } else if (label == risk_labels[2][1]) {
+                    if (risk_labels[2][0] > max_risk_val){
+                        max_risk_val = risk_labels[2][0];
+                    };
+                } else if (label == risk_labels[3][1]) {
+                    if (risk_labels[3][0] > max_risk_val){
+                        max_risk_val = risk_labels[3][0];
+                    };
+                } else {
+                    if (risk_labels[4][0] > max_risk_val){
+                        max_risk_val = risk_labels[4][0];
+                    };
+                };
+            });
+            max_risk_span.text(risk_labels[max_risk_val-1][1]);
+            var label = max_risk_span.text();
+            if (label == risk_labels[0][1]) {
+                max_risk_span.addClass("label-very-low");
+            } else if (label == risk_labels[1][1]) {
+                max_risk_span.addClass("label-low");
+            } else if (label == risk_labels[2][1]) {
+                max_risk_span.addClass("label-medium");
+            } else if (label == risk_labels[3][1]) {
+                max_risk_span.addClass("label-high");
+            } else {
+                max_risk_span.addClass("label-very-high");
+            };
+
+        };
+        var risk_matrix = {% dump_json cl.model.RISK_MATRIX %};
+        var risk_labels = {% dump_json cl.model.LEVEL_CHOICES %};
+        var calc_risk = function (likelihood, consequence) {
+            return risk_labels.filter(function(val) {
+                return val[0] == risk_matrix[likelihood - 1][consequence - 1]
+            })[0][1]
+        };
+        $('tr input[type=checkbox]:checked').change(function() {
+            calc_max_risk_val();
+        });
+        $('table#result_list').on('change', 'select', function() {
+            var row = $(this).parents("tr");
+            var likelihood = row.find("select[id$=likelihood]").val();
+            var consequence = row.find("select[id$=consequence]").val();
+            var label = calc_risk(likelihood, consequence);
+            row.find('span.label').text(label).removeClass("label-very-low label-low label-medium label-high label-very-high");
+            if (label == risk_labels[0][1]) {
+                row.find('span.label').addClass("label-very-low");
+            } else if (label == risk_labels[1][1]) {
+                row.find('span.label').addClass("label-low");
+            } else if (label == risk_labels[2][1]) {
+                row.find('span.label').addClass("label-medium");
+            } else if (label == risk_labels[3][1]) {
+                row.find('span.label').addClass("label-high");
+            } else {
+                row.find('span.label').addClass("label-very-high");
+            };
+            calc_max_risk_val();
+        });
+        /*
+        if ($('table#result_list > tbody > tr > td > span.label').length > 0){
+            // the final risks page does not have any checkboxes any more
+            calc_max_risk_val();
+        };
+        */
+    });
+  {% url 'admin:risk_register_changelist' current.id as risk_register %}
+  {% if request.get_full_path == risk_register and current.endorsement_status == current.ENDORSEMENT_DRAFT and current.can_corporate_approve %}
+  (function($) {
+    $(function() {
+      $("#result_list tbody tr").tabularFormset({
+        prefix: "{{ cl.formset.prefix }}",
+        adminStaticPrefix: '{% static "admin/" %}',
+        addText: '<i class="icon-plus"></i> Add another risk register item'
+      });
+    });
+  })(django.jQuery);
+  {% endif %}
+
+  </script>
+  <style>
+    .column-risk {
+      width: 20%;
+    }
+
+    .column-all_treatments ul {
+        list-style: none;
+        margin: 0;
+    }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_summary' current.id %}">Part A</a> <span class="divider">/</span></li>
+  <li>Section A6 &#x2010; Prescribed burn risk register</li>
+</ul>
+{% endblock %}
+
+{% block pretitle %}
+<ul class="nav nav-tabs">
+    <li><a href="{% url 'admin:risk_context_changelist' current.id %}"><i class="icon-legal"></i> Risk management context statement</a></li>
+    <li><a href="{% url 'admin:stakeholder_criticalstakeholder_changelist' current.id %}"><i class="icon-user"></i> Critical stakeholders</a></li>
+    <li><a href="{% url 'admin:risk_action_changelist' current.id %}"><i class="icon-legal"></i> Actions</a></li>
+    <li class="active"><a href="{% url 'admin:risk_register_changelist' current.id %}"><i class="icon-warning-sign"></i> Risk register</a></li>
+</ul>
+{% endblock %}
+
+{% block content_title %}
+{% url 'admin:risk_register_changelist' current.id as risk_register %}
+<h1>Prescribed Burn Risk Register</h1>
+<h4><i class="icon-warning-sign"></i> <strong>
+    <span id="currentLevelOfRiskLabel">
+        {% if request.get_full_path == risk_register %}
+            Draft ePFP Risk Level is </strong>
+            {{ current.maximum_draft_risk_html }}
+        {% elif request.get_full_path == risk_register|add:"?section=final" %}
+            Final ePFP Risk Level is </strong>
+            {{ current.maximum_risk_html }}
+        {% endif %}
+</h4>
+
+
+
+<ul id="actionnav" class="nav nav-pills">
+  <li{% if request.get_full_path == risk_register %} class="active"{% endif %}><a href="{% url 'admin:risk_register_changelist' current.id %}">Initial risk assessment</a></li>
+  <li{% if request.get_full_path == risk_register|add:"?section=final" %} class="active"{% endif %}><a href="{% url 'admin:risk_register_changelist' current.id %}?section=final">Treatments & final risk assessment</a></li>
+</ul>
+<h5>Refer to APPENDIX 11 (page 103) of the Prescribed Fire Manual for the Prescribed Burn Risk Tables.
+<a class="btn pull-right btn-small btn-info" href="https://fmsb.dpaw.wa.gov.au/doctrine/manuals" target="_blank"><i class='icon-download-alt'></i> Download the Prescribed Fire Manual</a></h5>
+{% if not current.can_corporate_approve %}
+<div class="alert clearfix">
+    <strong>Warning!</strong> In order to edit this section, you need to complete all Corporate information.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block object-tools %}{% endblock %}
+
+{% block filters %}{% endblock %}
+{% block contentclass %}span12{% endblock %}

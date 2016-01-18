@@ -1,0 +1,223 @@
+{% extends "admin/base_site.html" %}
+
+{% load prescription_tags %}
+
+{% block content %}
+<style>
+.filter-pad {
+  margin-top: 5px;
+  margin-bottom: -17px !important;
+  margin-left: 10px;
+}
+.adjust-legend{
+  margin-bottom:-40px;
+}
+
+.ui-datepicker {
+    width: 216px;
+    height: auto;
+    margin: 5px auto 0;
+    font: 9pt Arial, sans-serif;
+    -webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, .5);
+    -moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, .5);
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, .5);
+    background-color: #FFF;
+}
+</style>
+
+{% if report == "summary" or report == "approvals" %}
+<div class="row">
+  <div class="span8 filter-top-pad">
+  </div>
+  <div class="span3 adjust-legend" >
+    <table class="table table-compressed table-bordered table-striped">
+      <tbody>
+        <tr>
+          <th colspan="2">Legend</th>
+        </tr>
+        <tr>
+          <td>Required but not completed</td>
+          <td><i class="icon-warning-sign text-error"></i></td>
+        </tr>
+        {% if report == "summary" %}
+        <tr>
+          <td>Required and completed</td>
+          <td><i class="icon-ok text-success"></i></td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<ul id="report-tabs" class="nav nav-tabs">
+    <li id="summary-tab"  "{% if report == "summary" %} class="active"{% endif %}>
+        <a href="{% url 'admin:endorse_authorise_summary' %}?report=summary">
+            <i class="icon-tag"></i>
+            Endorsements
+        </a>
+    </li>
+    <li id="approvals-tab" {% if report == "approvals" %} class="active"{% endif %}>
+        <a href="{% url 'admin:endorse_authorise_summary' %}?report=approvals">
+            <i class="icon-plus"></i>
+            Approvals
+        </a>
+    </li>
+    <li id="ignitions-tab"  "{% if report == "ignitions" %} class="active"{% endif %}>
+        <a href="{% url 'admin:endorse_authorise_summary' %}?report=ignitions">
+            <i class="icon-fire"></i>
+            Ignitions
+        </a>
+    </li>
+    {% if report == "summary" or report == "approvals" %}
+        <li class="filter-pad">
+            <form class="form-inline">
+                <label for="id_region" class="control-label">Region</label>
+                {{ form.region }}
+                <label for="id_district" class="control-label">District</label>
+                {{ form.district }}
+                <button type="submit" class="btn btn-primary">Update</button>
+                {% if report == "approvals" %}
+                    <input class="hidden" name="report" value="approvals">
+                {% endif %}
+            </form>
+        </li>
+    {% else %}
+        <p align="right">
+            <a id="id_href" href="">
+                <button id="id_csv" class="csv_btn btn-primary">Export As CSV</button></a></p>
+    <li class="filter-pad">
+        <form class="form-inline">
+            <label for="id_fromDate" class="control-label">From Date</label>
+            <input type="text" id="id_fromDate" value="{{fromDate}}" name="fromDate"/>
+            <label for="id_toDate" class="control-label">To Date</label>
+            <input type="text" id="id_toDate" value="{{toDate}}" name="toDate"/>
+            <button id="submit" class="btn btn-primary">Update</button>
+            <input class="hidden" name="report" value="ignitions">
+        </form>
+    </li>
+    {% endif %}
+</ul>
+
+{% if report == "ignitions" %}
+<table id="burns-table" class="table table-striped table-hover table-compressed">
+  <thead>
+    <tr>
+      <th><div class="text-center">Region</div></th>
+      <th><div class="text-center">Burns completed</div></th>
+      <th><div class="text-center">Burns commenced</div></th>
+      <th><div class="text-center">Burn area (ha)</div></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for burn in burns %}
+    <tr>
+      <td><div class="text-center">{{burn.0}}</div></td>
+      <td><div class="text-center">{{burn.1}}</div></td>
+      <td><div class="text-center">{{burn.2}}</div></td>
+      <td><div class="text-center">{{burn.3}}</div></td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="17">There are no burns 'commenced' or 'completed' in the date range specified.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if report == "summary" or report == "approvals" %}
+<table id="sorted-table" class="table table-striped table-hover table-compressed">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      {% if report == "approvals" %}
+        <th><div class="text-center">District Manager</div></th>
+        <th><div class="text-center">Regional Manager</div></th>
+        <th><div class="text-center">FMS Branch Representative</div></th>
+      {% else %}
+        <th>District Leader PVS</th>
+        <th>Regional Leader PVS</th>
+        <th>District Leader NC</th>
+        <th>Regional Leader NC</th>
+        <th>District Leader SFM</th>
+        <th>Regional Leader SFM</th>
+        <th>District Fire Coordinator</th>
+        <th>Regional Fire Coordinator</th>
+        <th>District Manager</th>
+        <th>Regional Manager</th>
+        <th>FMS Branch Representative</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for prescription in prescriptions %}
+    <tr>
+      <td><a href="{% url 'admin:prescription_prescription_detail' prescription.id %}">{{ prescription.burn_id }}</a></td>
+      <td>{{ prescription.name }}</td>
+      {% if report == "approvals" %}
+      <td>{% if prescription.maximum_risk == 'Low' %}<div class="text-center"><i class="icon-warning-sign text-error"></i></div>{% endif %}</td>
+      <td>{% if prescription.maximum_risk == 'Medium' %}<div class="text-center"><i class="icon-warning-sign text-error"></i></div>{% endif %}</td>
+      <td>{% if prescription.maximum_risk == 'High' %}<div class="text-center"><i class="icon-warning-sign text-error"></i></div>{% endif %}</td>
+      {% else %}
+      <td>{% role_required prescription "District Program Leader - Parks and Visitor Services" %}</td>
+      <td>{% role_required prescription "Regional Program Leader - Parks and Visitor Services" %}</td>
+      <td>{% role_required prescription "District Program Leader - Nature Conservation" %}</td>
+      <td>{% role_required prescription "Regional Program Leader - Nature Conservation" %}</td>
+      <td>{% role_required prescription "District Program Leader - Sustainable Forest Management" %}</td>
+      <td>{% role_required prescription "Regional Program Leader - Sustainable Forest Management" %}</td>
+      <td>{% role_required prescription "District Fire Coordinator" %}</td>
+      <td>{% role_required prescription "Regional Fire Coordinator" %}</td>
+      <td>{% role_required prescription "District Manager" %}</td>
+      <td>{% role_required prescription "Regional Manager" %}</td>
+      <td>{% role_required prescription "FMS Branch Representative" %}</td>
+      {% endif %}
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="17">There are no burns requiring {% if report == "approvals" %}approval{% else %}endorsement{% endif %}.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<script>
+
+$(function(){
+
+    $("#sorted-table").tablesorter();
+    $("#burns-table tr:contains('Total')").css("font-weight","bold");
+
+    $("#id_fromDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
+    $("#id_toDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
+
+    $("#id_toDate").change(function () {
+      var fromDate = $("#id_fromDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
+      var toDate = $("#id_toDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
+      if ( ($.datepicker.parseDate('dd-mm-yy', fromDate)) >  $.datepicker.parseDate('dd-mm-yy', toDate))  {
+        alert("'From Date' cannot be after 'To Date' ");
+      }
+    });
+
+    $("#id_fromDate").change(function () {
+      var fromDate = $("#id_fromDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
+      var toDate = $("#id_toDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
+      if ( ($.datepicker.parseDate('dd-mm-yy', fromDate)) >  $.datepicker.parseDate('dd-mm-yy', toDate))  {
+        alert("'From Date' cannot be after 'To Date' ");
+      }
+    });
+
+    $("#id_csv").click(function () {
+      var fromDate = $("#id_fromDate").val();
+      var toDate = $("#id_toDate").val();
+      var urlStr = '?fromDate=' + fromDate + '&toDate=' + toDate + '&Export_CSV=export_csv'
+      $("#id_href").attr("href", urlStr);
+    });
+
+});
+
+</script>
+{% endblock %}

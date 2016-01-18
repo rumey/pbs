@@ -1,0 +1,18 @@
+
+Contribute
+----------
+
+* Join the *dpaw* mailing list, or read the archives, at
+  http://groups.google.com/group/dpaw/.
+
+* Report bugs, ideas for new features, etc., at our issue tracker
+  https://bitbucket.org/dpaw/{{ project_name }}/issues/
+
+* Help develop *{{ project_name }}*: ::
+
+     hg clone https://bitbucket.org/dpaw/{{ project_name }}/
+     python setup.py develop
+     python setup.py test
+
+  * We prefer patches submitted via pull requests, at
+    https://bitbucket.org/dpaw/{{ project_name }}/pull-requests/

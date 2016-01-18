@@ -1,0 +1,173 @@
+[
+{
+  "pk": 730,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2011-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T00:02:34.568Z",
+    "start": "2010-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+},
+{
+  "pk": 731,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2012-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T00:02:34.568Z",
+    "start": "2011-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+},
+{
+  "pk": 732,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2013-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T00:02:34.568Z",
+    "start": "2012-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+},
+{
+  "pk": 733,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2014-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T17:02:34.568Z",
+    "start": "2013-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+},
+{
+  "pk": 734,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2015-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T17:02:34.568Z",
+    "start": "2014-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+},
+{
+  "pk": 735,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2016-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T17:02:34.568Z",
+    "start": "2015-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+},
+{
+  "pk": 736,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2017-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T17:02:34.568Z",
+    "start": "2016-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+},
+{
+  "pk": 737,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2018-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T17:02:34.568Z",
+    "start": "2017-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+},
+{
+  "pk": 738,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2019-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T17:02:34.568Z",
+    "start": "2018-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+},
+{
+  "pk": 739,
+  "model": "prescription.season",
+  "fields": {
+    "end": "2020-06-30",
+    "name": 8,
+    "created": "2015-06-29T00:02:34.567Z",
+    "creator": [
+      "admin"
+    ],
+    "modified": "2015-06-29T17:02:34.568Z",
+    "start": "2019-07-01",
+    "modifier": [
+      "admin"
+    ]
+  }
+}
+
+]

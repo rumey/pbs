@@ -1,0 +1,166 @@
+{% extends "admin/base_site.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li>{% if current.planning_status == current.PLANNING_DRAFT %}Submit for corporate approval{% else %}Apply corporate approval{% endif %}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+{% if current.planning_status == current.PLANNING_DRAFT %}
+<h1>Submit for Corporate Approval</h1>
+{% if not current.can_corporate_approve %}
+<div class="alert alert-error">
+    <i class="icon-warning-sign"></i>
+    Please complete any mandatory Corporate Burn Attributes before submitting for corporate approval.<br>
+    They are highlighted in the tables in red below.<br>
+    <a href="{{ sectiona1 }}">Click here to navigate to Section A1 - Summary & approval.</a>
+</div>
+{% endif %}
+<div class="alert alert-error">
+    <i class="icon-warning-sign"></i>
+    <strong>Are you sure you wish to submit this to Corporate Executive?</strong><br>
+    This will lock the information in the table below and will prevent further modification of this information for the remainder of the ePFP process.
+</div>
+<form action="" method="post">{% csrf_token %}
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <th>Burn ID</th>
+      <td>{{ current.burn_id }}</td>
+    </tr>
+    <tr>
+      <th>Burn Name</th>
+      <td>{{ current.name }}</td>
+    </tr>
+    <tr>
+      <th>Description</th>
+      <td>{{ current.description }}</td>
+    </tr>
+    <tr>
+      <th>Region</th>
+      <td>{{ current.region }}</td>
+    </tr>
+    <tr>
+      <th>District</th>
+      <td>{{ current.district }}</td>
+    </tr>
+    <tr>
+      <th>Year</th>
+      <td width="80%">{{ current.financial_year }}</td>
+    </tr>
+    <tr{% if not current.last_year_unknown and not current.last_year %} class="error"{% endif %}>
+      <th>Year last burnt</th>
+      <td>{% if current.last_year_unknown %}Unknown{% elif current.last_year %}{{ current.last_year }}{% else %}Last year burnt is a required field unless marked as unknown.{% endif %}</td>
+    </tr>
+    <tr{% if not current.last_season_unknown and not current.last_season %} class="error"{% endif %}>
+      <th>Season last burnt</th>
+      <td>{% if current.last_season_unknown %}Unknown{% elif current.last_season %}{{ current.last_season }}{% else %}Last season burnt is a required field unless marked as unknown.{% endif %}</td>
+    </tr>
+    {% if current.contentious %}
+    <tr>
+      <th>Contentious burn</th>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <th>Contentious rationale</th>
+      <td>{{ current.contentious_rationale }}</td>
+    </tr>
+    {% elif current.contentious == False %}
+    <tr>
+      <th>Contentious burn</th>
+      <td>No</td>
+    </tr>
+    {% else %}
+    <tr class="error">
+      <th>Contentious burn</th>
+      <td>Contentious burn is a required field and must be either Yes or No.</td>
+    </tr>
+    {% endif %}
+  </tbody>
+</table>
+<hr>
+<div class="alert alert-info">
+    The following Corporate Burn Attributes will be submitted for approval but will not be locked.
+</div>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <th>Aircraft burn</th>
+      <td width="80%">{% if current.aircraft_burn %}Yes{% else %}No{% endif %}</td>
+    </tr>
+    <tr{% if not current.priorityjustification_set.all %} class="error"{% endif %}>
+      <th>Purposes</th>
+      <td>{% if current.purposes.all %}
+          <ul>
+          {% for purpose in current.purposes.all %}
+            <li>{{ purpose }}</li>
+          {% endfor %}
+          </ul>
+          {% else %}This ePFP must contain at least one burn purpose.{% endif %}</td>
+    </tr>
+    <tr{% if not current.remote_sensing_priority %} class="error"{% endif %}>
+      <th>Remote Sensing Priority</th>
+      <td>{% if current.remote_sensing_priority %}{{ current.get_remote_sensing_priority_display }}{% else %}Remote sensing priority is a required field.{% endif %}</td>
+    </tr>
+    <tr{% if not current.treatment_percentage %} class="error"{% endif %}>
+      <th>Treatment percentage</th>
+      <td>{% if current.treatment_percentage %}{{ current.treatment_percentage }}%{% else %}The treatment percentage must be between 1 and 100.{% endif %}</td>
+    </tr>
+    <tr{% if not current.area %} class="error"{% endif %}>
+      <th>Planned burn area</th>
+      <td>{% if current.area %}{{ current.area }} ha{% else %} Planned burn area is a required field.{% endif %}</td>
+    </tr>
+    <tr{% if not current.perimeter %} class="error"{% endif %}>
+      <th>Perimeter</th>
+      <td>{% if current.perimeter %}{{ current.perimeter }} km{% else %}Perimeter is a required field.{% endif %}</td>
+    </tr>
+    <tr{% if not current.location %} class="error"{% endif %}>
+      <th>Location</th>
+      <td>{% if current.location %}{{ current.location_text }}{% else %}Location is a required field.{% endif %}</td>
+    </tr>
+    <tr{% if not current.priority %} class="error"{% endif %}>
+      <th>Burn priority</th>
+      <td>{{ current.get_priority_display }}</td>
+    </tr>
+    <tr{% if not current.allocations %} class="error"{% endif %}>
+      <th>Program allocation(s)</th>
+      <td>{% if not current.allocations %}Program allocation(s) is a required field.{% else %}{{  current.allocations }}{% endif %}</td>
+    </tr>
+  </tbody>
+</table>
+{% load i18n admin_urls %}
+<div class="form-actions">
+  <input type="submit" value="{% trans 'Submit' %}" class="btn btn-primary" name="_save"/>
+  <input type="submit" value="{% trans 'Go back' %}" class="btn" name="_cancel"/>
+</div>
+</form>
+{% else %}
+
+  {% if not current.has_corporate_approval %}
+    <h4>Apply Corporate Approval</h4>
+    <p>Do you wish to apply corporate approval to this ePFP? This will prevent further modification of this information for the remainder of the ePFP process.</p>
+    <form action="" method="post">{% csrf_token %}
+    {% load i18n admin_urls %}
+    <div class="form-actions">
+      <input type="submit" value="{% trans 'Submit' %}" class="btn btn-primary" name="_save"/>
+      <input type="submit" value="{% trans 'Go back' %}" class="btn" name="_cancel"/>
+    </div>
+    </form>
+  {% else %}
+    <h4>Delete Corporate Approval</h4>
+    <p>Do you wish to delete the corporate approval to this ePFP? This will return the ePFP to Draft status.</p>
+    <form action="" method="post">{% csrf_token %}
+    {% load i18n admin_urls %}
+    <div class="form-actions">
+      <input type="submit" value="{% trans 'Delete' %}" class="btn btn-primary" name="_delete"/>
+      <input type="submit" value="{% trans 'Go back' %}" class="btn" name="_cancel"/>
+    </div>
+    </form>
+  {% endif %}
+
+{% endif %}
+{% endblock %}

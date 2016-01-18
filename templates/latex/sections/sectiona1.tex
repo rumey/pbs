@@ -1,0 +1,60 @@
+\section{Section A1 - Burn Summary}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section A1 last modified}\textit{ {{ prescription.modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+\subsubsection{Burn Summary}
+\begin{tabu} to \linewidth { | X | X | X | X | }
+\hline
+\textbf{Planned burn\newline financial year} & {{ prescription.financial_year }} & \textbf{Season / year last burnt} & {% if prescription.last_season_unknown %}Unknown{% else %}{{ prescription.last_season|texify }}{% endif %} / {% if prescription.last_year_unknown %}Unknown{% else %}{{ prescription.last_year|texify }}{% endif %} \\
+\textbf{Burn ID} & {{ prescription.burn_id|texify }} & \textbf{Burn Name} & {{ prescription.name|texify }} \\
+\textbf{Region} & {{ prescription.region }} & \textbf{District} & {{ prescription.district }} \\
+\textbf{Contentious} & {% if prescription.contentious %}Yes{% else %}No{% endif %} & \textbf{Aircraft Burn} & {% if prescription.aircraft_burn %}Yes{% else %}No{% endif %} \\
+\textbf{Program Allocation} & {{ prescription.allocations|texify }} & \textbf{Burn Priority} & {{ prescription.get_priority_display }} \\
+\tabucline{2-4}
+\textbf{Burn Purposes} &
+\multicolumn{3}{p{\dimexpr 3\tabucolX+3\tabcolsep+\arrayrulewidth\relax}|}{
+{% for pj in prescription.priorities %}{{ pj.purpose }}{% if not forloop.last %}, {% endif %}{% endfor %}
+} \\
+\tabucline{2-4}
+\textbf{Remote Sensing} & {{ prescription.get_remote_sensing_priority_display }} & \textbf{Treatment \%} & {{ prescription.treatment_percentage }} \% \\
+\textbf{Planned Burn Area (ha)} & {{ prescription.area }} ha & \textbf{Perimeter/length (kms)} & {{ prescription.perimeter }} kms \\
+\tabucline{2-4}
+\textbf{Location} & \multicolumn{3}{l|}{% templatetag openbrace %}{{ prescription.location_text|texify|safe }} } \\
+\tabucline{2-4}
+\textbf{Date Created} & {{ prescription.created }} & \textbf{Date Last Saved} & {{ prescription.modified }} \\
+\textbf{Burn Risk} & {{ prescription.maximum_risk }} & \textbf{Complexity Rating} & {{ prescription.maximum_complexity }} \\
+\textbf{Tenure} &
+{% for tenure in prescription.tenures.all %} {{ tenure|texify|safe }}{% if not forloop.last %}, {% endif %}{% empty %}No Tenure Selected{% endfor %}
+& \textbf{Fuel Type(s)} &
+{% for fuel_type in prescription.fuel_types.all %} {{ fuel_type|texify|safe }}{% if not forloop.last %}, {% endif %}{% empty %}Not recorded{% endfor %} \\
+\textbf{Bushfire Act Zone} & {{ prescription.bushfire_act_zone|texify }} & \textbf{Prohibited Period} & {{ prescription.prohibited_period }} \\
+\tabucline{2-4}
+\textbf{Shire/s} &
+\multicolumn{3}{p{\dimexpr 3\tabucolX+3\tabcolsep+\arrayrulewidth\relax}|}{
+{{ prescription.shire_str }}
+}\\
+\tabucline{2-4}
+\textbf{Fire Weather Forecast Areas} &
+{% for area in prescription.forecast_areas.all %} {{ area }}{% if not forloop.last %}, {% endif %}{% empty %}No Forecast Areas{% endfor %}
+& \textbf{Prescribing Officer} & {% firstof prescription.prescribing_officer.get_full_name "No Prescribing Officer" %} \\
+\textbf{Endorsement Status} & {{ prescription.get_endorsement_status_display }} & \textbf{Approval Status} & {{ prescription.get_approval_status_display }} \\
+\textbf{Planning Status} & {{ prescription.get_planning_status_display }} & \textbf{Ignition Status} & {{ prescription.get_ignition_status_display }} \\
+\textbf{Burn Closure Status} & {{ prescription.get_status_display }} & \textbf{Shortcode} & {% firstof prescription.short_code "No Shortcode" %} \\
+\hline
+\end{tabu}
+\vfill
+\subsubsection{Part A Stage of Completion}
+\begin{tabu} to \linewidth { | X[l] | X[c] | }
+\hline
+\textbf{Contents} & \textbf{Status} \\
+\hline
+\textbf{Burn Summary} & {{ prescription.pre_state.get_summary_display }} \\
+\textbf{Risk Management Context Statement} & {{ prescription.pre_state.get_context_statement_display }} \\
+\textbf{Context Map} & {{ prescription.pre_state.get_context_map_display }} \\
+\textbf{Burn Objectives} & {{ prescription.pre_state.get_objectives_display }} \\
+\textbf{Success Criteria} & {{ prescription.pre_state.get_success_criteria_display }} \\
+\textbf{Burn Priority Justification} & {{ prescription.pre_state.get_priority_justification_display }} \\
+\textbf{Complexity Analysis Summary} & {{ prescription.pre_state.get_complexity_analysis_display }} \\
+\textbf{Risk Register} & {{ prescription.pre_state.get_risk_register_display }} \\
+\hline
+\end{tabu}
+\vfill
+\clearpage

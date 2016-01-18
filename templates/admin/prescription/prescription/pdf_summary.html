@@ -1,0 +1,78 @@
+{% extends "admin/base_site.html" %}
+{% load i18n staticfiles admin_list %}
+{% load counter_tags %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  {% url 'admin:prescription_priorityjustification_changelist' as priority_justification %}
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}">{{ current.burn_id }}</a> <span class="divider">/</span></li>
+  <li>PDFs Created</li>
+</ul>
+{% endblock %}
+
+{% block extrahead %}{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/widgets.css" %}">
+{% endblock %}
+
+{% block contentwrapper %}
+
+<button id ="refresh" class="btn btn-medium btn-primary" type="button" style="float: right;">Refresh</button>
+
+{% counter_from 1 as counter %}
+<h1>PDF Files for {{ current.burn_id }}</h1>
+<table class="table table-bordered table-striped table-condensed">
+  <thead>
+    <tr>
+      <th scope="col"></th>
+      <th scope="col">File</th>
+      <th scope="col">Size</th>
+      <th scope="col">Expiry</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for file in fex_file_list %}
+    {% if current.burn_id in file.0 %}
+    <tr>
+      <td>{{ counter }}</td>
+      <td><a href="{{file.1}}">{{ file.0 }}</a></td>
+      <td>{{ file.2 }}</a></td>
+      <td>{{ file.3 }}</a></td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+
+{% counter_from 1 as counter %}
+<h1>Other ePFP PDF Files</h1>
+<table class="table table-bordered table-striped table-condensed">
+  <thead>
+    <tr>
+      <th scope="col"></th>
+      <th scope="col">File</th>
+      <th scope="col">Size</th>
+      <th scope="col">Expiry</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for file in fex_file_list %}
+    {% if current.burn_id not in file.0 %}
+    <tr>
+      <td>{{ counter }}</td>
+      <td><a href="{{file.1}}">{{ file.0 }}</a></td>
+      <td>{{ file.2 }}</a></td>
+      <td>{{ file.3 }}</a></td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<script>
+$('#refresh').click(function() {
+    location.reload();
+});
+</script>
+{% endblock %}

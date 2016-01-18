@@ -1,0 +1,463 @@
+{% load staticfiles %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="description" content="{% block page_description %}{% endblock %}">
+  <meta name="author" content="{% block page_author %}{% endblock %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static "css/bootstrap.css" %}">
+  <link rel="stylesheet" href="{% static "css/bootstrap-responsive.css" %}">
+  <link rel="stylesheet" href="{% static "css/font-awesome.min.css" %}">
+  <link rel="stylesheet" href="{% static "css/tablecloth.css" %}">
+  <link rel="stylesheet" href="{% static "css/bootstrap-multiselect.css" %}">
+
+  <link rel="stylesheet" href="{% static "css/fonts.css" %}">
+  <link rel="stylesheet" href="{% static "css/styles.css" %}">
+  <link rel="stylesheet" href="{% static "pbs/css/styles.css" %}">
+  <link rel="stylesheet" href="{% static "css/animate.css" %}">
+  <link rel="stylesheet" href="{% static "css/jquery-ui-1.11.4.min.css" %}">
+  <link rel="shortcut icon" type="image/png" href="{{STATIC_URL}}favicon.ico"/>
+  {% block extrastyle %}{% endblock %}
+
+  {% if LANGUAGE_BIDI %}<link rel="stylesheet" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}">{% endif %}
+  <script src="{% static 'js/jquery-1.9.1.min.js' %}"></script>
+  <script src="{% static 'js/jquery-ui-1.11.4.min.js' %}"></script>
+  <script src="{% static 'js/modernizr.js' %}"></script>
+  <script src="{% static 'js/bootstrap.min.js' %}"></script>
+  <script src="{% static 'js/fullcalendar.min.js' %}"></script>
+  <script src="{% static 'js/gcal.js' %}"></script>
+  <script src="{% static 'js/tasks.js' %}"></script>
+  <script src="{% static 'js/jquery.metadata.js' %}"></script>
+  <script src="{% static 'js/jquery.tablesorter.min.js' %}"></script>
+  <script src="{% static 'js/jquery.tablecloth.js' %}"></script>
+  <script src="{% static 'js/jquery-ui-datepicker-1.11.1.min.js' %}"></script>
+  <script src="{% static 'js/jquery.cookie.js' %}"></script>
+  <script src="{% static 'js/jquery.blockui.js' %}"></script>
+  <script src="{% static 'js/bootstrap-growl.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap-multiselect.js' %}"></script>
+
+  <script src="{% static 'pbs/js/is-number.js' %}" type="text/javascript"></script>
+  <script>
+      window.__admin_media_prefix__ = "{% filter escapejs %}{% static "admin/" %}{% endfilter %}";
+      // fix standard addrelated popup closure
+      var SelectBox = SelectBox || {
+          add_to_cache: function() {},
+          redisplay: function() { window.location.reload(true); }
+      };
+      $(function() {
+          $("li.dropdown li.active").parents("li.dropdown").addClass("active");
+          function textAreaAdjust(o) {
+              o.target.style.height = "1.5em";
+              if (o.target.scrollHeight > $(o.target).height()) {
+                o.target.style.height = "1px";
+                o.target.style.height = (25 + o.target.scrollHeight) + "px";
+              }
+          }
+          //$("textarea").keyup(textAreaAdjust).keyup();
+          $("body").on('keyup', 'textarea', textAreaAdjust);
+          $("body textarea").keyup();
+
+          // Check browser features/version (below test fails on firefox 3.6/ie8)
+          // May need subcheck for mobile browsers?
+          /*var testEl = $("div.unsupported").show();
+          var viewport = $(window);
+          testEl.css({
+            width: "100vw"
+          });
+          var difference = testEl.width() - viewport.width();
+          if (Math.round(difference) == 0 || window.indexedDB) {
+             $("div.unsupported").hide();
+          } else {
+             $("div.unsupported").show();
+          };*/
+      });
+  </script>
+  {% block extrahead %}{% endblock %}
+
+</head>
+{% load i18n %}
+{% url 'admin:index' as home %}
+{% url 'admin:prescription_prescription_changelist' as all_prescriptions %}
+{% if current %}
+{% url 'admin:prescription_prescription_sitemap' current.id as sitemap %}
+{% url 'admin:prescription_prescription_detail' current.id as overview %}
+{% url 'admin:document_document_add' current.id as upload_document %}
+{% url 'admin:prescription_prescription_download' current.id as download_pdf %}
+{% url 'admin:prescription_prescription_summary' current.id as parta %}
+{% url 'admin:prescription_prescription_pre_summary' current.id as sectiona1 %}
+{% url 'admin:prescription_prescription_pdf_summary' current.id as pdf_view %}
+{% url 'admin:risk_context_changelist' current.id as sectiona2 %}
+{% url 'admin:risk_complexity_changelist' current.id as sectiona5 %}
+{% url 'admin:risk_register_changelist' current.id as sectiona6 %}
+{% url 'admin:prescription_prescription_day_summary' current.id as partb %}
+{% url 'admin:implementation_roadsegment_changelist' current.id as sectionb3_roads %}
+{% url 'admin:implementation_trailsegment_changelist' current.id as sectionb3_trails %}
+{% url 'admin:document_document_tag' current.id 'sign_inspection_and_surveillance_form' as sectionb3_inspection %}
+{% url 'admin:document_document_tag' current.id 'operations_officer_day_of_burn_checklist' as sectionb9 %}
+{% url 'admin:document_document_tag' current.id 'fire_and_weather_observations' as sectionb10 %}
+
+{% url 'admin:prescription_prescription_post_summary' current.id as post_summary %}
+{% url 'admin:prescription_objective_changelist' current.id as objectives_url %}
+{% url 'admin:prescription_successcriteria_changelist' current.id as success_criteria %}
+{% url 'admin:prescription_priorityjustification_changelist' current.id as priority_justification %}
+{% url 'admin:risk_contingency_changelist' current.id as contingency %}
+{% url 'admin:risk_action_changelist' current.id as actions %}
+{% url 'admin:implementation_operationaloverview_changelist' current.id as operational_overview %}
+{% url 'admin:implementation_burningprescription_changelist' current.id as burning_prescription %}
+{% url 'admin:implementation_edgingplan_changelist' current.id as edging_plan %}
+{% url 'admin:implementation_lightingsequence_changelist' current.id as lighting_sequence %}
+{% url 'admin:implementation_exclusionarea_changelist' current.id as exclusion_area %}
+{% url 'admin:document_document_tag' current.id 'prescribed_burning_organisational_structure_and_communications_plan' as org_structure %}
+{% url 'admin:document_document_tag' current.id 'operations_map' as operations_map %}
+{% url 'admin:document_document_tag' current.id 'aerial_burn_map' as aerial_burn_map %}
+{% url 'admin:document_document_tag' current.id 'smeac' as smeac %}
+{% url 'admin:document_document_all' current.id as documents %}
+{% url 'admin:prescription_briefingchecklist_changelist' current.id as briefing_checklist %}
+{% url 'admin:report_areaachievement_changelist' current.id as area_achievement %}
+{% url 'admin:prescription_prescription_post_summary' current.id as partc %}
+{% url 'admin:report_evaluation_changelist' current.id as evaluation %}
+{% url 'admin:report_proposedaction_changelist' current.id as proposed_action %}
+{% url 'admin:report_postburnchecklist_changelist' current.id as post_burn_checklist %}
+{% url 'admin:stakeholder_criticalstakeholder_changelist' current.id as critical_stakeholders %}
+{% url 'admin:stakeholder_publiccontact_changelist' current.id as public_contacts %}
+{% url 'admin:stakeholder_notification_changelist' current.id as notifications %}
+{% endif %}
+{% block body %}
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
+{% if not is_popup %}
+<div class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar-inner">
+    {% if not user.is_anonymous %}
+    {% block topnavbar_content %}
+    <div class="container">
+      {% if current %}
+      <ul class="nav">
+        <li><a href="{% url 'admin:prescription_prescription_detail' current.id %}"><b>{{ current.burn_id }}</b> - {{ current.name }} ({{ current.season }})</a></li>
+        <li><a {% if request.path == sitemap %} class="top-header-active"{% endif %}href="{{ sitemap }}">Sitemap</a></li>
+      </ul>
+      {% endif %}
+      <div id="first-nav" class="nav-collapse collapse navbar-responsive-collapse">
+      <ul class="nav pull-right">
+        <li>
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+            {% trans 'Welcome,' %}
+            <strong>{% filter force_escape %}{% firstof user.get_short_name user.get_username %}{% endfilter %}</strong>.
+            <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu">
+          {% block userlinks %}
+          {% url 'django-admindocs-docroot' as docsroot %}
+          {% if docsroot %}
+            <li><a href="{{ docsroot }}">{% trans 'Help' %}</a></li>
+          {% endif %}
+          {% if perms.auth.change_user %}
+            <li><a href="{% url 'admin:auth_user_changelist' %}">Manage Users</a></li>
+          {% endif %}
+          {% if perms.prescription.change_regionalobjective %}
+            <li><a href="{% url 'admin:prescription_regionalobjective_changelist' %}">Manage RFMPs</a></li>
+          {% endif %}
+          {% url 'password_change' as password_change %}
+          {% if user.profile.is_fpc_user and password_change %}
+            <li><a href="{{ password_change }}">{% trans 'Change password' %}</a></li>
+          {% endif %}
+            <li><a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a></li>
+          {% endblock %}
+          </ul>
+        </li>
+      </ul>
+      <ul class="nav pull-right">
+      {% block nav-global %}{% endblock %}
+      {% if user.is_active %}
+        <li><a href="{% url 'admin:profile' %}">Home Location:
+        {% if request.user.profile.region and request.user.profile.district %}
+        <b>{{ request.user.profile.region }}, {{ request.user.profile.district }}</b>
+        {% elif request.user.profile.region and not request.user.profile.district %}
+        <b>{{ request.user.profile.region }}</b>
+        {% elif not request.user.profile.region and request.user.profile.district %}
+                        <b>{{ request.user.profile.district }}</b>
+                    {% else %}
+                        Click to set.
+                    {% endif %}
+                    </a></li>
+                {% endif %}
+           </ul>
+          </div>
+    </div>
+    {% endblock topnavbar_content %}
+    {% endif %}
+  </div>
+</div>
+<div class="topmast">
+  <div class="container">
+    <div class="masthead">
+      <div class="row-fluid">
+        <div class="span8">
+          <div class="agency-freespace">
+            <a class="brand pull-left">
+              <img src="{% static 'pbs/img/waTextBlack_80-bluebg.gif' %}" alt="Government of Western Australia" />
+            </a>
+            <h1 id="site-title" class="site-logo pull-left">
+                <img src="{% static 'pbs/img/logo-dpaw.gif' %}" alt="Department of Parks and Wildlife" />
+                Department of <br><strong>Parks and Wildlife</strong>
+            </h1>
+          </div>
+        </div>
+        {% block topsearch %}
+        <div class="span4 topsearch hidden-phone text-right">
+           <div class="hidden-phone">
+             <form action="{% url 'admin:prescription_prescription_changelist' %}" method="get" class="inline">
+               <div class="search input">
+                 <input name="q" id="mod-search-searchword" maxlength="20" class="input-large" type="text" size="20" placeholder="Search burn ID or name..." />
+               </div>
+             </form>
+           </div>
+        </div>
+        {% endblock topsearch %}
+      </div>
+    </div>
+  </div>
+</div>
+{% if not user.is_anonymous %}
+{% block navigation %}
+<div class="navbar" id="mainnav">
+  <div class="container">
+    <div class="pull-left visible-phone pad-5">
+      <form action="{% url 'admin:prescription_prescription_changelist' %}" method="get" class="inline">
+        <div class="search visible-phone form-search input">
+          <input name="q" id="mod-search-searchword" maxlength="20" class="input-medium" type="text" size="30" value="Search..."  onblur="if (this.value=='') this.value='Search...';" onfocus="if (this.value=='Search...') this.value='';" />
+        </div>
+      </form>
+    </div>
+    <a data-target=".nav-collapse" data-toggle="collapse" class="btn btn-navbar btn-inverse">
+      <i class="icon-menu"></i> Menu
+    </a>
+    <div class="navbar navbar-static-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target="#second-nav">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <div id="second-nav" class="nav-collapse collapse navbar-responsive-collapse">
+            <ul class="nav">
+              <li{% if request.path == all_prescriptions %} class="active"{% endif %}><a href="{{ all_prescriptions }}{% if request.user.profile.region %}?region__id__exact={{ request.user.profile.region.id }}{% endif %}"><i class="icon-fire"></i> Regional Overview</a></li>
+              {% url 'admin:prescription_prescription_add' as add_link %}
+              <li{% if request.path == add_link %} class="active"{% endif %}><a href="{{ add_link }}"><i class="icon-plus"></i> Create Prescribed Burn</a></li>
+              {% url 'admin:endorse_authorise_summary' as endorse_authorise_summary %}
+              <li{% if request.path == endorse_authorise_summary %} class="active"{% endif %}><a href="{{ endorse_authorise_summary }}"><i class="icon-dashboard"></i> Endorse/Authorise Summary</a></li>
+              {% url 'admin:epfp_review_summary' as epfp_review_summary %}
+              <li{% if request.path == epfp_review_summary %} class="active"{% endif %}><a href="{{ epfp_review_summary }}"><i class="icon-dashboard"></i> Day of Burn ePFP review</a></li>
+              {% if current %}
+            </ul>
+            <ul class="nav pull-right">
+              <li{% if request.path == overview %} class="active"{% endif %}><a href="{{ overview }}">
+                  ePFP overview</a></li>
+              <li id="summary-dropdown" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  <span class="label {% if current.pre_state.finished %}label-success{% else %}label-important{% endif %}">{{ current.pre_state.complete }}/{{ current.pre_state.total }}</span>
+                  Part A
+                  <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                  <li{% if request.path == parta %} class="active"{% endif %}><a href="{{ parta }}">Part A Summary</a></li>
+                  <li{% if request.path == sectiona1 %} class="active"{% endif %}><a href="{{ sectiona1 }}">A1 - Summary &amp; Approval</a></li>
+                  <li{% if request.path == sectiona2 %} class="active"{% endif %}><a href="{{ sectiona2 }}">A2 - Context Statement</a></li>
+                  <li{% if request.path == critical_stakeholders %} class="active"{% endif %}><a href="{{ critical_stakeholders }}">A2 - Critical Stakeholders</a></li>
+                  <li{% if request.path == objectives_url %} class="active"{% endif %}><a href="{{ objectives_url }}">A3 - Burn Objectives</a></li>
+                  <li{% if request.path == success_criteria %} class="active"{% endif %}><a href="{{ success_criteria }}">A3 - Success Criteria</a></li>
+                  <li{% if request.path == priority_justification %} class="active"{% endif %}><a href="{{ priority_justification }}">A4 - Priority Justification</a></li>
+                  <li{% if request.path == sectiona5 %} class="active"{% endif %}><a href="{{ sectiona5 }}">A5 - Complexity Analysis</a></li>
+                  <li{% if request.path == sectiona6 %} class="active"{% endif %}><a href="{{ sectiona6 }}">A6 - Risk Register</a></li>
+                </ul>
+              </li>
+              <li id="implementation-dropdown" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  <span class="label {% if current.day_state.finished %}label-success{% else %}label-important{% endif %}">{{ current.day_state.complete }}/{{ current.day_state.total }}</span>
+                  Part B
+                  <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                  <li{% if request.path == partb %} class="active"{% endif %}><a href="{{ partb }}">Part B Summary</a></li>
+                  <li{% if request.get_full_path == operational_overview %} class="active"{% endif %}><a href="{{ operational_overview }}">B1 - Operational Overview</a></li>
+                  <li{% if request.get_full_path == actions %} class="active"{% endif %}><a href="{{ actions }}">B1 - Plan Actions</a></li>
+                  <li{% if actions|add:"?pre_burn=true" in request.get_full_path %} class="active"{% endif %}><a href="{{ actions }}?pre_burn=true">B1 - Pre-burn actions</a></li>
+                  <li{% if actions|add:"?day_of_burn=true" in request.get_full_path %} class="active"{% endif %}><a href="{{ actions }}?day_of_burn=true">B2 - Day of burn actions</a></li>
+                  <li{% if request.path == sectionb3_roads %} class="active"{% endif %}><a href="{{ sectionb3_roads }}">B3 - Roads</a></li>
+                  <li{% if request.path == sectionb3_trails %} class="active"{% endif %}><a href="{{ sectionb3_trails }}">B3 - Tracks and Trails</a></li>
+                  <li{% if request.path == sectionb3_inspection %} class="active"{% endif %}><a href="{{ sectionb3_inspection }}">B3 - Sign Inspection & Surveillance</a></li>
+                  <li{% if request.path == burning_prescription %} class="active"{% endif %}><a href="{{ burning_prescription }}">B5 - Burning Prescription</a></li>
+                  <li{% if request.path == edging_plan %} class="active"{% endif %}><a href="{{ edging_plan }}">B5 - Edging Plan</a></li>
+                  <li{% if request.path == lighting_sequence%} class="active"{% endif %}><a href="{{ lighting_sequence }}">B5 - Lighting Sequence</a></li>
+                  <li{% if request.path == exclusion_area %} class="active"{% endif %}><a href="{{ exclusion_area }}">B5 - Areas to be Excluded from ignition</a></li>
+                  <li{% if request.path == contingency %} class="active"{% endif %}><a href="{{ contingency }}">B6 - Contingency Plan</a></li>
+                  <li{% if request.path == org_structure %} class="active"{% endif %}><a href="{{ org_structure }}">B7 - Organisational Structure</a></li>
+                  <li{% if request.path == briefing_checklist %} class="active"{% endif %}><a href="{{ briefing_checklist }}">B8 - Briefing Checklist (SMEACS)</a></li>
+                  <li{% if request.path == sectionb9 %} class="active"{% endif %}><a href="{{ sectionb9 }}">B9 - Operations Officer's Day of Burn Checklist</a></li>
+                      <li{% if request.path == sectionb10 %} class="active"{% endif %}><a href="{{ sectionb10 }}">B10 - Fire and Weather Observations</a></li>
+                  <li{% if request.path == area_achievement %} class="active"{% endif %}><a href="{{ area_achievement }}">B11 - DoB achievement update</a></li>
+                </ul>
+              </li>
+              <li id="closure-dropdown" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  <span class="label {% if current.post_state.finished %}label-success{% else %}label-important{% endif %}">{{ current.post_state.complete }}/{{ current.post_state.total }}</span>
+                  Part C
+                  <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                  <li{% if request.path == post_summary %} class="active"{% endif %}><a href="{{ post_summary }}">Part C Summary</a></li>
+                  <li{% if actions|add:"?post_burn=true" in request.get_full_path %} class="active"{% endif %}><a href="{{ actions }}?post_burn=true">C1 - Post burn actions</a></li>
+                  <li{% if request.path == evaluation %} class="active"{% endif %}><a href="{{ evaluation }}">C2 - Burn evaluation summary</a></li>
+                  <li{% if request.path == proposed_action %} class="active"{% endif %}><a href="{{ proposed_action }}">C3 - Lessons learned</a></li>
+                  <li{% if request.path == post_burn_checklist %} class="active"{% endif %}><a href="{{ post_burn_checklist }}">C4 - Post burn checklist</a></li>
+                  <li{% if request.path == burn_closure %} class="active"{% endif %}{% if not current.can_close or current.status == current.STATUS_CLOSED %} class="disabled"{% endif %}><a href="{% if current.can_close and current.status != current.STATUS_CLOSED %}{% url 'admin:prescription_prescription_close' current.pk %}{% else %}javascript:void(0);{% endif %}">{% if current.can_close %}{% if current.status == current.STATUS_CLOSED %}Burn closed{% else %}Close this burn{% endif %}{% else %}Burn closure unavailable{% endif %}</a></li>
+                </ul>
+              </li>
+              <li id="document-dropdown" class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">Part D<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li{% if request.path == documents %} class="active"{% endif %}><a href="{{ documents }}?document_archived__exact=0">Documents</a></li>
+                  <li{% if request.path == notifications %} class="active"{% endif %}><a href="{{ notifications }}">D1 - Notifications</a></li>
+                  <li{% if request.path == public_contacts %} class="active"{% endif %}><a href="{{ public_contacts }}">D2 - Public Contacts</a></li>
+                </ul>
+              </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock navigation%}
+{% endif %}
+{% endif %}
+<div class="page">
+  <div class="page-container">
+    <div class="container">
+    {% block header %}
+    {% endblock %}
+    {% if not is_popup %}{% block breadcrumbs %}{% endblock %}{% endif %}
+    {% block messages %}
+    {% if messages %}
+    <div class="row-fluid">
+      <div class="span12">
+          {% for message in messages %}
+            {% if 'error' in message.tags %}
+                <div class="alert alert-error">
+                <i class="icon-warning-sign"></i>
+            {% else %}
+                <div class="alert alert-success">
+                <i class="icon-ok"></i>
+            {% endif %}
+            {% if 'safe' in message.tags %}
+                {{ message|safe }}
+            {% else %}
+                {{ message }}
+            {% endif %}
+            </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endblock %}
+      {% block contentwrapper %}
+    <div class="row">
+      <div class="span12">
+      {% block pretitle %}{% endblock %}
+      {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+      {% block content %}
+      {% endblock %}
+      </div>
+    </div>
+      {% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block footer %}
+<footer class="footer">
+  <div class="container">
+      <div class="row">
+    <div class="span6">
+        <p>Version: {{ application_version_no }}</p>
+    </div>
+    <div class="span6">
+        <p class="pull-right">&copy; 2015 Department of Parks and Wildlife</p>
+    </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+
+// clear the cookie token on page load
+$(document).ready(function() {
+   $.cookie('fileDownloadToken', null, { path: '/' }); //clears this cookie value
+   $.removeCookie('fileDownloadToken'); //clears this cookie value
+});
+
+$('.file-download').on('click', function(e) {
+    var id = e.target.id
+
+    href = this.href; // initialising var
+    //var href = $('#'+id).href; // initialising var
+    var origHref_fd1 = $('#fd1').attr('href');
+    var origUrl_fd1 = $('#fd1').html();
+
+    var origHref_fd2 = $('#fd2').attr('href');
+    var origUrl_fd2 = $('#fd2').html();
+
+    var origCol = $('#'+id).css('color');
+    var text = $('#'+id).text();
+    var txtMsg = '. Downloading ...';
+
+    // set new msg
+    //console.log('text' + text)
+    if ( $('.file-download').text().indexOf(txtMsg) < 0 ) { // do once - check txtMsg not present in text
+      $('#'+id).append(txtMsg).css('color', 'red');;
+
+      blockUIForDownload(id);
+      // diable the URL link
+      e.preventDefault(); //disabling default behaviour
+      if (this.href) //checking if href attr is stil set
+      {
+          href = this.href; //saving current href for it will be removed
+          $('.file-download').removeAttr("href"); //removing href
+          window.location.href = href; //redirecting user to href
+      }
+    }
+
+
+    var fileDownloadCheckTimer;
+    function blockUIForDownload(id) {
+      var token = '_token';
+      //$.blockUI(); //this will block/unblock entire page
+
+      fileDownloadCheckTimer = window.setInterval(function () {
+        var cookieValue = $.cookie('fileDownloadToken');
+        if (cookieValue == token)
+          finishDownload(id);
+      }, 1000);
+    }
+
+    function finishDownload(id) {
+     window.clearInterval(fileDownloadCheckTimer);
+     $.cookie('fileDownloadToken', null, { path: '/' }); //clears this cookie value
+     $.removeCookie('fileDownloadToken'); //clears this cookie value
+     $('#fd1').attr("href", origHref_fd1);  // re-assign the url link
+     $('#fd1').html(origUrl_fd1).css('color', origCol);
+     $('#fd2').attr("href", origHref_fd2);  // re-assign the url link
+     $('#fd2').html(origUrl_fd2).css('color', origCol);
+     //$.unblockUI(); //this will block/unblock entire page
+    }
+});
+
+</script>
+
+{% endblock %}
+
+</body>
+</html>

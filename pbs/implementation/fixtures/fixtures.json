@@ -1,0 +1,583 @@
+[
+{
+  "pk": 1, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.621Z", 
+    "modified": "2013-06-03T14:21:36.660Z", 
+    "name": "Bluegum", 
+    "creator": 1
+  }
+},
+{
+  "pk": 2, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.669Z", 
+    "modified": "2013-06-03T14:21:36.670Z", 
+    "name": "Very Open Jarrah", 
+    "creator": 1
+  }
+},
+{
+  "pk": 3, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.676Z", 
+    "modified": "2013-06-03T14:21:36.676Z", 
+    "name": "Open Jarrah", 
+    "creator": 1
+  }
+},
+{
+  "pk": 4, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.680Z", 
+    "modified": "2013-06-03T14:21:36.680Z", 
+    "name": "Northern Jarrah", 
+    "creator": 1
+  }
+},
+{
+  "pk": 5, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.685Z", 
+    "modified": "2013-06-03T14:21:36.686Z", 
+    "name": "Southern Jarrah", 
+    "creator": 1
+  }
+},
+{
+  "pk": 6, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.688Z", 
+    "modified": "2013-06-03T14:21:36.688Z", 
+    "name": "Karri 3 / 6", 
+    "creator": 1
+  }
+},
+{
+  "pk": 7, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.692Z", 
+    "modified": "2013-06-03T14:21:36.692Z", 
+    "name": "Karri 4 / 5", 
+    "creator": 1
+  }
+},
+{
+  "pk": 8, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.696Z", 
+    "modified": "2013-06-03T14:21:36.696Z", 
+    "name": "Tingle", 
+    "creator": 1
+  }
+},
+{
+  "pk": 9, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.699Z", 
+    "modified": "2013-06-03T14:21:36.699Z", 
+    "name": "Karri 1 / 2", 
+    "creator": 1
+  }
+},
+{
+  "pk": 10, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.702Z", 
+    "modified": "2013-06-03T14:21:36.703Z", 
+    "name": "Karri Regrowth", 
+    "creator": 1
+  }
+},
+{
+  "pk": 11, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.705Z", 
+    "modified": "2013-06-03T14:21:36.705Z", 
+    "name": "Woodland", 
+    "creator": 1
+  }
+},
+{
+  "pk": 12, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.709Z", 
+    "modified": "2013-06-03T14:21:36.709Z", 
+    "name": "Banksia", 
+    "creator": 1
+  }
+},
+{
+  "pk": 13, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.713Z", 
+    "modified": "2013-06-03T14:21:36.713Z", 
+    "name": "Mulga", 
+    "creator": 1
+  }
+},
+{
+  "pk": 14, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.717Z", 
+    "modified": "2013-06-03T14:21:36.717Z", 
+    "name": "Heath (Flats)", 
+    "creator": 1
+  }
+},
+{
+  "pk": 15, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.720Z", 
+    "modified": "2013-06-03T14:21:36.721Z", 
+    "name": "Spinifex", 
+    "creator": 1
+  }
+},
+{
+  "pk": 16, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.725Z", 
+    "modified": "2013-06-03T14:21:36.725Z", 
+    "name": "Open Forest", 
+    "creator": 1
+  }
+},
+{
+  "pk": 17, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.727Z", 
+    "modified": "2013-06-03T14:21:36.727Z", 
+    "name": "Open Grassland", 
+    "creator": 1
+  }
+},
+{
+  "pk": 18, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.729Z", 
+    "modified": "2013-06-03T14:21:36.729Z", 
+    "name": "Conifer Needle Bed", 
+    "creator": 1
+  }
+},
+{
+  "pk": 19, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.731Z", 
+    "modified": "2013-06-03T14:21:36.732Z", 
+    "name": "Conifer Red Tops", 
+    "creator": 1
+  }
+},
+{
+  "pk": 20, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.733Z", 
+    "modified": "2013-06-03T14:21:36.734Z", 
+    "name": "Conifer Clear Fell", 
+    "creator": 1
+  }
+},
+{
+  "pk": 21, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.736Z", 
+    "modified": "2013-06-03T14:21:36.736Z", 
+    "name": "Heaps", 
+    "creator": 1
+  }
+},
+{
+  "pk": 22, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.738Z", 
+    "modified": "2013-06-03T14:21:36.738Z", 
+    "name": "Mallee-Heath", 
+    "creator": 1
+  }
+},
+{
+  "pk": 23, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.740Z", 
+    "modified": "2013-06-03T14:21:36.740Z", 
+    "name": "Coastal Heath", 
+    "creator": 1
+  }
+},
+{
+  "pk": 24, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.742Z", 
+    "modified": "2013-06-03T14:21:36.742Z", 
+    "name": "Shrubland", 
+    "creator": 1
+  }
+},
+{
+  "pk": 25, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.744Z", 
+    "modified": "2013-06-03T14:21:36.744Z", 
+    "name": "Other", 
+    "creator": 1
+  }
+},
+{
+  "pk": 26, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.746Z", 
+    "modified": "2013-06-03T14:21:36.746Z", 
+    "name": "Conifer Thinned", 
+    "creator": 1
+  }
+},
+{
+  "pk": 27, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.750Z", 
+    "modified": "2013-06-03T14:21:36.750Z", 
+    "name": "Conifer Unthinned", 
+    "creator": 1
+  }
+},
+{
+  "pk": 28, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.750Z", 
+    "modified": "2013-06-03T14:21:36.750Z", 
+    "name": "Tropical Woodland", 
+    "creator": 1
+  }
+},
+{
+  "pk": 29, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.750Z", 
+    "modified": "2013-06-03T14:21:36.750Z", 
+    "name": "Tropical Open Grassland", 
+    "creator": 1
+  }
+},
+{
+  "pk": 30, 
+  "model": "implementation.fueltype", 
+  "fields": {
+    "modifier": 1, 
+    "created": "2013-06-03T14:21:36.750Z", 
+    "modified": "2013-06-03T14:21:36.750Z", 
+    "name": "Tropical Open Forest", 
+    "creator": 1
+  }
+},
+{
+  "pk": 1, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS001",
+    "path": "MMS001.pdf"
+  }
+},
+{
+  "pk": 2, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS002",
+    "path": "MMS002.pdf"
+  }
+},
+{
+  "pk": 3, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS003",
+    "path": "MMS003.pdf"
+  }
+},
+{
+  "pk": 4, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS004",
+    "path": "MMS004.pdf"
+  }
+},
+{
+  "pk": 5, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS005",
+    "path": "MMS005.pdf"
+  }
+},
+{
+  "pk": 6, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS006",
+    "path": "MMS006.pdf"
+  }
+},
+{
+  "pk": 7, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS007",
+    "path": "MMS007.pdf"
+  }
+},
+{
+  "pk": 8, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS008",
+    "path": "MMS008.pdf"
+  }
+},
+{
+  "pk": 9, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS009",
+    "path": "MMS009.pdf"
+  }
+},
+{
+  "pk": 10, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS010",
+    "path": "MMS010.pdf"
+  }
+},
+{
+  "pk": 11, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS011",
+    "path": "MMS011.pdf"
+  }
+},
+{
+  "pk": 12, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS012",
+    "path": "MMS012.pdf"
+  }
+},
+{
+  "pk": 13, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC / MMS013",
+    "path": "MMS013.pdf"
+  }
+},
+{
+  "pk": 14, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC001",
+    "path": "DEC001.pdf"
+  }
+},
+{
+  "pk": 15, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC002",
+    "path": "DEC002.pdf"
+  }
+},
+{
+  "pk": 16, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC003",
+    "path": "DEC003.pdf"
+  }
+},
+{
+  "pk": 17, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC004",
+    "path": "DEC004.pdf"
+  }
+},
+{
+  "pk": 18, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC005",
+    "path": "DEC005.pdf"
+  }
+},
+{
+  "pk": 19, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC006",
+    "path": "DEC006.pdf"
+  }
+},
+{
+  "pk": 20, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC007",
+    "path": "DEC007.pdf"
+  }
+},
+{
+  "pk": 21, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC008",
+    "path": "DEC008.pdf"
+  }
+},
+{
+  "pk": 22, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC009",
+    "path": "DEC009.pdf"
+  }
+},
+{
+  "pk": 23, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC010",
+    "path": "DEC010.pdf"
+  }
+},
+{
+  "pk": 24, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC011",
+    "path": "DEC011.pdf"
+  }
+},
+{
+  "pk": 25, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC012",
+    "path": "DEC012.pdf"
+  }
+},
+{
+  "pk": 26, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "DEC013",
+    "path": "DEC013.pdf"
+  }
+},
+{
+  "pk": 27, 
+  "model": "implementation.trafficcontroldiagram", 
+  "fields": {
+    "name": "custom",
+    "path": ""
+  }
+},
+{
+  "pk": 1, 
+  "model": "implementation.ignitiontype", 
+  "fields": {
+    "name": "Ground ignition"
+  }
+},
+{
+  "pk": 2, 
+  "model": "implementation.ignitiontype", 
+  "fields": {
+    "name": "Aerial ignition"
+  }
+},
+{
+  "pk": 3, 
+  "model": "implementation.ignitiontype", 
+  "fields": {
+    "name": "Fixed wing incendiary"
+  }
+},
+{
+  "pk": 4, 
+  "model": "implementation.ignitiontype", 
+  "fields": {
+    "name": "Rotary drip torch"
+  }
+},
+{
+  "pk": 5, 
+  "model": "implementation.ignitiontype", 
+  "fields": {
+    "name": "Rotary incendiary"
+  }
+}
+]

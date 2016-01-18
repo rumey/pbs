@@ -1,0 +1,89 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />{% endblock %}
+
+{% block coltype %}colMS{% endblock %}
+
+{% block bodyclass %}dashboard{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="span3">
+  <div class="sidebar">
+  <div id="content-related">
+    <div class="module" id="recent-actions-module">
+        <h4>{% trans 'Recent Actions' %}</h4>
+            {% load log %}
+            {% get_admin_log 10 as admin_log for_user user %}
+            {% if not admin_log %}
+            <p>{% trans 'None available' %}</p>
+            {% else %}
+            <ul class="col-nav span3">
+            {% for entry in admin_log %}
+            <li>
+                {% if entry.is_deletion or not entry.get_admin_url %}
+                    <a href="#">
+                      <i class="pull-right icon-trash"></i>
+                      {{ entry.object_repr }}
+                    </a>
+                {% else %}
+                    <a href="{{ entry.get_admin_url }}">
+                      <i class="pull-right icon-{% if entry.is_addition %}plus{% endif %}{% if entry.is_change %}edit{% endif %}{% if entry.is_deletion %}trash{% endif %}"></i>
+                      {{ entry.object_repr }}
+                      {% if entry.content_type %}
+                          <small>({% filter capfirst %}{% trans entry.content_type.name %}{% endfilter %})</small>
+                      {% else %}
+                          <small>({% trans 'Unknown content' %})</small>
+                      {% endif %}
+                    </a>
+                {% endif %}
+            </li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+    </div>
+  </div>
+  </div>
+</div>
+<div class="span9">
+{% if app_list %}
+    {% for app in app_list %}
+        <div class="table-panel">
+        <h4>
+          <i class="icon-share-alt"></i>
+            <a href="{{ app.app_url }}" class="section" title="{% blocktrans with name=app.name %}Models in the {{ name }} application{% endblocktrans %}">
+                {% blocktrans with name=app.name %}{{ name }}{% endblocktrans %}
+            </a>
+        </h4>
+        <table class="table table-striped sortable">
+        {% for model in app.models %}
+            <tr>
+            {% if model.admin_url %}
+                <th scope="row" style="width: 100%;"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+            {% else %}
+                <th scope="row" style="width: 100%;">{{ model.name }}</th>
+            {% endif %}
+
+            {% if model.add_url %}
+                <td style="white-space: nowrap;"><a href="{{ model.add_url }}" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i>{% trans 'Add' %}</a></td>
+            {% else %}
+                <td>&nbsp;</td>
+            {% endif %}
+
+            {% if model.admin_url %}
+                <td style="white-space: nowrap;"><a href="{{ model.admin_url }}" class="btn btn-small"><i class="icon-edit"></i>{% trans 'Change' %}</a></td>
+            {% else %}
+                <td>&nbsp;</td>
+            {% endif %}
+            </tr>
+        {% endfor %}
+        </table>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>{% trans "You don't have permission to edit anything." %}</p>
+{% endif %}
+</div>
+{% endblock %}

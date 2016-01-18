@@ -1,0 +1,31 @@
+{% autoescape off %}
+\begin{landscape}
+\section{Section B2 - Day of Burn Actions}
+\fancyfoot[L]{ \leftmark\newline\textbf{Section B2 last modified}\textit{ {{ prescription.day_of_burn_modified|default:"" }}}\quad\textbf{PDF Created On}\textit{ {{ timestamp }} } }
+{% if prescription.day_of_burn_actions %}
+\begin{longtabu} to \linewidth { | X[3] | X[6] | X | X | X | X | }
+\hline
+\textbf{Action} & \textbf{Action Details} & \textbf{\small{Responsible}} & \textbf{Include in Briefing} & \textbf{Actioned by Whom} & \textbf{Date\newline Actioned} \\
+\endhead
+\hline
+{% regroup prescription.day_of_burn_actions by risk.category as actions %}
+{% for category in actions %}
+\multicolumn{6}{|l|}{\textbf{% templatetag openbrace %}{{ category.grouper|texify|safe }}}} \\
+\hline
+{% for action in category.list %}
+{{ action|texify|safe }} & {{ action.details|texify|safe }} & {{ action.day_of_burn_responsible }} & {% if action.day_of_burn_include %}Yes{% else %}No{% endif %} & {% if action.day_of_burn_completer %}{{ action.day_of_burn_completer|texify|safe }}{% endif %} & {{ action.day_of_burn_completed|default_if_none:"" }} \\
+\hline
+{% endfor %}
+\hline
+{% endfor %}
+\end{longtabu}
+{% else %}
+  {% if current.day_state.actions %}
+    { No Day of Burn Actions. }
+  {% else %}
+    Not Applicable
+  {% endif %}
+{% endif %}
+\end{landscape}
+\clearpage
+{% endautoescape %}
