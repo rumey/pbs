@@ -101,12 +101,10 @@ ROOT_URLCONF = 'pbs_project.urls'
 WSGI_APPLICATION = 'pbs_project.wsgi.application'
 
 # Database
-# https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 DATABASES = {'default': dj_database_url.config()}
 CONN_MAX_AGE = None
 
 # Internationalization
-# https://docs.djangoproject.com/en/1.6/topics/i18n/
 SITE_ID = 1
 SITE_NAME = "PBS"
 LANGUAGE_CODE = 'en-us'
@@ -116,10 +114,11 @@ USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.6/howto/static-files/
+# Ensure that the media directory exists:
+if not os.path.exists(os.path.join(BASE_DIR, 'media')):
+    os.mkdir(os.path.join(BASE_DIR, 'media'))
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 
@@ -240,6 +239,9 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 # Logging configuration
+# Ensure that the logs directory exists:
+if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
+    os.mkdir(os.path.join(BASE_DIR, 'logs'))
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
