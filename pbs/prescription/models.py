@@ -563,8 +563,7 @@ class Prescription(Audit):
         except:
             raise ValidationError("Financial Year must be consecutive years and "
                                   "in the format '2015/2016'")
-
-        if self.financial_year and yr1 < timezone.now().year:
+        if self.financial_year and yr2 < timezone.now().year:
             raise ValidationError("Financial year burnt must be in the current "
                                   "financial year or in the future.")
 
