@@ -63,8 +63,8 @@ INSTALLED_APPS = (
     'django_select2',
     'chosen',
     'smart_selects',
-    'debug_toolbar',
-    'debug_toolbar_htmltidy',
+    #'debug_toolbar',
+    #'debug_toolbar_htmltidy',
     'crispy_forms',
     'registration',
     'django_wsgiserver',
@@ -74,7 +74,7 @@ INSTALLED_APPS = (
 
 MIDDLEWARE_CLASSES = (
     'pagination.middleware.PaginationMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
