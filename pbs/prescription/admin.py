@@ -13,7 +13,7 @@ from datetime import datetime
 
 from swingers.admin import DetailAdmin
 
-from guardian.shortcuts import assign_perm, remove_perm
+from guardian.shortcuts import assign_perm
 
 from django.conf import settings
 from django.contrib import admin
@@ -24,7 +24,6 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import (FieldError, ValidationError,
                                     PermissionDenied)
 from django.core.urlresolvers import reverse
-from django.core.cache import cache
 from django.db import transaction, router
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.forms.models import modelform_factory
@@ -1322,7 +1321,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             "inline", errortxt))
         try:
             with mutex('pbs'+str(object_id), 1, obj.burn_id, request.user):
-                #time.sleep(120)
                 subtitles = {
                     "parta": "Part A - Summary and Approval",
                     "partb": "Part B - Burn Implementation Plan",
@@ -1408,7 +1406,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     resp.set_cookie('fileDownloadToken', token)
                     resp.set_cookie('fileUrl', file_url)
                     return resp
-                    #return HttpResponseRedirect(url)
                 else:
                     # inline http response - pdf returned to web page
                     response.set_cookie('fileDownloadToken', token)
@@ -1416,7 +1413,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     return self.pdf_to_http(directory + filename, response, error_response)
 
         except SemaphoreException as e:
-            #error_response.write("The PDF is locked. It is probably in the process of being created by another user. Try again in 2 minutes")
             error_response.write("The PDF is locked. It is probably in the process of being created by another user. <br/><br/>{}".format(e))
             return error_response
 
@@ -1434,7 +1430,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         return response
 
     def pdf_to_fexsvr(self, filename, texname, downloadname, email):
-
         err_msg = None
         fex_filename = downloadname
         recipient = settings.FEX_MAIL

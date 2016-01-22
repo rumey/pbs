@@ -1225,10 +1225,10 @@ class FundingAllocation(models.Model):
     Note that `proportion` is a value between 0 and 1.
     """
     ALLOCATION_CHOICES = (
-          (42, '42 - Native forest'),
-          (43, '43 - Plantations'),
-          (72, '72 - Prescribed fire'),
-          (7204, '72-04 - Recoupable projects'),
+        (42, '42 - Native forest'),
+        (43, '43 - Plantations'),
+        (72, '72 - Prescribed fire'),
+        (7204, '72-04 - Recoupable projects'),
     )
 
     prescription = models.ForeignKey(Prescription)
@@ -1238,7 +1238,7 @@ class FundingAllocation(models.Model):
         help_text="Program funding code which is assigned to the burn")
     proportion = models.DecimalField(
         max_digits=5, decimal_places=2, default=0,
-        validators = [MaxValueValidator(100), MinValueValidator(0)],
+        validators=[MaxValueValidator(100), MinValueValidator(0)],
         verbose_name="Proportion of budget covered [%]",
         help_text="Percentage between 0 and 100")
 
