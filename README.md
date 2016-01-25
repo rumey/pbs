@@ -14,11 +14,11 @@ Create a new virtualenv and install required libraries using `pip`:
 
 # Environment variables
 
-This project uses Honcho as a task runner and to set environment
+This project uses `django-confy` to set environment
 variables (in a `.env` file). Required settings are as follows:
 
+    DJANGO_SETTINGS_MODULE="pbs_project.settings"
     DEBUG=True
-    PORT=8080
     DATABASE_URL="postgis://USER:PASSWORD@HOST:PORT/DATABASE_NAME"
     SECRET_KEY="ThisIsASecretKey"
     LDAP_SERVER_URI="ldap://URL"
