@@ -1501,7 +1501,6 @@ class PrescriptionMixin(object):
     def get_urls(self):
         from django.conf.urls import patterns, url
 
-
         def wrap(view):
             def wrapper(*args, **kwargs):
                 return self.admin_site.admin_view(view)(*args, **kwargs)

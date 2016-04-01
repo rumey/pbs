@@ -1,3 +1,4 @@
+from datetime import date
 from pbs.admin import BaseAdmin
 from swingers.admin import DetailAdmin
 from functools import update_wrapper
@@ -6,7 +7,7 @@ from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState
 from pbs.review.forms import BurnStateSummaryForm
-from pbs.prescription.models import Prescription
+from pbs.prescription.models import Prescription, Approval
 from datetime import datetime
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
@@ -17,7 +18,6 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
     SDO Burn State Report
     """
     epfp_review_template = 'admin/review/epfp_review_summary.html'
-
     fmsb_group = Group.objects.get(name='Fire Management Services Branch')
     drfms_group = Group.objects.get(name='Director Fire and Regional Services')
 
@@ -82,18 +82,21 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
         """
         Display summaries of prescriptions, approvals and ignitions.
         """
-
         report_set = {'epfp_review'}
         report = request.GET.get('report', 'epfp_review')
         if report not in report_set:
             report = 'epfp_review'
 
-
         title = 'Day of burn ePFP review and confirmation (approved burns)'
+        # Queryset business rules:
+        # * Prescription approved, open, ignition not started or started.
+        # * Approval ``valid_to`` date is not in the past.
+        presc_ids = [a.prescription.pk for a in Approval.objects.filter(valid_to__gte=date.today())]
         queryset = Prescription.objects.filter(
             approval_status=Prescription.APPROVAL_APPROVED,
             status=Prescription.STATUS_OPEN,
             ignition_status__in=[Prescription.IGNITION_NOT_STARTED, Prescription.IGNITION_COMMENCED],
+            pk__in=presc_ids
         ).order_by('burn_id')
 
         # Use the region from the request.
