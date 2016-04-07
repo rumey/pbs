@@ -250,6 +250,8 @@
               <li{% if request.path == endorse_authorise_summary %} class="active"{% endif %}><a href="{{ endorse_authorise_summary }}"><i class="icon-dashboard"></i> Endorse/Authorise Summary</a></li>
               {% url 'admin:epfp_review_summary' as epfp_review_summary %}
               <li{% if request.path == epfp_review_summary %} class="active"{% endif %}><a href="{{ epfp_review_summary }}"><i class="icon-dashboard"></i> Day of Burn ePFP review</a></li>
+              {% url 'admin:epfp_planned_burn_summary' as epfp_planned_burn_summary %}
+              <li{% if request.path == epfp_planned_burn_summary %} class="active"{% endif %}><a href="{{ epfp_planned_burn_summary }}"><i class="icon-dashboard"></i> Planned Burn Program</a></li>
               {% if current %}
             </ul>
             <ul class="nav pull-right">

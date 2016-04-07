@@ -63,7 +63,7 @@ INSTALLED_APPS = (
     'django_select2',
     'chosen',
     'smart_selects',
-    #'debug_toolbar',
+    'debug_toolbar',
     #'debug_toolbar_htmltidy',
     'crispy_forms',
     'registration',

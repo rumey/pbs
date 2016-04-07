@@ -187,7 +187,8 @@
       ["view_proposedaction", "report", "proposedaction"],
       ["add_summarycompletionstate", "report", "summarycompletionstate"],
       ["change_summarycompletionstate", "report", "summarycompletionstate"],
-      ["view_summarycompletionstate", "report", "summarycompletionstate"]
+      ["view_summarycompletionstate", "report", "summarycompletionstate"],
+      ["view_plannedburn", "review", "plannedburn"]
     ]
   }
 },

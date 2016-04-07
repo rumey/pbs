@@ -5,7 +5,7 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState
+from pbs.review.models import BurnState, PlannedBurn
 from pbs.review.forms import BurnStateSummaryForm
 from pbs.prescription.models import Prescription, Approval
 from datetime import datetime
@@ -123,3 +123,60 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
         }
         context.update(extra_context or {})
         return TemplateResponse(request, self.epfp_review_template, context)
+
+
+class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
+    """
+    The (current) Day's Planned Burns (Fire 268a)
+    """
+    epfp_planned_burn_template = 'admin/review/epfp_planned_burn_summary.html'
+
+    def get_urls(self):
+        """
+        Add a view to clear the current prescription from the session
+        """
+        from django.conf.urls import patterns, url
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        urlpatterns = patterns(
+            '',
+            url(r'^epfp-planned/$',
+                wrap(self.epfp_planned_burn_summary),
+                name='epfp_planned_burn_summary'),
+        )
+
+        return urlpatterns + super(PlannedBurnAdmin, self).get_urls()
+
+    def epfp_planned_burn_summary(self, request, extra_context=None):
+        """
+        Display a list of the current day's planned burns
+        """
+        report_set = {'epfp_planned_burns'}
+        report = request.GET.get('report', 'epfp_planned_burns')
+        if report not in report_set:
+            report = 'epfp_planned_burns'
+
+        title = "Today's Planned Burn Program"
+        # Queryset business rules:
+        # * Prescription approved, open, ignition not started or started.
+        # * Approval ``valid_to`` date is not in the past.
+        presc_ids = [pb.prescription.pk for pb in PlannedBurn.objects.filter(date__gte=date.today())]
+        queryset = Prescription.objects.filter(pk__in=presc_ids).order_by('burn_id')
+
+        context = {
+            'title': title,
+            'prescriptions': queryset,
+            'form': BurnStateSummaryForm(request.GET),
+            'report': report,
+            'username': request.user.username,
+            'date': datetime.now().strftime('%Y-%m-%d')
+        }
+        context.update(extra_context or {})
+        return TemplateResponse(request, self.epfp_planned_burn_template, context)
+
+
+
