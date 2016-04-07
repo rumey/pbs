@@ -7,6 +7,7 @@ from pbs.implementation.models import (Way, RoadSegment, TrailSegment,
                                        SignInspection, TrafficControlDiagram)
 from pbs.risk.models import Action, Register
 from pbs.prescription.models import Endorsement, EndorsingRole
+import os
 
 register = template.Library()
 
@@ -141,3 +142,8 @@ def role_required(prescription, role):
     else:
         output = '<span style="display:none">0</span>'
     return output
+    
+@register.simple_tag(takes_context=True)
+def base_dir(context):
+    """ Hack for getting the base_dir for uWSGI config. settings.BASE_DIR returns '' in latex templates when using uWSGI """
+    return '{}'.format(os.getcwd())
