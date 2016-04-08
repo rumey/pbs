@@ -5,7 +5,7 @@
   "fields": {
     "prescription": 609,
     "user": 228,
-    "date": "2016-04-08",
+    "date": "2016-04-07",
     "area": 10.0,
     "est_start": "11:59:59",
     "has_contigency": "False",
@@ -20,7 +20,7 @@
   "fields": {
     "prescription": 610,
     "user": 228,
-    "date": "2016-04-08",
+    "date": "2016-04-07",
     "area": 11.0,
     "est_start": "13:59:59",
     "has_contigency": "True",
@@ -35,13 +35,59 @@
   "fields": {
     "prescription": 611,
     "user": 228,
-    "date": "2016-04-08",
+    "date": "2016-04-07",
     "area": 12.0,
     "est_start": "09:59:59",
     "has_contigency": "True",
     "has_monitoring": "True",
     "invite": ["DFES"],
     "conditions": ""
+  }
+},
+
+{
+  "pk": 1,
+  "model": "review.ongoingburn",
+  "fields": {
+    "prescription": 612,
+    "user": 228,
+    "date": "2016-04-08",
+    "ignition_type": 1,
+    "burn_active": "True",
+    "further_ignitions": "False",
+    "ignition_completed": "False",
+    "tenure": ["NP", "SF"],
+    "external_assist": "False"
+  }
+},
+{
+  "pk": 2,
+  "model": "review.ongoingburn",
+  "fields": {
+    "prescription": 613,
+    "user": 228,
+    "date": "2016-04-08",
+    "ignition_type": 1,
+    "burn_active": "False",
+    "further_ignitions": "True",
+    "ignition_completed": "False",
+    "tenure": ["NP", "SF"],
+    "external_assist": "True"
+  }
+},
+{
+  "pk": 3,
+  "model": "review.ongoingburn",
+  "fields": {
+    "prescription": 614,
+    "user": 228,
+    "date": "2016-04-08",
+    "ignition_type": 2,
+    "burn_active": "True",
+    "further_ignitions": "False",
+    "ignition_completed": "True",
+    "tenure": ["NP", "SF"],
+    "external_assist": "False"
   }
 }
 

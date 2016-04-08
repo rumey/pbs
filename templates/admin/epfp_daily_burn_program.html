@@ -66,26 +66,47 @@
 
 <ul id="report-tabs" class="nav nav-tabs">
     <li id="planned-tab"  "{% if report == "epfp_planned_burns" %} class="active"{% endif %}>
-        <a href="{% url 'admin:epfp_planned_burn_summary' %}?report=epfp_planned_burns">
+        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_planned_burns">
             <i class="icon-tag"></i>
             Planned
         </a>
     </li>
     <li id="ongoing-tab" {% if report == "epfp_ongoing_burns" %} class="active"{% endif %}>
-        <a href="{% url 'admin:epfp_ongoing_burn' %}?report=epfp_ongoing_burns">
+        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_ongoing_burns">
             <i class="icon-plus"></i>
             Ongoing
         </a>
     </li>
-    <li id="summary-tab"  "{% if report == "epfp_summary_burns" %} class="active"{% endif %}>
-        <a href="{% url 'admin:epfp_planned_burn_summary' %}?report=epfp_summary_burns">
+    <li id="summary-tab"  "{% if report == "epfp_active_burns" %} class="active"{% endif %}>
+        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_active_burns">
             <i class="icon-fire"></i>
             Summary
         </a>
     </li>
 </ul>
 
-{% if report == "summary" or report == "epfp_planned_burns" %}
+{% if report == "epfp_planned_burns" %}
+
+<div style="width: 50%; margin-left:25%; margin-right:25%; float: left">
+    <div style="float: left">
+        <table id="active-burn-table" class="table table-striped table-hover table-compressed" style="width:100%" border="2">
+        <tr>
+            <th>No. of Active Burns</th>
+            <td>10</td>
+        </tr>
+        </table>
+    </div>
+
+    <div style="float: right">
+        <table id="active-fire-table" class="table table-striped table-hover table-compressed" style="width:100%" border="2">
+        <tr>
+            <th>No. of Active Fires</th>
+            <td>5</td>
+        </tr>
+        </table>
+    </div>
+</div>
+
 <table id="sorted-table" class="table table-striped table-hover table-compressed">
   <thead>
     <tr>
@@ -132,8 +153,45 @@
 {% endif %}
 {% paginate %}
 
+{% if report == "epfp_active_burns" %}
+<p>Active Summary TAB</p>
+{% endif %}
+
 {% if report == "epfp_ongoing_burns" %}
-  <p>Ongoing TAB</p>
+<p>Ongoing TAB</p>
+<table id="sorted-table" class="table table-striped table-hover table-compressed">
+  <thead>
+    <tr>
+      <th rowspan="2">Burn ID</th>
+      <th rowspan="2">Name</th>
+      <th colspan="3"><div class="text-center">Burn Status</div></th>
+      <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
+      <th rowspan="2"><div class="text-center">Tenure</div></th>
+      <th rowspan="2"><div class="text-center">External Assist</div></th>
+    </tr>
+    <tr>
+      <th> Active </th>
+      <th> Further ignitions req </th>
+      <th> Ignition now completed </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% autopaginate queryset 25 %}
+    {% for qs in queryset %}
+    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
+      <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
+      <td>{{ qs.prescription.name }}</td>
+      <td>{% if qs.burn_active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.ignition_completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{{ qs.area }}</td>
+      <td>{{ qs.tenure }}</td>
+      <td>{% if qs.external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 {% endif %}
 
 <script>
