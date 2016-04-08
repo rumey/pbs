@@ -115,6 +115,9 @@ class PrescriptionSite(AuditSite):
             url(r'^endorse-authorise/$',
                 wrap(self.endorse_authorise_summary),
                 name='endorse_authorise_summary'),
+            url(r'^daily-burn-program/$',
+                wrap(self.daily_burn_program),
+                name='daily_burn_program'),
             url(r'^endorse-authorise/export_csv/$',
                 wrap(self.export_to_csv),
                 name='endorse_authorise_exportcsv'),
@@ -226,6 +229,67 @@ class PrescriptionSite(AuditSite):
         }
         return TemplateResponse(request, "admin/profile.html", context,
                                 current_app=self.name)
+
+    def daily_burn_program(self, request, extra_context=None):
+#        context = {}
+#        context.update(extra_context or {})
+#        return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context,
+#                                current_app=self.name)
+#
+#    def epfp_planned_burn(self, request, extra_context=None):
+        """
+        Display a list of the current day's planned burns
+        """
+        report_set = {'epfp_planned_burns'}
+        report = request.GET.get('report', 'epfp_planned_burns')
+        if report not in report_set:
+            report = 'epfp_planned_burns'
+
+        if request.REQUEST.has_key('report'):
+            report = request.REQUEST.get('report', None)
+
+
+        # Use the region from the request.
+        if request.REQUEST.has_key('date'):
+            dt = request.REQUEST.get('date', None)
+            if dt:
+                dt = datetime.datetime.strptime(dt, '%Y-%m-%d')
+        else:
+            dt = datetime.date.today()
+
+        if report=='epfp_planned_burns':
+            title = "Today's Planned Burn Program"
+            queryset = PlannedBurn.objects.filter(date__gte=dt)
+        elif report=='epfp_ongoing_burns':
+            title = "Summary of Current Fire Load"
+            queryset = OngoingBurn.objects.filter(date__gte=dt)
+#        elif report=='epfp_active_burns':
+#            queryset = ActiveBurn.objects.filter(date__gte=dt)
+
+        import ipdb; ipdb.set_trace()
+        if request.REQUEST.has_key('region'):
+            region = request.REQUEST.get('region', None)
+            if region:
+                queryset = queryset.filter(prescription__region=region)
+
+        if request.REQUEST.has_key('district'):
+            district = request.REQUEST.get('district', None)
+            if district:
+                queryset = queryset.filter(prescription__district=district)
+
+
+
+        context = {
+            'title': title,
+            'queryset': queryset.order_by('prescription__burn_id'),
+            'form': BurnStateSummaryForm(request.GET),
+            'report': report,
+            'username': request.user.username,
+            'date': dt.strftime('%Y-%m-%d')
+        }
+        context.update(extra_context or {})
+        return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
+
 
     def endorse_authorise_summary(self, request, extra_context=None):
         """

@@ -50,4 +50,26 @@ class PlannedBurn(models.Model):
         return 'DFES' in self.invite
 
 class OngoingBurn(models.Model):
+    IGNTYPE_BURN = 1
+    IGNTYPE_FIRE = 2
+    IGNTYPE_CHOICES = (
+        (IGNTYPE_BURN, 'BURN'),
+        (IGNTYPE_FIRE, 'FIRE'),
+    )
+
     prescription = models.ForeignKey(Prescription, related_name='ongoing_burn')
+    user = models.ForeignKey(User, help_text="User")
+    date = models.DateTimeField(auto_now_add=True)
+    ignition_type = models.PositiveSmallIntegerField(
+        verbose_name="Ignition Type (Burn/Fire)", choices=IGNTYPE_CHOICES)
+
+    burn_active = models.BooleanField(verbose_name="Burn Active?", blank=True)
+    further_ignitions = models.BooleanField(verbose_name="Further ignitions required?", blank=True)
+    ignition_completed = models.BooleanField(verbose_name="Ignition now completed?", blank=True)
+    tenure = models.CharField(verbose_name="Tenure", max_length=24, null=True, blank=True)
+    external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
+
+
+    def area(self):
+        return 100
+
