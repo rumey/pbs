@@ -5,7 +5,7 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PlannedBurn
+from pbs.review.models import BurnState, PlannedBurn, OngoingBurn
 from pbs.review.forms import BurnStateSummaryForm
 from pbs.prescription.models import Prescription, Approval
 from datetime import datetime
@@ -161,22 +161,96 @@ class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
             report = 'epfp_planned_burns'
 
         title = "Today's Planned Burn Program"
-        # Queryset business rules:
-        # * Prescription approved, open, ignition not started or started.
-        # * Approval ``valid_to`` date is not in the past.
-        presc_ids = [pb.prescription.pk for pb in PlannedBurn.objects.filter(date__gte=date.today())]
-        queryset = Prescription.objects.filter(pk__in=presc_ids).order_by('burn_id')
+
+        # Use the region from the request.
+        if request.REQUEST.has_key('date'):
+            dt = request.REQUEST.get('date', None)
+            if dt:
+                dt = datetime.strptime(dt, '%Y-%m-%d')
+        else:
+            dt = date.today()
+        queryset = PlannedBurn.objects.filter(date__gte=dt)
+
+        if request.REQUEST.has_key('region'):
+            region = request.REQUEST.get('region', None)
+            if region:
+                queryset = queryset.filter(prescription__region=region)
+
+        if request.REQUEST.has_key('report'):
+            report = request.REQUEST.get('report', None)
 
         context = {
             'title': title,
-            'prescriptions': queryset,
+            'queryset': queryset.order_by('prescription__burn_id'),
             'form': BurnStateSummaryForm(request.GET),
             'report': report,
             'username': request.user.username,
-            'date': datetime.now().strftime('%Y-%m-%d')
+            'date': dt.strftime('%Y-%m-%d')
         }
         context.update(extra_context or {})
         return TemplateResponse(request, self.epfp_planned_burn_template, context)
 
+
+class OngoingBurnAdmin(DetailAdmin, BaseAdmin):
+    """
+    The Current Ongoing Burns (Fire 268b)
+    """
+    epfp_ongoing_burn_template = 'admin/review/epfp_ongoing_burn.html'
+
+    def get_urls(self):
+        """
+        Add a view to clear the current prescription from the session
+        """
+        from django.conf.urls import patterns, url
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        urlpatterns = patterns(
+            '',
+            url(r'^epfp-ongoing/$',
+                wrap(self.epfp_ongoing_burn),
+                name='epfp_ongoing_burn'),
+        )
+
+        return urlpatterns + super(OngoingBurnAdmin, self).get_urls()
+
+    def epfp_ongoing_burn(self, request, extra_context=None):
+        """
+        Display a list of the current ongoing burns
+        """
+        report_set = {'epfp_ongoing_burns'}
+        report = request.GET.get('report', 'epfp_ongoing_burns')
+        if report not in report_set:
+            report = 'epfp_ongoing_burns'
+
+        title = "Summary of Current Fire Load"
+
+        # Use the region from the request.
+        if request.REQUEST.has_key('date'):
+            dt = request.REQUEST.get('date', None)
+            if dt:
+                dt = datetime.strptime(dt, '%Y-%m-%d')
+        else:
+            dt = date.today()
+        queryset = PlannedBurn.objects.filter(date__gte=dt)
+
+        if request.REQUEST.has_key('region'):
+            region = request.REQUEST.get('region', None)
+            if region:
+                queryset = queryset.filter(prescription__region=region)
+
+        context = {
+            'title': title,
+            'queryset': queryset.order_by('prescription__burn_id'),
+            'form': BurnStateSummaryForm(request.GET),
+            'report': report,
+            'username': request.user.username,
+            'date': dt.strftime('%Y-%m-%d')
+        }
+        context.update(extra_context or {})
+        return TemplateResponse(request, self.epfp_ongoing_burn_template, context)
 
 

@@ -1,0 +1,51 @@
+[
+{
+  "pk": 1,
+  "model": "review.plannedburn",
+  "fields": {
+    "prescription": 609,
+    "user": 228,
+    "date": "2016-04-08",
+    "area": 10.0,
+    "est_start": "11:59:59",
+    "has_contigency": "False",
+    "has_monitoring": "True",
+    "invite": ["LGA", "DFES"],
+    "conditions": ""
+  }
+},
+{
+  "pk": 2,
+  "model": "review.plannedburn",
+  "fields": {
+    "prescription": 610,
+    "user": 228,
+    "date": "2016-04-08",
+    "area": 11.0,
+    "est_start": "13:59:59",
+    "has_contigency": "True",
+    "has_monitoring": "False",
+    "invite": ["LGA"],
+    "conditions": "Special conditions go here ..."
+  }
+},
+{
+  "pk": 3,
+  "model": "review.plannedburn",
+  "fields": {
+    "prescription": 611,
+    "user": 228,
+    "date": "2016-04-08",
+    "area": 12.0,
+    "est_start": "09:59:59",
+    "has_contigency": "True",
+    "has_monitoring": "True",
+    "invite": ["DFES"],
+    "conditions": ""
+  }
+}
+
+]
+
+
+
