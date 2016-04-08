@@ -41,5 +41,13 @@ class PlannedBurn(models.Model):
     has_monitoring = models.BooleanField(verbose_name="Monitoring plan in place?", blank=True)
     invite = models.CharField(verbose_name="Invite to Assist?", max_length=24, null=True, blank=True)
     conditions = models.TextField(verbose_name='Special Conditions', null=True, blank=True)
+    #review_type = models.CharField(max_length=64)
 
+    def contains_lga(self):
+        return 'LGA' in self.invite
 
+    def contains_dfes(self):
+        return 'DFES' in self.invite
+
+class OngoingBurn(models.Model):
+    prescription = models.ForeignKey(Prescription, related_name='ongoing_burn')

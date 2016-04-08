@@ -450,6 +450,9 @@ class Prescription(Audit):
     def __str__(self):
         return self.burn_id
 
+    def purposes_list(self):
+        return [i.name.strip('Management') for i in self.purposes.all()]
+
     def generate_description(self):
         try:
             if self.tenures.count() > 0:
