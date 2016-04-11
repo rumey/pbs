@@ -287,6 +287,8 @@ class PrescriptionSite(AuditSite):
             region = request.REQUEST.get('region', None)
             if region:
                 queryset = queryset.filter(prescription__region=region)
+                if report=='epfp_active_burns':
+                    qs_ongoing = qs_ongoing.filter(prescription__region=region)
 
         if request.REQUEST.has_key('district'):
             district = request.REQUEST.get('district', None)
