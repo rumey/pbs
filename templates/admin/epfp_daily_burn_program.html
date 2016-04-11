@@ -37,29 +37,12 @@
 {% endblock %}
 
 {% block content %}
+{% comment %}
 <div class="row">
   <div class="span12 filter-top-pad">
       <p>Click on each row to view a summary for each burn, and to mark each as reviewed.</p>
   </div>
 </div>
-
-{% comment %}
-<ul id="report-tabs" class="nav nav-tabs">
-        <li class="filter-pad">
-            <form class="form-inline">
-                <label for="id_date" class="control-label">Date</label>
-                <input type="text" id="id_date" value="{{date}}" name="date"/>
-
-                <label for="id_region" class="control-label">Region</label>
-                {{ form.region }}
-
-                <button type="submit" class="btn btn-primary">Update</button>
-                {% if report == "epfp_planned_burn" %}
-                    <input class="hidden" name="report" value="epfp_planned_burn">
-                {% endif %}
-            </form>
-        </li>
-</ul>
 {% endcomment %}
 
 <ul id="report-tabs" class="nav nav-tabs">
@@ -101,6 +84,9 @@
 
                 <input class="hidden" name="report" value="epfp_ongoing_burns">
             {% elif report == "epfp_active_burns" %}
+                <label for="id_date" class="control-label">Date</label>
+                <input type="text" id="id_date" value="{{date}}" name="date"/>
+
                 <label for="id_region" class="control-label">Region</label>
                 {{ form.region }}
 
@@ -181,7 +167,6 @@
 {% paginate %}
 
 {% if report == "epfp_ongoing_burns" %}
-<p>Ongoing TAB</p>
 <table id="sorted-table" class="table table-striped table-hover table-compressed">
   <thead>
     <tr>
@@ -230,8 +215,72 @@
 {% paginate %}
 
 {% if report == "epfp_active_burns" %}
-<p>Active Summary TAB</p>
+<table id="sorted-table" class="table table-striped table-hover table-compressed">
+  <thead>
+    <tr>
+      <th rowspan="1"><div class="text-center">Burn ID</div></th>
+      <th rowspan="1"><div class="text-center">Name/Block</div></th>
+      <th rowspan="1"><div class="text-center">Position</div></th>
+      <th rowspan="1"><div class="text-center">Burn Purpose</div></th>
+      <th rowspan="1"><div class="text-center">Area</div></th>
+      <th rowspan="1"><div class="text-center">Est Start WST</div></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% autopaginate queryset 25 %}
+    {% for qs in queryset %}
+    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
+      <td>
+        {% if qs.prescription %}
+           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>
+        {% else %}
+            {{ qs.ignition_id }}
+        {% endif %}
+      </td>
+      <td>{{ qs.prescription.name }}</td>
+      <td><div class="text-center">{{ qs.prescription.location }}</div></td>
+      <td>
+        <div class="text-center">
+        {% for purpose in qs.prescription.purposes_list %}
+            {{ purpose }}
+            <br>
+        {% endfor %}
+        </div>
+      </td>
+      <td><div class="text-center">{{ qs.area }}</div></td>
+      <td><div class="text-center">{{ qs.est_start }}</div></td>
+    </tr>
+    {% endfor %}
+
+    {% for qs in qs_ongoing %}
+    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
+      <td>
+        {% if qs.prescription %}
+           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>
+        {% else %}
+            {{ qs.ignition_id }}
+        {% endif %}
+      </td>
+      <td>{{ qs.ignition_desc }}</td>
+      <td><div class="text-center">{{ qs.prescription.location }}</div></td>
+      <td>
+        <div class="text-center">
+        {% for purpose in qs.prescription.purposes_list %}
+            {{ purpose }}
+            <br>
+        {% endfor %}
+        </div>
+      </td>
+      <td><div class="text-center">{{ qs.area }}</div></td>
+      <td><div class="text-center">{{ qs.est_start }}</div></td>
+    </tr>
+    {% endfor %}
+
+  </tbody>
+</table>
+
 {% endif %}
+{% paginate %}
 
 
 <script>

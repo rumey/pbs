@@ -261,9 +261,10 @@ class PrescriptionSite(AuditSite):
         if request.REQUEST.has_key('ignition_type'):
             import ipdb; ipdb.set_trace
 
+        qs_ongoing= None
         if report=='epfp_planned_burns':
             title = "Today's Planned Burn Program"
-            queryset = PlannedBurn.objects.filter(date__gte=dt)
+            queryset = PlannedBurn.objects.filter(date=dt)
             form = PlannedBurnSummaryForm(request.GET)
         elif report=='epfp_ongoing_burns':
             title = "Summary of Current Fire Load"
@@ -271,8 +272,9 @@ class PrescriptionSite(AuditSite):
             form = OngoingBurnSummaryForm(request.GET)
         elif report=='epfp_active_burns':
             title = "Summary of Current and Planned Fires"
-            queryset = OngoingBurn.objects.filter(date__gte=dt)
-            form = OngoingBurnSummaryForm(request.GET)
+            queryset = PlannedBurn.objects.filter(date=dt)
+            qs_ongoing = OngoingBurn.objects.filter(burn_active=True)
+            form = PlannedBurnSummaryForm(request.GET)
             #queryset = ActiveBurn.objects.filter(date__gte=dt)
 
         if request.REQUEST.has_key('ignition_type'):
@@ -291,11 +293,10 @@ class PrescriptionSite(AuditSite):
             if district:
                 queryset = queryset.filter(prescription__district=district)
 
-
-
         context = {
             'title': title,
             'queryset': queryset.order_by('prescription__burn_id'),
+            'qs_ongoing': qs_ongoing,
             'form': form,
             'report': report,
             'username': request.user.username,
