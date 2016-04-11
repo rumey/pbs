@@ -1,5 +1,6 @@
 from django import forms
 from pbs.prescription.models import Region, District
+from pbs.review.models import OngoingBurn
 
 
 class BurnStateSummaryForm(forms.Form):
@@ -8,6 +9,8 @@ class BurnStateSummaryForm(forms.Form):
 
 class PlannedBurnSummaryForm(forms.Form):
     date = forms.DateField(required=False)
+    region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
+    district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
 
     def clean_fromDate(self):
         d = self.cleaned_data.get('fromDate')
@@ -21,4 +24,8 @@ class PlannedBurnSummaryForm(forms.Form):
             d = date.today()
         return d
 
+
+class OngoingBurnSummaryForm(forms.Form):
+    region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
+    ignition_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Fires')])
 

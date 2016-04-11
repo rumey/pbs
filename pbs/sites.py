@@ -24,6 +24,7 @@ from pbs.document.admin import DocumentAdmin
 from pbs.document.models import Document
 from pbs.forms import (UserForm, ProfileForm, PbsAdminAuthenticationForm,
     EndorseAuthoriseSummaryForm, BurnStateSummaryForm)
+from pbs.review.forms import PlannedBurnSummaryForm, OngoingBurnSummaryForm
 from pbs.implementation.admin import (BurningPrescriptionAdmin,
                                       EdgingPlanAdmin, LightingSequenceAdmin,
                                       ExclusionAreaAdmin, RoadSegmentAdmin,
@@ -60,7 +61,7 @@ from pbs.stakeholder.admin import (CriticalStakeholderAdmin,
 from pbs.stakeholder.models import (CriticalStakeholder, PublicContact,
                                     Notification)
 from pbs.review.models import (BurnState, PlannedBurn, OngoingBurn)
-from pbs.review.admin import (BurnStateAdmin, PlannedBurnAdmin, OngoingBurnAdmin)
+from pbs.review.admin import (BurnStateAdmin) #, PlannedBurnAdmin, OngoingBurnAdmin)
 
 from swingers.sauth.sites import AuditSite
 
@@ -240,7 +241,7 @@ class PrescriptionSite(AuditSite):
         """
         Display a list of the current day's planned burns
         """
-        report_set = {'epfp_planned_burns'}
+        report_set = {'epfp_planned_burns', 'epfp_ongoing_burns', 'epfp_active_burns'}
         report = request.GET.get('report', 'epfp_planned_burns')
         if report not in report_set:
             report = 'epfp_planned_burns'
@@ -257,16 +258,29 @@ class PrescriptionSite(AuditSite):
         else:
             dt = datetime.date.today()
 
+        if request.REQUEST.has_key('ignition_type'):
+            import ipdb; ipdb.set_trace
+
         if report=='epfp_planned_burns':
             title = "Today's Planned Burn Program"
             queryset = PlannedBurn.objects.filter(date__gte=dt)
+            form = PlannedBurnSummaryForm(request.GET)
         elif report=='epfp_ongoing_burns':
             title = "Summary of Current Fire Load"
+            queryset = OngoingBurn.objects.all() #filter(burn_active=True)
+            form = OngoingBurnSummaryForm(request.GET)
+        elif report=='epfp_active_burns':
+            title = "Summary of Current and Planned Fires"
             queryset = OngoingBurn.objects.filter(date__gte=dt)
-#        elif report=='epfp_active_burns':
-#            queryset = ActiveBurn.objects.filter(date__gte=dt)
+            form = OngoingBurnSummaryForm(request.GET)
+            #queryset = ActiveBurn.objects.filter(date__gte=dt)
 
-        import ipdb; ipdb.set_trace()
+        if request.REQUEST.has_key('ignition_type'):
+            ignition_type =int (request.REQUEST.get('ignition_type', None))
+            if ignition_type != 0:
+                queryset = queryset.filter(ignition_type=ignition_type)
+
+        #import ipdb; ipdb.set_trace()
         if request.REQUEST.has_key('region'):
             region = request.REQUEST.get('region', None)
             if region:
@@ -282,10 +296,12 @@ class PrescriptionSite(AuditSite):
         context = {
             'title': title,
             'queryset': queryset.order_by('prescription__burn_id'),
-            'form': BurnStateSummaryForm(request.GET),
+            'form': form,
             'report': report,
             'username': request.user.username,
-            'date': dt.strftime('%Y-%m-%d')
+            'date': dt.strftime('%Y-%m-%d'),
+            'active_burns': OngoingBurn.objects.filter(ignition_type=1, burn_active=True).count(),
+            'active_fires': OngoingBurn.objects.filter(ignition_type=2, burn_active=True).count()
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
@@ -553,8 +569,8 @@ site.register(PostBurnChecklist, PostBurnChecklistAdmin)
 site.register(OperationalOverview, OperationalOverviewAdmin)
 
 site.register(BurnState, BurnStateAdmin)
-site.register(PlannedBurn, PlannedBurnAdmin)
-site.register(OngoingBurn, OngoingBurnAdmin)
+#site.register(PlannedBurn, PlannedBurnAdmin)
+#site.register(OngoingBurn, OngoingBurnAdmin)
 
 # add our own texify filter to the builtins here.
 add_to_builtins('pbs.prescription.templatetags.texify')
