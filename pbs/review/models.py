@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 from pbs.prescription.models import (Prescription)
 from dateutil import tz
@@ -30,7 +30,7 @@ class BurnState(models.Model):
 class PlannedBurn(models.Model):
     prescription = models.ForeignKey(Prescription, related_name='planned_burn')
     user = models.ForeignKey(User, help_text="User")
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True)
     area = models.DecimalField(
         verbose_name="Planned Burn Area (ha)", max_digits=7, decimal_places=1,
         help_text="Planned burn area (in ha)",
@@ -57,19 +57,51 @@ class OngoingBurn(models.Model):
         (IGNTYPE_FIRE, 'FIRE'),
     )
 
-    prescription = models.ForeignKey(Prescription, related_name='ongoing_burn')
+    prescription = models.ForeignKey(Prescription, related_name='ongoing_burn', null=True, blank=True)
+    fire_id = models.CharField(verbose_name="Fire ID?", max_length=10, null=True, blank=True)
+    fire_desc = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
     user = models.ForeignKey(User, help_text="User")
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True)
     ignition_type = models.PositiveSmallIntegerField(
         verbose_name="Ignition Type (Burn/Fire)", choices=IGNTYPE_CHOICES)
 
     burn_active = models.BooleanField(verbose_name="Burn Active?", blank=True)
     further_ignitions = models.BooleanField(verbose_name="Further ignitions required?", blank=True)
     ignition_completed = models.BooleanField(verbose_name="Ignition now completed?", blank=True)
-    tenure = models.CharField(verbose_name="Tenure", max_length=24, null=True, blank=True)
+    #tenure = models.CharField(verbose_name="Tenure", max_length=24, null=True, blank=True)
     external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
 
+    def ignition_id(self):
+        if self.ignition_type==1:
+            return self.prescription.burn_id
+        else:
+            return self.fire_id
+
+    def ignition_desc(self):
+        if self.ignition_type==1:
+            return self.prescription.name
+        else:
+            return self.fire_desc
 
     def area(self):
-        return 100
+        if self.ignition_type==1:
+            yesterday = self.date - timedelta(days=1)
+            pb = PlannedBurn.objects.filter(prescription__id=self.prescription.id, date=yesterday)
+            if pb:
+                return pb[0].area
 
+        return None
+
+    def tenures(self):
+        if self.ignition_type==1:
+            return [t.name for t in self.prescription.tenures.all()]
+        return None
+
+#    def external_assist(self):
+#        pb = PlannedBurn.objects.filter(prescription__id=self.prescription.id, date=yesterday)
+#        if pb.invite:
+#            return True
+#        return False
+
+class ActiveBurn(models.Model):
+    prescription = models.ForeignKey(Prescription, related_name='active_burn')

@@ -43,6 +43,7 @@
   </div>
 </div>
 
+{% comment %}
 <ul id="report-tabs" class="nav nav-tabs">
         <li class="filter-pad">
             <form class="form-inline">
@@ -52,10 +53,6 @@
                 <label for="id_region" class="control-label">Region</label>
                 {{ form.region }}
 
-                {% comment %}
-                <label for="id_district" class="control-label">District</label>
-                {{ form.district }}
-                {% endcomment %}
                 <button type="submit" class="btn btn-primary">Update</button>
                 {% if report == "epfp_planned_burn" %}
                     <input class="hidden" name="report" value="epfp_planned_burn">
@@ -63,6 +60,7 @@
             </form>
         </li>
 </ul>
+{% endcomment %}
 
 <ul id="report-tabs" class="nav nav-tabs">
     <li id="planned-tab"  "{% if report == "epfp_planned_burns" %} class="active"{% endif %}>
@@ -83,6 +81,35 @@
             Summary
         </a>
     </li>
+
+    <li class="filter-pad">
+        <form class="form-inline">
+            {% if report == "epfp_planned_burns" %}
+                <label for="id_date" class="control-label">Date</label>
+                <input type="text" id="id_date" value="{{date}}" name="date"/>
+
+                <label for="id_region" class="control-label">Region</label>
+                {{ form.region }}
+
+                <input class="hidden" name="report" value="epfp_planned_burns">
+            {% elif report == "epfp_ongoing_burns" %}
+                <label for="id_ignition_type" class="control-label">Ignition Type</label>
+                {{ form.ignition_type }}
+
+                <label for="id_region" class="control-label">Region</label>
+                {{ form.region }}
+
+                <input class="hidden" name="report" value="epfp_ongoing_burns">
+            {% elif report == "epfp_active_burns" %}
+                <label for="id_region" class="control-label">Region</label>
+                {{ form.region }}
+
+                <input class="hidden" name="report" value="epfp_active_burns">
+            {% endif %}
+            <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+    </li>
+
 </ul>
 
 {% if report == "epfp_planned_burns" %}
@@ -92,7 +119,7 @@
         <table id="active-burn-table" class="table table-striped table-hover table-compressed" style="width:100%" border="2">
         <tr>
             <th>No. of Active Burns</th>
-            <td>10</td>
+            <td>{{active_burns}}</td>
         </tr>
         </table>
     </div>
@@ -101,7 +128,7 @@
         <table id="active-fire-table" class="table table-striped table-hover table-compressed" style="width:100%" border="2">
         <tr>
             <th>No. of Active Fires</th>
-            <td>5</td>
+            <td>{{active_fires}}</td>
         </tr>
         </table>
     </div>
@@ -153,10 +180,6 @@
 {% endif %}
 {% paginate %}
 
-{% if report == "epfp_active_burns" %}
-<p>Active Summary TAB</p>
-{% endif %}
-
 {% if report == "epfp_ongoing_burns" %}
 <p>Ongoing TAB</p>
 <table id="sorted-table" class="table table-striped table-hover table-compressed">
@@ -179,13 +202,24 @@
     {% autopaginate queryset 25 %}
     {% for qs in queryset %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
-      <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
-      <td>{{ qs.prescription.name }}</td>
+      <td>
+        {% if qs.prescription %}
+           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>
+        {% else %}
+            {{ qs.ignition_id }}
+        {% endif %}
+      </td>
+      <td>{{ qs.ignition_desc }}</td>
       <td>{% if qs.burn_active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.ignition_completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{{ qs.area }}</td>
-      <td>{{ qs.tenure }}</td>
+      <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% endif %}</td>
+      <td>
+        {% for tenure in qs.tenures %}
+            {{ tenure }}
+            <br>
+        {% endfor %}
+      </td>
       <td>{% if qs.external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
     </tr>
     {% endfor %}
@@ -193,6 +227,12 @@
 </table>
 
 {% endif %}
+{% paginate %}
+
+{% if report == "epfp_active_burns" %}
+<p>Active Summary TAB</p>
+{% endif %}
+
 
 <script>
 $(function(){
