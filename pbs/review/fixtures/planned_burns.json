@@ -5,7 +5,7 @@
   "fields": {
     "prescription": 609,
     "user": 228,
-    "date": "2016-04-10",
+    "date": "2016-04-11",
     "area": 10.0,
     "est_start": "11:59:59",
     "has_contigency": "False",
@@ -20,7 +20,7 @@
   "fields": {
     "prescription": 610,
     "user": 228,
-    "date": "2016-04-10",
+    "date": "2016-04-11",
     "area": 11.0,
     "est_start": "13:59:59",
     "has_contigency": "True",
@@ -35,9 +35,54 @@
   "fields": {
     "prescription": 611,
     "user": 228,
-    "date": "2016-04-10",
+    "date": "2016-04-11",
     "area": 12.0,
     "est_start": "09:59:59",
+    "has_contigency": "True",
+    "has_monitoring": "True",
+    "invite": ["DFES"],
+    "conditions": ""
+  }
+},
+{
+  "pk": 4,
+  "model": "review.plannedburn",
+  "fields": {
+    "prescription": 620,
+    "user": 228,
+    "date": "2016-04-12",
+    "area": 10.0,
+    "est_start": "06:59:59",
+    "has_contigency": "False",
+    "has_monitoring": "True",
+    "invite": ["LGA", "DFES"],
+    "conditions": ""
+  }
+},
+{
+  "pk": 5,
+  "model": "review.plannedburn",
+  "fields": {
+    "prescription": 621,
+    "user": 228,
+    "date": "2016-04-12",
+    "area": 11.0,
+    "est_start": "07:59:59",
+    "has_contigency": "True",
+    "has_monitoring": "False",
+    "invite": ["LGA"],
+    "conditions": "Special conditions go here ..."
+  }
+},
+{
+  "pk": 6,
+  "model": "review.plannedburn",
+  "fields": {
+    "prescription": 622,
+    "user": 228,
+    "date": "2016-04-12",
+    "area": 12.0,
+    "est_start": "08:59:59",
     "has_contigency": "True",
     "has_monitoring": "True",
     "invite": ["DFES"],
@@ -51,7 +96,7 @@
   "fields": {
     "prescription": 611,
     "user": 228,
-    "date": "2016-04-11",
+    "date": "2016-04-12",
     "ignition_type": 1,
     "burn_active": "True",
     "further_ignitions": "False",
@@ -65,7 +110,7 @@
   "fields": {
     "prescription": 613,
     "user": 228,
-    "date": "2016-04-11",
+    "date": "2016-04-12",
     "ignition_type": 1,
     "burn_active": "False",
     "further_ignitions": "True",
@@ -79,7 +124,7 @@
   "fields": {
     "prescription": 614,
     "user": 228,
-    "date": "2016-04-11",
+    "date": "2016-04-12",
     "ignition_type": 1,
     "burn_active": "True",
     "further_ignitions": "False",
@@ -91,11 +136,26 @@
   "pk": 4,
   "model": "review.ongoingburn",
   "fields": {
+    "prescription": 615,
+    "user": 228,
+    "date": "2016-04-12",
+    "ignition_type": 1,
+    "burn_active": "True",
+    "further_ignitions": "False",
+    "ignition_completed": "True",
+    "external_assist": "False"
+  }
+},
+
+{
+  "pk": 5,
+  "model": "review.ongoingburn",
+  "fields": {
     "fire_id": "Fire_001",
-    "fire_desc": "Desc of Fire_001 ...",
+    "fire_desc": "Fire in Midwest ...",
     "fire_region": 3,
     "user": 228,
-    "date": "2016-04-11",
+    "date": "2016-04-12",
     "ignition_type": 2,
     "burn_active": "True",
     "further_ignitions": "False",
@@ -104,14 +164,30 @@
   }
 },
 {
-  "pk": 5,
+  "pk": 6,
   "model": "review.ongoingburn",
   "fields": {
     "fire_id": "Fire_002",
-    "fire_desc": "Desc of Fire_002 ...",
+    "fire_desc": "Fire in South West ...",
     "fire_region": 6,
     "user": 228,
-    "date": "2016-04-11",
+    "date": "2016-04-12",
+    "ignition_type": 2,
+    "burn_active": "True",
+    "further_ignitions": "False",
+    "ignition_completed": "False",
+    "external_assist": "True"
+  }
+},
+{
+  "pk": 7,
+  "model": "review.ongoingburn",
+  "fields": {
+    "fire_id": "Fire_003",
+    "fire_desc": "Fire in South West ...",
+    "fire_region": 6,
+    "user": 228,
+    "date": "2016-04-12",
     "ignition_type": 2,
     "burn_active": "True",
     "further_ignitions": "False",

@@ -268,19 +268,25 @@ class PrescriptionSite(AuditSite):
             form = PlannedBurnSummaryForm(request.GET)
         elif report=='epfp_ongoing_burns':
             title = "Summary of Current Fire Load"
-            queryset = OngoingBurn.objects.all() #filter(burn_active=True)
+            #queryset = OngoingBurn.objects.all() #filter(burn_active=True)
+            queryset = OngoingBurn.objects.filter(date=dt) #filter(burn_active=True)
             form = OngoingBurnSummaryForm(request.GET)
         elif report=='epfp_active_burns':
             title = "Summary of Current and Planned Fires"
             queryset = PlannedBurn.objects.filter(date=dt)
-            qs_ongoing = OngoingBurn.objects.filter(burn_active=True)
-            form = PlannedBurnSummaryForm(request.GET)
+            qs_ongoing = OngoingBurn.objects.filter(burn_active=True, date=dt)
+            form = OngoingBurnSummaryForm(request.GET)
             #queryset = ActiveBurn.objects.filter(date__gte=dt)
 
+        ignition_type = 0
         if request.REQUEST.has_key('ignition_type'):
             ignition_type =int (request.REQUEST.get('ignition_type', None))
             if ignition_type != 0:
-                queryset = queryset.filter(ignition_type=ignition_type)
+                try:
+                    queryset = queryset.filter(ignition_type=ignition_type)
+                except:
+                    qs_ongoing = qs_ongoing.filter(ignition_type=ignition_type)
+
 
         #import ipdb; ipdb.set_trace()
         if request.REQUEST.has_key('region'):
@@ -303,13 +309,14 @@ class PrescriptionSite(AuditSite):
             'report': report,
             'username': request.user.username,
             'date': dt.strftime('%Y-%m-%d'),
-            'active_burns': OngoingBurn.objects.filter(ignition_type=1, burn_active=True).count(),
-            'active_fires': OngoingBurn.objects.filter(ignition_type=2, burn_active=True).count(),
+            'ignition_type': ignition_type,
+            'active_burns': OngoingBurn.objects.filter(ignition_type=1, burn_active=True, date=dt).count(),
+            'active_fires': OngoingBurn.objects.filter(ignition_type=2, burn_active=True, date=dt).count(),
 
-            'active_burns_stateside': OngoingBurn.objects.filter(ignition_type=1, burn_active=True).exclude(prescription__region__in=[6, 7, 8]).count(),
-            'active_burns_non_stateside': OngoingBurn.objects.filter(ignition_type=1, burn_active=True, prescription__region__in=[6, 7, 8]).count(),
-            'active_fires_stateside': OngoingBurn.objects.filter(ignition_type=2, burn_active=True).exclude(fire_region__in=[6, 7, 8]).count(),
-            'active_fires_non_stateside': OngoingBurn.objects.filter(ignition_type=2, burn_active=True, fire_region__in=[6, 7, 8]).count(),
+            'active_burns_stateside': OngoingBurn.objects.filter(ignition_type=1, burn_active=True, date=dt).exclude(prescription__region__in=[6, 7, 8]).count(),
+            'active_burns_non_stateside': OngoingBurn.objects.filter(ignition_type=1, burn_active=True, date=dt, prescription__region__in=[6, 7, 8]).count(),
+            'active_fires_stateside': OngoingBurn.objects.filter(ignition_type=2, burn_active=True, date=dt).exclude(fire_region__in=[6, 7, 8]).count(),
+            'active_fires_non_stateside': OngoingBurn.objects.filter(ignition_type=2, burn_active=True, date=dt, fire_region__in=[6, 7, 8]).count(),
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
