@@ -49,6 +49,11 @@ class PlannedBurn(models.Model):
     def contains_dfes(self):
         return 'DFES' in self.invite
 
+    def has_conditions(self):
+        if self.conditions:
+            return True
+        return False
+
 class OngoingBurn(models.Model):
     IGNTYPE_BURN = 1
     IGNTYPE_FIRE = 2

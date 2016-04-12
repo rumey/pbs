@@ -37,13 +37,13 @@
 {% endblock %}
 
 {% block content %}
-{% comment %}
+{% if report == "epfp_planned_burns" %}
 <div class="row">
   <div class="span12 filter-top-pad">
-      <p>Click on each row to view a summary for each burn, and to mark each as reviewed.</p>
+      <p>Click on row to view the special conditions</p>
   </div>
 </div>
-{% endcomment %}
+{% endif %}
 
 <ul id="report-tabs" class="nav nav-tabs">
     <li id="planned-tab"  "{% if report == "epfp_planned_burns" %} class="active"{% endif %}>
@@ -126,7 +126,7 @@
     </div>
 </div>
 
-<table id="sorted-table" class="table table-striped table-hover table-compressed">
+<table id="sorted-table" class="table table-hover table-compressed">
   <thead>
     <tr>
       <th rowspan="2">Burn ID</th>
@@ -164,8 +164,13 @@
       <td>{% if qs.has_monitoring %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.contains_lga %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.contains_dfes %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{{ qs.conditions }}</td>
+      <td>{% if qs.has_conditions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
     </tr>
+    {% if qs.has_conditions %}
+    <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
+      <td colspan="11">{{ qs.conditions }}</td>
+    </tr>
+    {% endif %}
     {% endfor %}
   </tbody>
 </table>
