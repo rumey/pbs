@@ -93,6 +93,23 @@
   "fields": {
     "fire_id": "Fire_001",
     "fire_desc": "Desc of Fire_001 ...",
+    "fire_region": 3,
+    "user": 228,
+    "date": "2016-04-11",
+    "ignition_type": 2,
+    "burn_active": "True",
+    "further_ignitions": "False",
+    "ignition_completed": "False",
+    "external_assist": "True"
+  }
+},
+{
+  "pk": 5,
+  "model": "review.ongoingburn",
+  "fields": {
+    "fire_id": "Fire_002",
+    "fire_desc": "Desc of Fire_002 ...",
+    "fire_region": 6,
     "user": 228,
     "date": "2016-04-11",
     "ignition_type": 2,

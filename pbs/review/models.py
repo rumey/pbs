@@ -1,7 +1,7 @@
 from django.db import models
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
-from pbs.prescription.models import (Prescription)
+from pbs.prescription.models import (Prescription, Region)
 from dateutil import tz
 
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -60,6 +60,7 @@ class OngoingBurn(models.Model):
     prescription = models.ForeignKey(Prescription, related_name='ongoing_burn', null=True, blank=True)
     fire_id = models.CharField(verbose_name="Fire ID?", max_length=10, null=True, blank=True)
     fire_desc = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
+    fire_region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     user = models.ForeignKey(User, help_text="User")
     date = models.DateField(auto_now_add=True)
     ignition_type = models.PositiveSmallIntegerField(

@@ -304,7 +304,12 @@ class PrescriptionSite(AuditSite):
             'username': request.user.username,
             'date': dt.strftime('%Y-%m-%d'),
             'active_burns': OngoingBurn.objects.filter(ignition_type=1, burn_active=True).count(),
-            'active_fires': OngoingBurn.objects.filter(ignition_type=2, burn_active=True).count()
+            'active_fires': OngoingBurn.objects.filter(ignition_type=2, burn_active=True).count(),
+
+            'active_burns_stateside': OngoingBurn.objects.filter(ignition_type=1, burn_active=True).exclude(prescription__region__in=[6, 7, 8]).count(),
+            'active_burns_non_stateside': OngoingBurn.objects.filter(ignition_type=1, burn_active=True, prescription__region__in=[6, 7, 8]).count(),
+            'active_fires_stateside': OngoingBurn.objects.filter(ignition_type=2, burn_active=True).exclude(fire_region__in=[6, 7, 8]).count(),
+            'active_fires_non_stateside': OngoingBurn.objects.filter(ignition_type=2, burn_active=True, fire_region__in=[6, 7, 8]).count(),
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
