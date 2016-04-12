@@ -76,6 +76,9 @@
 
                 <input class="hidden" name="report" value="epfp_planned_burns">
             {% elif report == "epfp_ongoing_burns" %}
+                <label for="id_date" class="control-label">Date</label>
+                <input type="text" id="id_date" value="{{date}}" name="date"/>
+
                 <label for="id_ignition_type" class="control-label">Ignition Type</label>
                 {{ form.ignition_type }}
 
@@ -86,6 +89,9 @@
             {% elif report == "epfp_active_burns" %}
                 <label for="id_date" class="control-label">Date</label>
                 <input type="text" id="id_date" value="{{date}}" name="date"/>
+
+                <label for="id_ignition_type" class="control-label">Ignition Type</label>
+                {{ form.ignition_type }}
 
                 <label for="id_region" class="control-label">Region</label>
                 {{ form.region }}
@@ -254,6 +260,7 @@
   </thead>
   <tbody>
     {% autopaginate queryset 25 %}
+    {% if ignition_type != 2 %}
     {% for qs in queryset %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td>
@@ -277,6 +284,7 @@
       <td><div class="text-center">{{ qs.est_start }}</div></td>
     </tr>
     {% endfor %}
+    {% endif %}
 
     {% for qs in qs_ongoing %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
