@@ -80,7 +80,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'swingers.middleware.auth.AuthenticationMiddleware'
+    'swingers.middleware.auth.AuthenticationMiddleware', # req'd by _locals in auth.py
+    'dpaw_utils.middleware.SSOLoginMiddleware',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -144,7 +145,7 @@ SOUTH_TESTS_MIGRATE = False
 SKIP_SOUTH_TESTS = True
 
 # Application version number
-APPLICATION_VERSION_NO = '1.4.6'
+APPLICATION_VERSION_NO = '1.4.8'
 
 # Application title
 SITE_TITLE = 'Prescribed Burn System'

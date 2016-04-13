@@ -1,5 +1,5 @@
 {% load pbs_tags %}
-\section{Section B7 - Prescribed Burning Organisational Structure and Communications Plan}
+\section{Section B7 - Organisational Structure and Communications Plan}
 {% filter_by_tag_name current.document_set "prescribed burning organisational structure and communications plan" as org_structures %}
 {% if org_structures %}
 \phantomsection
@@ -11,6 +11,7 @@
   {% endif %}
 {% endfor %}
 {% else %}
+    \fancyfoot[L]{ SECTION B7 - ORGANISATIONAL STRUCTURE AND COMMUNICATIONS PLAN\newline\textbf{Section B7 last modified}\textit{ N/A  }\quad\textbf{PDF Created On}\textit{ {{ timestamp  }}  }  }
   {% if current.day_state.organisational_structure %}
     No Document Uploaded
   {% else %}
