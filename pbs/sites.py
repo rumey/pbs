@@ -317,12 +317,12 @@ class PrescriptionSite(AuditSite):
             'date': dt.strftime('%Y-%m-%d'),
             'ignition_type': ignition_type,
 
-            'active_burns': OngoingBurn.objects.filter(active=True, date=dt).count(),
+            'active_burns': OngoingBurn.objects.filter(active=True, date=dt).exclude(fire__region__in=[i for i in range(1,10)]).count(),
             'active_fires': Fire.objects.filter(active=True, date=dt).count(),
 
-            'active_burns_stateside': OngoingBurn.objects.filter(active=True, date=dt).exclude(prescription__region__in=[6, 7, 8]).count(),
+            'active_burns_stateside': OngoingBurn.objects.filter(active=True, date=dt).exclude(fire__region__in=[6, 7, 8]).count(),
             'active_burns_non_stateside': OngoingBurn.objects.filter(active=True, date=dt, prescription__region__in=[6, 7, 8]).count(),
-            'active_fires_stateside': Fire.objects.filter(active=True, date=dt).exclude(region__in=[6, 7, 8]).count(),
+            'active_fires_stateside': Fire.objects.filter(active=True, date=dt).count(),
             'active_fires_non_stateside': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
         }
         context.update(extra_context or {})
