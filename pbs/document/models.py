@@ -132,8 +132,13 @@ class Document(Audit):
     objects = TagManager()
 
     def save(self, *args, **kwargs):
-        # import ipdb; ipdb.set_trace()
-        return super(Document, self).save(*args, **kwargs)
+        super(Document, self).save(*args, **kwargs)
+        # confirm that file is written to filesystem, if not remove the record
+        if not self.exists:
+            fname = self.document.name
+            Document.objects.get(id=self.id).delete()
+            raise Exception('ERROR: File not created on filesystem {}'.format(fname))
+        return
 
     @property
     def descriptor(self):
