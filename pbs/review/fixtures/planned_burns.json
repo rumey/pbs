@@ -92,13 +92,64 @@
 
 {
   "pk": 1,
+  "model": "review.fire",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
+    "fire_id": "SWC_001",
+    "desc": "Description of SWC_001 ...",
+    "region": 7,
+    "user": 228,
+    "date": "2016-04-12",
+    "active": "True",
+    "external_assist": "False"
+  }
+},
+{
+  "pk": 2,
+  "model": "review.fire",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
+    "fire_id": "SWC_002",
+    "desc": "Description of SWC_001 ...",
+    "region": 7,
+    "user": 228,
+    "date": "2016-04-12",
+    "active": "True",
+    "external_assist": "False"
+  }
+},
+{
+  "pk": 3,
+  "model": "review.fire",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
+    "fire_id": "ALB_001",
+    "desc": "Description of SWC_001 ...",
+    "region": 5,
+    "user": 228,
+    "date": "2016-04-12",
+    "active": "True",
+    "external_assist": "False"
+  }
+},
+
+{
+  "pk": 1,
   "model": "review.ongoingburn",
   "fields": {
     "prescription": 611,
     "user": 228,
     "date": "2016-04-12",
-    "ignition_type": 1,
-    "burn_active": "True",
+    "active": "True",
     "further_ignitions": "False",
     "ignition_completed": "False",
     "external_assist": "False"
@@ -111,8 +162,7 @@
     "prescription": 613,
     "user": 228,
     "date": "2016-04-12",
-    "ignition_type": 1,
-    "burn_active": "False",
+    "active": "False",
     "further_ignitions": "True",
     "ignition_completed": "False",
     "external_assist": "True"
@@ -125,8 +175,7 @@
     "prescription": 614,
     "user": 228,
     "date": "2016-04-12",
-    "ignition_type": 1,
-    "burn_active": "True",
+    "active": "True",
     "further_ignitions": "False",
     "ignition_completed": "True",
     "external_assist": "False"
@@ -139,60 +188,10 @@
     "prescription": 615,
     "user": 228,
     "date": "2016-04-12",
-    "ignition_type": 1,
-    "burn_active": "True",
+    "active": "True",
     "further_ignitions": "False",
     "ignition_completed": "True",
     "external_assist": "False"
-  }
-},
-
-{
-  "pk": 5,
-  "model": "review.ongoingburn",
-  "fields": {
-    "fire_id": "Fire_001",
-    "fire_desc": "Fire in Midwest ...",
-    "fire_region": 3,
-    "user": 228,
-    "date": "2016-04-12",
-    "ignition_type": 2,
-    "burn_active": "True",
-    "further_ignitions": "False",
-    "ignition_completed": "False",
-    "external_assist": "True"
-  }
-},
-{
-  "pk": 6,
-  "model": "review.ongoingburn",
-  "fields": {
-    "fire_id": "Fire_002",
-    "fire_desc": "Fire in South West ...",
-    "fire_region": 6,
-    "user": 228,
-    "date": "2016-04-12",
-    "ignition_type": 2,
-    "burn_active": "True",
-    "further_ignitions": "False",
-    "ignition_completed": "False",
-    "external_assist": "True"
-  }
-},
-{
-  "pk": 7,
-  "model": "review.ongoingburn",
-  "fields": {
-    "fire_id": "Fire_003",
-    "fire_desc": "Fire in South West ...",
-    "fire_region": 6,
-    "user": 228,
-    "date": "2016-04-12",
-    "ignition_type": 2,
-    "burn_active": "True",
-    "further_ignitions": "False",
-    "ignition_completed": "False",
-    "external_assist": "True"
   }
 }
 

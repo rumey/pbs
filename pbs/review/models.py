@@ -1,7 +1,9 @@
-from django.db import models
+#from django.db import models
+from swingers import models
 from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 from pbs.prescription.models import (Prescription, Region)
+from swingers.models.auth import Audit
 from dateutil import tz
 
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -54,60 +56,48 @@ class PlannedBurn(models.Model):
             return True
         return False
 
-class OngoingBurn(models.Model):
-    IGNTYPE_BURN = 1
-    IGNTYPE_FIRE = 2
-    IGNTYPE_CHOICES = (
-        (IGNTYPE_BURN, 'BURN'),
-        (IGNTYPE_FIRE, 'FIRE'),
-    )
+    class Meta:
+        unique_together = ('prescription', 'date',)
 
-    prescription = models.ForeignKey(Prescription, related_name='ongoing_burn', null=True, blank=True)
+
+class Fire(Audit):
     fire_id = models.CharField(verbose_name="Fire ID?", max_length=10, null=True, blank=True)
-    fire_desc = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
-    fire_region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
+    desc = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
+    region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     user = models.ForeignKey(User, help_text="User")
     date = models.DateField(auto_now_add=True)
-    ignition_type = models.PositiveSmallIntegerField(
-        verbose_name="Ignition Type (Burn/Fire)", choices=IGNTYPE_CHOICES)
+    active = models.BooleanField(verbose_name="Fire Active?", blank=True)
+    external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
 
-    burn_active = models.BooleanField(verbose_name="Burn Active?", blank=True)
+    class Meta:
+        unique_together = ('fire_id', 'date',)
+
+
+class OngoingBurn(models.Model):
+    prescription = models.ForeignKey(Prescription, related_name='ongoing_burn', null=True, blank=True)
+    fire = models.ForeignKey(Fire, related_name='fire', null=True, blank=True)
+    user = models.ForeignKey(User, help_text="User")
+    date = models.DateField(auto_now_add=True)
+
+    active = models.BooleanField(verbose_name="Burn Active?", blank=True)
     further_ignitions = models.BooleanField(verbose_name="Further ignitions required?", blank=True)
     ignition_completed = models.BooleanField(verbose_name="Ignition now completed?", blank=True)
     #tenure = models.CharField(verbose_name="Tenure", max_length=24, null=True, blank=True)
     external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
 
-    def ignition_id(self):
-        if self.ignition_type==1:
-            return self.prescription.burn_id
-        else:
-            return self.fire_id
-
-    def ignition_desc(self):
-        if self.ignition_type==1:
-            return self.prescription.name
-        else:
-            return self.fire_desc
-
     def area(self):
-        if self.ignition_type==1:
+        if self.prescription:
             yesterday = self.date - timedelta(days=1)
             pb = PlannedBurn.objects.filter(prescription__id=self.prescription.id, date=yesterday)
             if pb:
                 return pb[0].area
-
         return None
 
     def tenures(self):
-        if self.ignition_type==1:
+        if self.prescription:
             return [t.name for t in self.prescription.tenures.all()]
         return None
 
-#    def external_assist(self):
-#        pb = PlannedBurn.objects.filter(prescription__id=self.prescription.id, date=yesterday)
-#        if pb.invite:
-#            return True
-#        return False
 
 class ActiveBurn(models.Model):
     prescription = models.ForeignKey(Prescription, related_name='active_burn')

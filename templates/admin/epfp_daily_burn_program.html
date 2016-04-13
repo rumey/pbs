@@ -195,18 +195,25 @@
     </tr>
   </thead>
   <tbody>
-    {% autopaginate queryset 25 %}
-    {% for qs in queryset %}
+    {% autopaginate qs_ongoing_burns 25 %}
+    {% for qs in qs_ongoing_burns %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td>
         {% if qs.prescription %}
-           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>
+           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id  }}</a>
         {% else %}
-            {{ qs.ignition_id }}
+           {{ qs.fire.fire_id  }}
         {% endif %}
       </td>
-      <td>{{ qs.ignition_desc }}</td>
-      <td>{% if qs.burn_active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>
+        {% if qs.prescription %}
+           {{ qs.prescription.name  }}
+        {% else %}
+           {{ qs.fire.desc  }}
+        {% endif %}
+      </td>
+
+      <td>{% if qs.active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.ignition_completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% endif %}</td>
@@ -265,7 +272,6 @@
   </thead>
   <tbody>
     {% autopaginate queryset 25 %}
-    {% if ignition_type != 2 %}
     {% for qs in queryset %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td>
@@ -289,18 +295,25 @@
       <td><div class="text-center">{{ qs.est_start }}</div></td>
     </tr>
     {% endfor %}
-    {% endif %}
 
-    {% for qs in qs_ongoing %}
+    {% for qs in qs_ongoing_burns %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td>
         {% if qs.prescription %}
-           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>
+           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id  }}</a>
         {% else %}
-            {{ qs.ignition_id }}
+           {{ qs.fire.fire_id  }}
         {% endif %}
       </td>
-      <td>{{ qs.ignition_desc }}</td>
+
+      <td>
+        {% if qs.prescription %}
+           {{ qs.prescription.name  }}
+        {% else %}
+           {{ qs.fire.desc  }}
+        {% endif %}
+      </td>
+
       <td><div class="text-center">{{ qs.prescription.location }}</div></td>
       <td>
         <div class="text-center">
