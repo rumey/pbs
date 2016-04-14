@@ -1193,11 +1193,14 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             expiry=self.__find_between(token, '[', ']')
             size=self.__find_between(token, '   ', ' [').strip()
             size = '< 1 MB' if size == '0 MB' else size
+            if not pdf.endswith("_pfp.pdf"): # exclude non-pfp's
+                continue
 
             try:
                 timestamp = datetime.strptime(pdf.split('_')[-2], '%Y-%m-%dT%H%M')
             except ValueError:
                 timestamp = datetime.strptime(pdf.split('_')[-2], '%Y-%m-%dT%H%M%S')
+
 
             fex_file_list.append([
                 pdf,
