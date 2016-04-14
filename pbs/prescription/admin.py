@@ -44,21 +44,21 @@ from pbs.prescription.actions import (
 from pbs.prescription.forms import (
     PrescriptionCreateForm, EndorsingRoleForm,
     AddEndorsementForm, AddApprovalForm, PrescriptionEditForm,
-    PrescriptionPriorityForm, BriefingChecklistForm, PrescriptionSummaryForm,
+    PrescriptionPriorityForm, BriefingChecklistForm,
     FundingAllocationInlineFormSet)
 from pbs.prescription.models import (
     Season, Prescription, RegionalObjective, Region, FundingAllocation)
 from django.forms.models import inlineformset_factory
 
 from pbs.report.models import Evaluation
-from pbs.report.forms import (SummaryCompletionStateForm,
-    BurnImplementationStateForm, BurnClosureStateForm)
+from pbs.report.forms import (
+    SummaryCompletionStateForm, BurnImplementationStateForm, BurnClosureStateForm)
 
 from pbs.templatetags.pbs_markdown import markdownify
 from pbs.utils import get_deleted_objects, update_permissions
 from pbs.utils.widgets import CheckboxSelectMultiple
 
-from pbs import mutex,SemaphoreException
+from pbs import mutex, SemaphoreException
 from django.core.mail import send_mail
 
 from pbs.prescription import fund_allocation
@@ -66,7 +66,6 @@ from pbs.prescription import fund_allocation
 
 csrf_protect_m = method_decorator(csrf_protect)
 logger = logging.getLogger('pbs')
-
 
 
 class DistrictAdmin(admin.ModelAdmin):
@@ -248,18 +247,14 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
     def get_actions(self, request):
         actions = super(PrescriptionAdmin, self).get_actions(request)
 
-        if not request.user.has_perm('prescription.delete_prescription'):
-            if actions['delete_selected']:
-                del actions['delete_selected']
-        if not request.user.has_perm('prescription.can_delete_approval'):
-            if actions['delete_approval_endorsement']:
-                del actions['delete_approval_endorsement']
-        if not request.user.has_perm('prescription.can_carry_over'):
-            if actions['carry_over_burns']:
-                del actions['carry_over_burns']
-        if not request.user.has_perm('prescription.can_corporate_approve'):
-            if actions['bulk_corporate_approve']:
-                del actions['bulk_corporate_approve']
+        if not request.user.has_perm('prescription.delete_prescription') and actions["delete_selected"]:
+            del actions['delete_selected']
+        if not request.user.has_perm('prescription.can_delete_approval') and actions["delete_approval_endorsement"]:
+            del actions['delete_approval_endorsement']
+        if not request.user.has_perm('prescription.can_carry_over') and actions["carry_over_burns"]:
+            del actions['carry_over_burns']
+        if not request.user.has_perm('prescription.can_corporate_approve') and actions["bulk_corporate_approve"]:
+            del actions['bulk_corporate_approve']
 
         return actions
 
@@ -338,10 +333,10 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             fuel_descriptions = '"%s"' % ",".join(
                 x.fuel_description for x in item.lightingsequence_set.all())
             tenures = '"%s"' % ",".join(x.name for x in item.tenures.all())
-            escape_dates = ", ".join(
-                [ datetime.strftime(x.date_escaped, '%d/%m/%Y')
-                  for x in item.areaachievement_set.filter(
-                  date_escaped__isnull=False).order_by('ignition') ])
+            escape_dates = ", ".join([
+                datetime.strftime(x.date_escaped, '%d/%m/%Y')
+                for x in item.areaachievement_set.filter(date_escaped__isnull=False).order_by('ignition')
+            ])
             dpaw_fire_nums = '"%s"' % ",".join(
                 x.dpaw_fire_no for x in item.areaachievement_set
                 .exclude(dpaw_fire_no__isnull=True)
@@ -483,10 +478,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 request, obj)
 
     def formfield_for_dbfield(self, db_field, **kwargs):
-
-        #today = timezone.now().date()
-        #if db_field.name == 'planned_year':
-        #    kwargs['initial'] = today.year
+        # today = timezone.now().date()
+        # if db_field.name == 'planned_year':
+        #     kwargs['initial'] = today.year
 
         if db_field.name == 'planned_season':
             kwargs['initial'] = Season.SEASON_ANNUAL
@@ -495,9 +489,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         # for each period. We need a dataset to relate the region to the
         # seasons they will use (tropical, temperate), otherwise we will
         # not be able to pre-populate this field.
-        #season = Season.objects.get(start__lte=today, end__gte=today)
-        #if db_field.name == 'planned_season':
-        #    kwargs['initial'] = season.name
+        # season = Season.objects.get(start__lte=today, end__gte=today)
+        # if db_field.name == 'planned_season':
+        #     kwargs['initial'] = season.name
 
         return super(PrescriptionAdmin, self).formfield_for_dbfield(
             db_field, **kwargs)
@@ -636,8 +630,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                         request, "Corporate approval successful.")
                     return HttpResponseRedirect(url)
             elif request.POST.get('_delete'):
-                if (obj.planning_status == obj.PLANNING_APPROVED
-                     and request.user.has_perm('prescription.can_admin')):
+                if (obj.planning_status == obj.PLANNING_APPROVED and request.user.has_perm('prescription.can_admin')):
                     obj.planning_status = obj.PLANNING_DRAFT
                     obj.planning_status_modified = timezone.now()
                     obj.save()
@@ -657,10 +650,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         """
         obj = self.get_object(request, unquote(object_id))
 
+        title = "Endorse this ePFP"
         if obj.endorsement_status == obj.ENDORSEMENT_DRAFT:
             title = "Submit for endorsement"
-        else:
-            title = "Endorse this ePFP"
 
         form = AddEndorsementForm(request.POST or None, request=request)
 
@@ -756,8 +748,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             # The user has confirmed they wish to delete the endorsement
             endorsement.delete()
             self.message_user(request, "Successfully deleted endorsement.")
-            url = reverse('admin:prescription_prescription_endorse',
-                args=(obj.id,))
+            url = reverse('admin:prescription_prescription_endorse', args=(obj.id,))
             return HttpResponseRedirect(url)
 
         context = {
@@ -767,10 +758,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         }
         context.update(extra_context or {})
 
-        return TemplateResponse(request,
-            "admin/prescription/prescription/delete_endorsement.html",
-            context, current_app=self.admin_site.name)
-
+        return TemplateResponse(request, "admin/prescription/prescription/delete_endorsement.html", context, current_app=self.admin_site.name)
 
     def endorsing_roles(self, request, object_id, extra_context=None):
         """
@@ -823,8 +811,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                                 "endorsing_roles.html", context,
                                 current_app=self.admin_site.name)
 
-    def delete_regional_objective(self, request, object_id, objective_id,
-                           extra_context=None):
+    def delete_regional_objective(self, request, object_id, objective_id, extra_context=None):
         obj = self.get_object(request, unquote(object_id))
 
         if obj is None:
@@ -843,8 +830,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             # The user has confirmed they wish to delete the regional objective
             regional_objective.delete()
             self.message_user(request, "Successfully deleted regional objective.")
-            url = reverse('admin:risk_context_changelist',
-                args=(obj.id,))
+            url = reverse('admin:risk_context_changelist', args=(obj.id,))
             return HttpResponseRedirect(url)
 
         context = {
@@ -855,9 +841,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         }
         context.update(extra_context or {})
 
-        return TemplateResponse(request,
-            "admin/prescription/prescription/delete_regional_objective.html",
-            context, current_app=self.admin_site.name)
+        return TemplateResponse(request, "admin/prescription/prescription/delete_regional_objective.html", context, current_app=self.admin_site.name)
 
     def _approve_title(self, obj):
         if obj.approval_status == obj.APPROVAL_DRAFT:
@@ -1095,10 +1079,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         """
         A custom view to display section A1 of an ePFP.
         """
-        class AdminPrescriptionSummaryForm(PrescriptionSummaryForm):
-            formfield_callback = partial(
-                self.formfield_for_dbfield, request=request)
-
         obj = self.get_object(request, unquote(object_id))
         AdminPrescriptionSummaryForm = self.get_form(request, obj)
 
@@ -1180,27 +1160,26 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         title = "PDFs"
 
         cmd = ['fexsend', '-l', '-v']
-        run = subprocess.Popen(' '.join(cmd), shell=True, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        run = subprocess.Popen(' '.join(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         fex_tokens = run.communicate()[0]
 
-        token_str=self.__find_between(fex_tokens, '<pre>', '</pre>')
-        tokens=[token for token in token_str.split('<--') if 'dkey' in token]
+        token_str = self.__find_between(fex_tokens, '<pre>', '</pre>')
+        tokens = [token for token in token_str.split('<--') if 'dkey' in token]
 
         fex_file_list = []
         for token in tokens:
-            pdf=self.__find_between(token, '>', '<')
-            dkey=self.__find_between(token, 'dkey=', '&')
-            expiry=self.__find_between(token, '[', ']')
-            size=self.__find_between(token, '   ', ' [').strip()
+            pdf = self.__find_between(token, '>', '<')
+            dkey = self.__find_between(token, 'dkey=', '&')
+            expiry = self.__find_between(token, '[', ']')
+            size = self.__find_between(token, '   ', ' [').strip()
             size = '< 1 MB' if size == '0 MB' else size
-            if not pdf.endswith("_pfp.pdf"): # exclude non-pfp's
+            if not pdf.endswith("_pfp.pdf"):  # exclude non-pfp's
                 continue
 
             try:
                 timestamp = datetime.strptime(pdf.split('_')[-2], '%Y-%m-%dT%H%M')
             except ValueError:
                 timestamp = datetime.strptime(pdf.split('_')[-2], '%Y-%m-%dT%H%M%S')
-
 
             fex_file_list.append([
                 pdf,
@@ -1225,8 +1204,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         Find the substring between the first and last chars/strings
         """
         try:
-            start = s.index( first ) + len( first )
-            end = s.index( last, start )
+            start = s.index(first) + len(first)
+            end = s.index(last, start)
             return s[start:end]
         except ValueError:
             return ""
@@ -1319,9 +1298,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 ' ', '_')
         error_response = HttpResponse(content_type='text/html')
         errortxt = downloadname.replace(".pdf", ".errors.txt.html")
-        error_response['Content-Disposition'] = (
-            '{0}; filename="{1}"'.format(
-            "inline", errortxt))
+        error_response['Content-Disposition'] = '{0}; filename="{1}"'.format("inline", errortxt)
         try:
             with mutex('pbs'+str(object_id), 1, obj.burn_id, request.user):
                 subtitles = {
@@ -1352,7 +1329,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                         disposition, downloadname))
 
                 # used by JQuery to block page until download completes
-                #response.set_cookie('fileDownloadToken', '_token')
+                # response.set_cookie('fileDownloadToken', '_token')
 
                 # directory should be a property of prescription model
                 # so caching machinering can put outdated flag in directory
@@ -1362,9 +1339,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 if not os.path.exists(directory):
                     logger.debug("Making a new directory: {}".format(directory))
                     os.makedirs(directory)
-                #os.chdir(directory)
-                #logger.debug("Changing directory: {}".format(directory))
-
+                # os.chdir(directory)
+                # logger.debug("Changing directory: {}".format(directory))
 
                 logger.debug('Starting  render_to_string step')
                 err_msg = None
@@ -1377,7 +1353,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     err_msg = u"PDF tex template render failed (might be missing attachments):"
                     logger.debug(err_msg + "\n{}".format(e))
 
-                    error_response.write(err_msg + "\n\n{0}\n\n{1}".format(e,traceback.format_exc()))
+                    error_response.write(err_msg + "\n\n{0}\n\n{1}".format(e, traceback.format_exc()))
                     return error_response
 
                 with open(directory + texname, "w") as f:
@@ -1399,11 +1375,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     token = '_token'
                 logger.info('Filesize in MB: {}'.format(filesize))
 
-
-
                 if settings.PDF_TO_FEXSRV:
                     file_url = self.pdf_to_fexsvr(directory + filename, directory + texname, downloadname, request.user.email)
-                    url = request.META.get('HTTP_REFERER') # redirect back to the current URL
+                    url = request.META.get('HTTP_REFERER')  # redirect back to the current URL
                     logger.debug("__________________________ END _____________________________")
                     resp = HttpResponseRedirect(url)
                     resp.set_cookie('fileDownloadToken', token)
@@ -1439,12 +1413,12 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         if os.path.exists(filename):
             logger.info("Sending file to FEX server {} ...".format(filename))
 
-            cmd = ['fexsend', '-={}'.format(downloadname), filename, recipient] # rename from filename to downloadname on fexsrv
+            cmd = ['fexsend', '-={}'.format(downloadname), filename, recipient]  # rename from filename to downloadname on fexsrv
             logger.info("FEX cmd: {}".format(cmd))
 
             p = subprocess.check_output(cmd)
-            time.sleep(2) # allow some time to upload to FEX Svr
-            items=p.split('\n')
+            time.sleep(2)  # allow some time to upload to FEX Svr
+            items = p.split('\n')
             logger.info('ITEMS: {}'.format(items))
             file_url = items[([items.index(i) for i in items if 'Location' in i]).pop()].split(': ')[1]
 
@@ -1473,7 +1447,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 out = subprocess.check_output(cmd)
                 filesize = out.split('K ')[0] + ' KB'
                 logger.info('Filesize in KB: {}'.format(filesize))
-
 
             subject = 'PBS: PDF File {}'.format(fex_filename)
             email_from = recipient
@@ -1906,8 +1879,7 @@ class SavePrescriptionMixin(object):
         if request.user.has_perm('prescription.can_admin') or self.lock_after == 'never':
             return self.list_editable
 
-        if ((self.lock_after == 'endorsement' and not current.is_draft) or
-            (self.lock_after == 'closure' and current.is_closed)):
+        if (self.lock_after == 'endorsement' and not current.is_draft) or (self.lock_after == 'closure' and current.is_closed):
             return ('id',)
         else:
             return self.list_editable
@@ -1915,11 +1887,16 @@ class SavePrescriptionMixin(object):
     def save_model(self, request, obj, form, change):
         """
         Save the model and assign delete permissions to particular objects.
+        Also save user to object if an audit object
         """
         try:
             obj.prescription = self.prescription
         except AttributeError:
             pass
+        if hasattr(obj, "creator") and not obj.creator:
+            obj.creator = request.user
+        if hasattr(obj, "modifier"):
+            obj.modifier = request.user
         obj.save()
 
         # If can_delete is set, allow the user to delete this object.
