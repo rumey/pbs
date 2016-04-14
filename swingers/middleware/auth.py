@@ -3,8 +3,6 @@ from __future__ import (division, print_function, unicode_literals,
 from django.conf import settings
 from django import http
 
-from swingers.models import get_locals
-
 import logging
 
 
@@ -42,8 +40,6 @@ class AuthenticationMiddleware(object):
     def process_request(self, request):
         if 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' in request.META:
             return cors_preflight_response(request)
-        _locals = get_locals()
-        _locals.request = request
 
         # Add site name to request object (if defined).
         if hasattr(settings, 'SITE_NAME'):

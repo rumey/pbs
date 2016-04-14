@@ -17,20 +17,6 @@ from swingers.models import Model, ForeignKey, DateTimeField
 
 logger = logging.getLogger("log." + __name__)
 
-_locals = threading.local()
-
-
-def get_locals():
-    """
-    Setup locals for a request thread so we can attach stuff and make it
-    available globally.
-    import from request.models::
-        from request.models import get_locals
-        _locals = get_locals
-        _locals.request.user = amazing
-    """
-    return _locals
-
 
 @python_2_unicode_compatible
 class Audit(Model):
@@ -72,22 +58,6 @@ class Audit(Model):
     changed_data = property(_get_changed_data)
 
     def save(self, *args, **kwargs):
-        """
-        This mandates a logged in user for save actions,
-        or that creator and modifier are specifed (for shell
-        sessions).
-        Requires swingers.middleware.auth.AuthenticationMiddleware
-        at the end of MIDDLEWARE_CLASSES to attach the request
-        object to the local thread.
-
-        Don't write to the thread locals object anywhere outside of
-        middleware as its not thread safe!!!
-        """
-        if hasattr(_locals, "request"):  # Assume not a shell session
-            if not self.pk:
-                self.creator = _locals.request.user
-            self.modifier = _locals.request.user
-
         if not self.pk:
             created = True
         else:

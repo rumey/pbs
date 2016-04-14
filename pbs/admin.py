@@ -20,6 +20,16 @@ class BaseAdmin(ModelAdmin):
     list_editable_extra = 0
     list_empty_form = False
 
+    def save_model(self, request, obj, form, change):
+        """
+        Save user to object if an audit object
+        """
+        if hasattr(obj, "creator") and not obj.creator:
+            obj.creator = request.user
+        if hasattr(obj, "modifier"):
+            obj.modifier = request.user
+        obj.save()
+
     def get_list_editable(self, request):
         return self.list_editable
 
