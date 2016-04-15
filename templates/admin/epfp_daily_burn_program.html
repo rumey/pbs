@@ -37,6 +37,7 @@
 {% endblock %}
 
 {% block content %}
+{% comment %}
 {% if report == "epfp_planned_burns" %}
 <div class="row">
   <div class="span12 filter-top-pad">
@@ -44,6 +45,7 @@
   </div>
 </div>
 {% endif %}
+{% endcomment %}
 
 <div style="width: 50%; margin-left:25%; margin-right:25%; float: left">
         <table id="active-burn-table" class="table table-striped table-hover table-compressed" style="width:100%" border="2">
@@ -58,71 +60,53 @@
         <tbody>
         <tr>
             <th>Active Burns and Fires - Statewide</th>
-            <td>{{active_burns_stateside}}</td>
-            <td>{{active_fires_stateside}}</td>
+            <td>{{active_burns_statewide}}</td>
+            <td>{{active_fires_statewide}}</td>
         </tr>
         <tr>
             <th>Active Burns and Fires - Southwest Bushfire Risk Zone</th>
-            <td>{{active_burns_non_stateside}}</td>
-            <td>{{active_fires_non_stateside}}</td>
+            <td>{{active_burns_non_statewide}}</td>
+            <td>{{active_fires_non_statewide}}</td>
         </tr>
         </tbody>
 
         </table>
+
 </div>
 
-<ul id="report-tabs" class="nav nav-tabs">
-    <li id="planned-tab"  "{% if report == "epfp_planned_burns" %} class="active"{% endif %}>
-        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_planned_burns">
-            <i class="icon-tag"></i>
-            Planned
-        </a>
-    </li>
-    <li id="ongoing-tab" {% if report == "epfp_ongoing_burns" %} class="active"{% endif %}>
-        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_ongoing_burns">
-            <i class="icon-plus"></i>
-            Ongoing
-        </a>
-    </li>
-    <li id="summary-tab"  "{% if report == "epfp_active_burns" %} class="active"{% endif %}>
-        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_active_burns">
-            <i class="icon-fire"></i>
-            Summary
-        </a>
-    </li>
-
+<ul id="filters" class="nav">
     <li class="filter-pad">
         <form class="form-inline">
-            {% if report == "epfp_planned_burns" %}
+            {% if report == "epfp_planned" %}
                 <label for="id_date" class="control-label">Date</label>
                 <input type="text" id="id_date" value="{{date}}" name="date"/>
 
                 <label for="id_region" class="control-label">Region</label>
                 {{ form.region }}
 
-                <input class="hidden" name="report" value="epfp_planned_burns">
-            {% elif report == "epfp_ongoing_burns" %}
+                <input class="hidden" style="float: right;" name="report" value="epfp_planned">
+            {% elif report == "epfp_fireload" %}
                 <label for="id_date" class="control-label">Date</label>
                 <input type="text" id="id_date" value="{{date}}" name="date"/>
 
-                <label for="id_ignition_type" class="control-label">Ignition Type</label>
-                {{ form.ignition_type }}
+                <label for="id_fire_type" class="control-label">Fire Type</label>
+                {{ form.fire_type }}
 
                 <label for="id_region" class="control-label">Region</label>
                 {{ form.region }}
 
-                <input class="hidden" name="report" value="epfp_ongoing_burns">
-            {% elif report == "epfp_active_burns" %}
+                <label for="id_district" class="control-label">District</label>
+                {{ form.district }}
+
+                <input class="hidden" style="float: right;" name="report" value="epfp_fireload">
+            {% elif report == "epfp_summary" %}
                 <label for="id_date" class="control-label">Date</label>
                 <input type="text" id="id_date" value="{{date}}" name="date"/>
-
-                <label for="id_ignition_type" class="control-label">Ignition Type</label>
-                {{ form.ignition_type }}
 
                 <label for="id_region" class="control-label">Region</label>
                 {{ form.region }}
 
-                <input class="hidden" name="report" value="epfp_active_burns">
+                <input class="hidden" style="float: right;" name="report" value="epfp_summary">
             {% endif %}
             <button type="submit" class="btn btn-primary">Update</button>
         </form>
@@ -130,21 +114,47 @@
 
 </ul>
 
-{% if report == "epfp_planned_burns" %}
+
+<ul id="report-tabs" class="nav nav-tabs">
+    <li id="planned-tab"  "{% if report == "epfp_planned" %} class="active"{% endif %}>
+        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_planned&date={{date}}">
+            <i class="icon-tag"></i>
+            Planned
+        </a>
+    </li>
+    <li id="fireload-tab" {% if report == "epfp_fireload" %} class="active"{% endif %}>
+        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_fireload&date={{date}}">
+            <i class="icon-plus"></i>
+            Fire Load
+        </a>
+    </li>
+    <li id="summary-tab"  "{% if report == "epfp_summary" %} class="active"{% endif %}>
+        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_summary&date={{date}}">
+            <i class="icon-fire"></i>
+            Approved Burns
+        </a>
+    </li>
+</ul>
+
+{% if report == "epfp_planned" %}
+
+<div class="row">
+  <div class="span12 filter-top-pad">
+      <p>Click on row to view the special conditions</p>
+  </div>
+</div>
 
 <table id="sorted-table" class="table table-hover table-compressed">
   <thead>
     <tr>
       <th rowspan="2">Burn ID</th>
       <th rowspan="2">Name</th>
-      <th rowspan="2"><div class="text-center">Location</div></th>
-      <th rowspan="2"><div class="text-center">Burn Purpose</div></th>
-      <th rowspan="2"><div class="text-center">Area</div></th>
-      <th rowspan="2"><div class="text-center">Est Start WST</div></th>
-      <th rowspan="2"><div class="text-center">Contingency Plan</div></th>
-      <th rowspan="2"><div class="text-center">Monitoring Plan</div></th>
+      <th rowspan="2"><div class="text-left">Location</div></th>
+      <th rowspan="2"><div class="text-left">Burn Purpose</div></th>
+      <th rowspan="2"><div class="text-left">Area</div></th>
+      <th rowspan="2"><div class="text-center">Est Start<br>WST</div></th>
       <th colspan="2"><div class="text-center">Invite to Assist</div></th>
-      <th rowspan="2"><div class="text-center">Special Conditions</div></th>
+      <th rowspan="2"><div class="text-center">Special<br>Conditions</div></th>
     </tr>
     <tr>
       <th> LGA </th>
@@ -152,24 +162,25 @@
     </tr>
   </thead>
   <tbody>
-    {% autopaginate queryset 25 %}
-    {% for qs in queryset %}
+    {% autopaginate qs_planned 25 %}
+    {% for qs in qs_planned %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
       <td>{{ qs.prescription.name }}</td>
       <td>{{ qs.prescription.location }}</td>
+      <td>{{ qs.prescription.purposes_list }}</td>
+      {% comment %}
       <td>
         {% for purpose in qs.prescription.purposes_list %}
             {{ purpose }}
             <br>
         {% endfor %}
        </td>
-      <td>{{ qs.area }}</td>
-      <td>{{ qs.est_start }}</td>
-      <td>{% if qs.has_contigency %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.has_monitoring %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.contains_lga %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.contains_dfes %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      {% endcomment %}
+      <td><div class="text-center">{{ qs.area }}</div></td>
+      <td><div class="text-center">{{ qs.est_start }}</div></td>
+      <td>{% if qs.contains_lga %}<div class="text-left"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.contains_dfes %}<div class="text-left"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.has_conditions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
     </tr>
     {% if qs.has_conditions %}
@@ -183,12 +194,13 @@
 {% endif %}
 {% paginate %}
 
-{% if report == "epfp_ongoing_burns" %}
+{% if report == "epfp_fireload" %}
 <table id="sorted-table" class="table table-striped table-hover table-compressed">
   <thead>
     <tr>
       <th rowspan="2">Burn ID</th>
       <th rowspan="2">Name</th>
+      <th rowspan="2">Region</th>
       <th colspan="3"><div class="text-center">Burn Status</div></th>
       <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
       <th rowspan="2"><div class="text-center">Tenure</div></th>
@@ -201,33 +213,35 @@
     </tr>
   </thead>
   <tbody>
-    {% autopaginate qs_ongoing_burns 25 %}
-    {% for qs in qs_ongoing_burns %}
+    {% autopaginate qs_fireload 25 %}
+    {% for qs in qs_fireload %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td>
         {% if qs.prescription %}
-           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id  }}</a>
+           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.fire_id  }}</a>
         {% else %}
-           {{ qs.fire.fire_id  }}
+           {{ qs.fire_id  }}
         {% endif %}
       </td>
-      <td>
-        {% if qs.prescription %}
-           {{ qs.prescription.name  }}
-        {% else %}
-           {{ qs.fire.desc  }}
-        {% endif %}
-      </td>
+      <td>{{ qs.name }}</td>
+      <td>{{ qs.region }}</td>
 
       <td>{% if qs.active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.ignition_completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% endif %}</td>
       <td>
-        {% for tenure in qs.tenures %}
-            {{ tenure }}
-            <br>
-        {% endfor %}
+        {% if qs.prescription %}
+            {% for tenure in qs.prescription.tenures.all %}
+                {{ tenure }}
+                <br>
+            {% endfor %}
+        {% else %}
+            {% for tenure in qs.tenures.all %}
+                {{ tenure }}
+                <br>
+            {% endfor %}
+        {% endif %}
       </td>
       <td>{% if qs.external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
     </tr>
@@ -238,7 +252,7 @@
 {% endif %}
 {% paginate %}
 
-{% if report == "epfp_active_burns" %}
+{% if report == "epfp_summary" %}
 <table id="sorted-table" class="table table-striped table-hover table-compressed">
   <thead>
     <tr>
@@ -251,8 +265,8 @@
     </tr>
   </thead>
   <tbody>
-    {% autopaginate queryset 25 %}
-    {% for qs in queryset %}
+    {% autopaginate qs_planned 25 %}
+    {% for qs in qs_planned %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td>
         {% if qs.prescription %}
@@ -263,46 +277,7 @@
       </td>
       <td>{{ qs.prescription.name }}</td>
       <td><div class="text-center">{{ qs.prescription.location }}</div></td>
-      <td>
-        <div class="text-center">
-        {% for purpose in qs.prescription.purposes_list %}
-            {{ purpose }}
-            <br>
-        {% endfor %}
-        </div>
-      </td>
-      <td><div class="text-center">{{ qs.area }}</div></td>
-      <td><div class="text-center">{{ qs.est_start }}</div></td>
-    </tr>
-    {% endfor %}
-
-    {% for qs in qs_ongoing_burns %}
-    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
-      <td>
-        {% if qs.prescription %}
-           <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id  }}</a>
-        {% else %}
-           {{ qs.fire.fire_id  }}
-        {% endif %}
-      </td>
-
-      <td>
-        {% if qs.prescription %}
-           {{ qs.prescription.name  }}
-        {% else %}
-           {{ qs.fire.desc  }}
-        {% endif %}
-      </td>
-
-      <td><div class="text-center">{{ qs.prescription.location }}</div></td>
-      <td>
-        <div class="text-center">
-        {% for purpose in qs.prescription.purposes_list %}
-            {{ purpose }}
-            <br>
-        {% endfor %}
-        </div>
-      </td>
+      <td>{{ qs.prescription.purposes_list }}</td>
       <td><div class="text-center">{{ qs.area }}</div></td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
     </tr>
@@ -333,24 +308,7 @@ $(function(){
     $("#sorted-table").tablesorter();
     $("#burns-table tr:contains('Total')").css("font-weight","bold");
 
-    $("#id_fromDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
-    $("#id_toDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
-
-    $("#id_toDate").change(function () {
-      var fromDate = $("#id_fromDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
-      var toDate = $("#id_toDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
-      if ( ($.datepicker.parseDate('dd-mm-yy', fromDate)) >  $.datepicker.parseDate('dd-mm-yy', toDate))  {
-        alert("'From Date' cannot be after 'To Date' ");
-      }
-    });
-
-    $("#id_fromDate").change(function () {
-      var fromDate = $("#id_fromDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
-      var toDate = $("#id_toDate").datepicker({ dateFormat: "dd-mm-yy" }).val();
-      if ( ($.datepicker.parseDate('dd-mm-yy', fromDate)) >  $.datepicker.parseDate('dd-mm-yy', toDate))  {
-        alert("'From Date' cannot be after 'To Date' ");
-      }
-    });
+    $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
 
     $("#id_csv").click(function () {
       var fromDate = $("#id_fromDate").val();
@@ -358,6 +316,33 @@ $(function(){
       var urlStr = '?fromDate=' + fromDate + '&toDate=' + toDate + '&Export_CSV=export_csv'
       $("#id_href").attr("href", urlStr);
     });
+
+    $("_report-tabs").click(function() {
+        var date = $("#id_date").val();
+        console.log("date " + date);
+        console.log("***********************************************************");
+        console.log("url " + {% url 'admin:daily_burn_program' %});
+        $.ajax({
+            type:"POST",
+            url:"{% url 'admin:daily_burn_program' %}",
+            data: {
+                "tab_date": date,
+                "region": $("#id_region").val(),
+                "fire_type": $("#id_fire_type").val(),
+                "csrfmiddlewaretoken": "{{ csrf_token }}",
+            },
+        });
+    });
+
+//  $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+//        console.log("***********************************************************");
+//    if (ui.index == 1) {
+//      $(".hide").switchClass('hide', 'show');
+//    } else {
+//      $(".show").switchClass("show", "hide");
+//    }
+//  });
+
 });
 </script>
 {% endblock %}

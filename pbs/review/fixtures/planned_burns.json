@@ -8,8 +8,6 @@
     "date": "2016-04-11",
     "area": 10.0,
     "est_start": "11:59:59",
-    "has_contigency": "False",
-    "has_monitoring": "True",
     "invite": ["LGA", "DFES"],
     "conditions": ""
   }
@@ -23,8 +21,6 @@
     "date": "2016-04-11",
     "area": 11.0,
     "est_start": "13:59:59",
-    "has_contigency": "True",
-    "has_monitoring": "False",
     "invite": ["LGA"],
     "conditions": "Special conditions go here ..."
   }
@@ -38,8 +34,6 @@
     "date": "2016-04-11",
     "area": 12.0,
     "est_start": "09:59:59",
-    "has_contigency": "True",
-    "has_monitoring": "True",
     "invite": ["DFES"],
     "conditions": ""
   }
@@ -53,8 +47,6 @@
     "date": "2016-04-12",
     "area": 10.0,
     "est_start": "06:59:59",
-    "has_contigency": "False",
-    "has_monitoring": "True",
     "invite": ["LGA", "DFES"],
     "conditions": ""
   }
@@ -68,8 +60,6 @@
     "date": "2016-04-12",
     "area": 11.0,
     "est_start": "07:59:59",
-    "has_contigency": "True",
-    "has_monitoring": "False",
     "invite": ["LGA"],
     "conditions": "Special conditions go here ..."
   }
@@ -83,8 +73,6 @@
     "date": "2016-04-12",
     "area": 12.0,
     "est_start": "08:59:59",
-    "has_contigency": "True",
-    "has_monitoring": "True",
     "invite": ["DFES"],
     "conditions": ""
   }
@@ -99,52 +87,21 @@
     "created": "2016-04-12",
     "modified": "2016-04-12",
     "fire_id": "SWC_001",
-    "desc": "Description of SWC_001 ...",
+    "name": "Description of SWC_001 ...",
     "region": 7,
+    "district": 13,
     "user": 228,
     "date": "2016-04-12",
     "active": "True",
-    "external_assist": "False"
-  }
-},
-{
-  "pk": 2,
-  "model": "review.fire",
-  "fields": {
-    "creator": ["jawaidm"],
-    "modifier": ["jawaidm"],
-    "created": "2016-04-12",
-    "modified": "2016-04-12",
-    "fire_id": "SWC_002",
-    "desc": "Description of SWC_002 ...",
-    "region": 7,
-    "user": 228,
-    "date": "2016-04-12",
-    "active": "True",
-    "external_assist": "False"
-  }
-},
-{
-  "pk": 3,
-  "model": "review.fire",
-  "fields": {
-    "creator": ["jawaidm"],
-    "modifier": ["jawaidm"],
-    "created": "2016-04-12",
-    "modified": "2016-04-12",
-    "fire_id": "ALB_001",
-    "desc": "Description of ALB_001 ...",
-    "region": 5,
-    "user": 228,
-    "date": "2016-04-12",
-    "active": "True",
-    "external_assist": "False"
+    "external_assist": "False",
+    "area": 0,
+    "tenures": [1,2]
   }
 },
 
 {
   "pk": 1,
-  "model": "review.ongoingburn",
+  "model": "review.prescribedburn",
   "fields": {
     "prescription": 611,
     "user": 228,
@@ -152,12 +109,13 @@
     "active": "True",
     "further_ignitions": "False",
     "ignition_completed": "False",
-    "external_assist": "False"
+    "external_assist": "False",
+    "area": 0
   }
 },
 {
   "pk": 2,
-  "model": "review.ongoingburn",
+  "model": "review.prescribedburn",
   "fields": {
     "prescription": 613,
     "user": 228,
@@ -165,12 +123,13 @@
     "active": "False",
     "further_ignitions": "True",
     "ignition_completed": "False",
-    "external_assist": "True"
+    "external_assist": "True",
+    "area": 0
   }
 },
 {
   "pk": 3,
-  "model": "review.ongoingburn",
+  "model": "review.prescribedburn",
   "fields": {
     "prescription": 614,
     "user": 228,
@@ -178,12 +137,13 @@
     "active": "True",
     "further_ignitions": "False",
     "ignition_completed": "True",
-    "external_assist": "False"
+    "external_assist": "False",
+    "area": 10
   }
 },
 {
   "pk": 4,
-  "model": "review.ongoingburn",
+  "model": "review.prescribedburn",
   "fields": {
     "prescription": 615,
     "user": 228,
@@ -191,7 +151,8 @@
     "active": "True",
     "further_ignitions": "False",
     "ignition_completed": "True",
-    "external_assist": "False"
+    "external_assist": "False",
+    "area": 0
   }
 }
 

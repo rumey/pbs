@@ -451,7 +451,7 @@ class Prescription(Audit):
         return self.burn_id
 
     def purposes_list(self):
-        return [i.name.strip('Management') for i in self.purposes.all()]
+        return ', '.join([i.name.strip('Management') for i in self.purposes.all()])
 
     def generate_description(self):
         try:
