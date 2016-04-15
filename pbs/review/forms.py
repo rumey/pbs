@@ -1,6 +1,6 @@
 from django import forms
 from pbs.prescription.models import Region, District
-from pbs.review.models import OngoingBurn
+from pbs.review.models import PrescribedBurn, Fire
 
 
 class BurnStateSummaryForm(forms.Form):
@@ -27,5 +27,6 @@ class PlannedBurnSummaryForm(forms.Form):
 
 class OngoingBurnSummaryForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
-    ignition_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Fires')])
+    district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
+    fire_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Fires')])
 

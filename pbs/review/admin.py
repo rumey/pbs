@@ -5,7 +5,7 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PlannedBurn, OngoingBurn
+from pbs.review.models import BurnState
 from pbs.review.forms import BurnStateSummaryForm, PlannedBurnSummaryForm
 from pbs.prescription.models import Prescription, Approval
 from datetime import datetime

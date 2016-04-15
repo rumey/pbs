@@ -60,7 +60,7 @@ from pbs.stakeholder.admin import (CriticalStakeholderAdmin,
                                    PublicContactAdmin, NotificationAdmin)
 from pbs.stakeholder.models import (CriticalStakeholder, PublicContact,
                                     Notification)
-from pbs.review.models import (BurnState, PlannedBurn, OngoingBurn, Fire)
+from pbs.review.models import (BurnState, PlannedBurn, PrescribedBurn, Fire)
 from pbs.review.admin import (BurnStateAdmin) #, PlannedBurnAdmin, OngoingBurnAdmin)
 
 from swingers.sauth.sites import AuditSite
@@ -70,6 +70,7 @@ import unicodecsv
 import datetime
 from dateutil import tz
 import re
+import itertools
 
 
 log = logging.getLogger(__name__)
@@ -241,92 +242,121 @@ class PrescriptionSite(AuditSite):
         """
         Display a list of the current day's planned burns
         """
-        report_set = {'epfp_planned_burns', 'epfp_ongoing_burns', 'epfp_active_burns'}
-        report = request.GET.get('report', 'epfp_planned_burns')
+        report_set = {'epfp_planned', 'epfp_fireload', 'epfp_summary'}
+        report = request.GET.get('report', 'epfp_planned')
         if report not in report_set:
-            report = 'epfp_planned_burns'
+            report = 'epfp_planned'
 
         if request.REQUEST.has_key('report'):
             report = request.REQUEST.get('report', None)
 
 
         # Use the region from the request.
+
+
         if request.REQUEST.has_key('date'):
             dt = request.REQUEST.get('date', None)
             if dt:
                 dt = datetime.datetime.strptime(dt, '%Y-%m-%d')
+#        elif request.REQUEST.has_key('tab_date'):
+#            dt = request.REQUEST.get('tab_date', None)
+#            if dt:
+#                dt = datetime.datetime.strptime(dt, '%Y-%m-%d')
         else:
             dt = datetime.date.today()
 
 #        queryset= None
-        queryset = PlannedBurn.objects.filter(date=dt)
-        qs_ongoing_burns= None
-        qs_ongoing_fires= None
-        if report=='epfp_planned_burns':
+        #import ipdb; ipdb.set_trace()
+        qs_planned = PlannedBurn.objects.filter(date=dt)
+        qs_burn = PrescribedBurn.objects.filter(date=dt)
+        qs_fire = Fire.objects.filter(date=dt)
+        #qs_fireload = FireLoad.objects.filter(prescription__date=dt, fire__date=dt)
+        if report=='epfp_planned':
             title = "Today's Planned Burn Program"
-            queryset = PlannedBurn.objects.filter(date=dt)
             form = PlannedBurnSummaryForm(request.GET)
-        elif report=='epfp_ongoing_burns':
+        elif report=='epfp_fireload':
             title = "Summary of Current Fire Load"
-            #queryset = OngoingBurn.objects.all() #filter(burn_active=True)
-            qs_ongoing_burns = OngoingBurn.objects.filter(date=dt)
-            qs_ongoing_fires = Fire.objects.filter(date=dt)
             form = OngoingBurnSummaryForm(request.GET)
-        elif report=='epfp_active_burns':
+        elif report=='epfp_summary':
             title = "Summary of Current and Planned Fires"
-            queryset = PlannedBurn.objects.filter(date=dt)
-            qs_ongoing_burns = OngoingBurn.objects.filter(active=True, date=dt)
-            qs_ongoing_fires = Fire.objects.filter(active=True, date=dt)
+            qs_burn = qs_burn.filter(active=True)
+            qs_fire = qs_fire.filter(active=True)
+            #qs_fire = qs_fireload.filter(prescription__active=True, fire__active=True)
+            #qs_fireload = qs_fireload.filter(prescription__active=True, fire__active=True)
             form = OngoingBurnSummaryForm(request.GET)
             #queryset = ActiveBurn.objects.filter(date__gte=dt)
 
-        ignition_type = 0
-        if request.REQUEST.has_key('ignition_type'):
-            ignition_type =int (request.REQUEST.get('ignition_type', None))
-            if ignition_type != 0:
-                try:
-                    queryset = queryset.filter(ignition_type=ignition_type)
-                except:
-                    pass
-#                    qs_ongoing = qs_ongoing.filter(ignition_type=ignition_type)
-#                    qs_ongoing_fire = qs_ongoing_fire.filter(ignition_type=ignition_type)
-
+        fire_type = 0
+        if request.REQUEST.has_key('fire_type'):
+            fire_type = int (request.REQUEST.get('fire_type', None))
+#            if fire_type == 1:
+#                qs_burn = qs_burn.filter(active=True)
+#            elif fire_type == 2:
+#                qs_fire = qs_fire.filter(active=True)
+#
 
         #import ipdb; ipdb.set_trace()
         if request.REQUEST.has_key('region'):
             region = request.REQUEST.get('region', None)
             if region:
-                queryset = queryset.filter(prescription__region=region)
-                if report=='epfp_active_burns':
-                    qs_ongoing_burns = qs_ongoing_burns.filter(prescription__region=region)
-                    qs_ongoing_fires = qs_ongoing_fires.filter(region=region)
+                if report=='epfp_planned':
+                    qs_planned = qs_planned.filter(prescription__region=region)
+                else:
+                    qs_burn = qs_burn.filter(prescription__region=region)
+                    qs_fire = qs_fire.filter(region=region)
 
         if request.REQUEST.has_key('district'):
             district = request.REQUEST.get('district', None)
             if district:
-                queryset = queryset.filter(prescription__district=district)
+                if report=='epfp_planned':
+                    qs_planned = qs_planned.filter(prescription__district=region)
+                else:
+                    qs_burn = qs_burn.filter(prescription__district=district)
+                    qs_fire = qs_fire.filter(district=district)
+
+        def qs_fireload(qs_burn, qs_fire, fire_type):
+            if fire_type == 1:
+                return qs_burn
+            elif fire_type == 2:
+                return qs_fire
+            return list(itertools.chain(qs_burn, qs_fire))
 
         context = {
             'title': title,
-            'queryset': queryset.order_by('prescription__burn_id') if queryset else [],
-            'qs_ongoing_burns': qs_ongoing_burns,
-            'qs_ongoing_fires': qs_ongoing_fires,
+            'qs_planned': qs_planned.order_by('prescription__burn_id') if qs_planned else [],
+            'qs_fireload': qs_fireload(qs_burn, qs_fire, fire_type),
             'form': form,
             'report': report,
             'username': request.user.username,
             'date': dt.strftime('%Y-%m-%d'),
-            'ignition_type': ignition_type,
+            'fire_type': fire_type,
 
-            'active_burns': OngoingBurn.objects.filter(active=True, date=dt).exclude(fire__region__in=[i for i in range(1,10)]).count(),
-            'active_fires': Fire.objects.filter(active=True, date=dt).count(),
+            'active_burns_statewide': PrescribedBurn.objects.filter(active=True, date=dt).count(),
+            'active_burns_non_statewide': PrescribedBurn.objects.filter(active=True, date=dt, prescription__region__in=[6, 7, 8]).count(),
+            'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
+            'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
 
-            'active_burns_stateside': OngoingBurn.objects.filter(active=True, date=dt).exclude(fire__region__in=[6, 7, 8]).count(),
-            'active_burns_non_stateside': OngoingBurn.objects.filter(active=True, date=dt, prescription__region__in=[6, 7, 8]).count(),
-            'active_fires_stateside': Fire.objects.filter(active=True, date=dt).count(),
-            'active_fires_non_stateside': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
+
+    def copy_prior_records(self, date):
+        today = datetime.date.today()
+        tomorrow = date + datetime.timedelta(days=1)
+        #only copy for today or tomorrow, and only copy if records for today/tomorrow don't already exist
+        if date!=today or date!=tomorrow or (PrescribedBurn.objects.filter(active=True, date=date).count()>0 or Fire.objects.filter(active=True, date=date).count()>0):
+            return
+
+        yesterday = date - datetime.timedelta(days=1)
+        qs_active_fireload = PrescribedBurn.objects.filter(active=True, date=yesterday)
+        qs_active_planned = Planned.objects.filter(active=True, date=yesterday)
+
+        for i in qs_active_planned:
+            i.pk = None
+            i.date = datetime.date(2016,4,13)
+            i.area=None
+            i.active=None
+            i.save()
 
 
     def endorse_authorise_summary(self, request, extra_context=None):
