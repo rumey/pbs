@@ -1893,10 +1893,10 @@ class SavePrescriptionMixin(object):
             obj.prescription = self.prescription
         except AttributeError:
             pass
-        if hasattr(obj, "creator") and not obj.creator:
+        if not obj.pk:
             obj.creator = request.user
-        if hasattr(obj, "modifier"):
-            obj.modifier = request.user
+        obj.modifier = request.user
+
         obj.save()
 
         # If can_delete is set, allow the user to delete this object.
@@ -1905,6 +1905,7 @@ class SavePrescriptionMixin(object):
             group = Group.objects.get(name='Users')
             perm = get_permission_codename('delete', opts)
             assign_perm("%s.%s" % (opts.app_label, perm), group, obj)
+
 
 
 class ObjectiveAdmin(PrescriptionMixin, SavePrescriptionMixin,

@@ -24,10 +24,9 @@ class BaseAdmin(ModelAdmin):
         """
         Save user to object if an audit object
         """
-        if hasattr(obj, "creator") and not obj.creator:
+        if not obj.pk:
             obj.creator = request.user
-        if hasattr(obj, "modifier"):
-            obj.modifier = request.user
+        obj.modifier = request.user
         obj.save()
 
     def get_list_editable(self, request):

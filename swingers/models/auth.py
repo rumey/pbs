@@ -63,6 +63,11 @@ class Audit(Model):
         else:
             created = False
 
+        if hasattr(self, "prescription") and self.prescription:
+            if not self.pk:
+                self.creator = self.prescription.creator
+            self.modifier = self.prescription.modifier
+
         super(Audit, self).save(*args, **kwargs)
 
         if created:
