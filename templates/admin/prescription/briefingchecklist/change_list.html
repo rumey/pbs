@@ -28,7 +28,7 @@
 {% show_treatments "Day Of Burn Briefing" %}
 <h1>Checklist Report</h1>
 <a href="{{ upload_document }}?tag={{ "Briefing Checklist"|tag_id }}&next={{ request.get_full_path }}" class="pull-right btn btn-small btn-info"><b><i class="icon-plus"></i> Upload Briefing Checklist</b></a>
-<a class="btn btn-small btn-info" href="{{ download_pdf }}?template=form-briefing-checklist&download=true" target="_blank"><b><i class="icon-download-alt"></i> Download the Briefing Checklist template</b></a>
+<a class="btn btn-small btn-info" href="{{ download_pdf }}?template=form-briefing-checklist&download=true"><b><i class="icon-download-alt"></i> Download the Briefing Checklist template</b></a>
 <div id="briefing-checklists">
 {% filter_by_tag_name current.document_set "Briefing Checklist" as document_set %}
 {% include "admin/document_list.html" with document_type="Briefing Checklist" %}

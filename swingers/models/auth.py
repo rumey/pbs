@@ -63,10 +63,12 @@ class Audit(Model):
         else:
             created = False
 
+        #import ipdb; ipdb.set_trace() 
         if hasattr(self, "prescription") and self.prescription:
-            if not self.pk:
+            if not self.creator and not self.pk:
                 self.creator = self.prescription.creator
-            self.modifier = self.prescription.modifier
+            if not self.modifier:
+                self.modifier = self.prescription.modifier
 
         super(Audit, self).save(*args, **kwargs)
 
