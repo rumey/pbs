@@ -26,7 +26,6 @@ class ContentTypeRestrictedFileField(FileField):
         self.max_upload_size = max_upload_size
         super(ContentTypeRestrictedFileField, self).__init__(*args, **kwargs)
 
-    @workdir()
     def clean(self, *args, **kwargs):
         data = super(ContentTypeRestrictedFileField, self).clean(*args,
                                                                  **kwargs)
@@ -54,7 +53,7 @@ class ContentTypeRestrictedFileField(FileField):
                                           "please check and try again." % (
                                               fname))
             try:
-                subprocess.check_output(["pdfinfo", "-box", fname])
+                subprocess.check_output(["pdfinfo", "-box", os.path.join(workdir, fname)])
             except subprocess.CalledProcessError:
                 raise ValidationError("File {0} appears to be corrupt, please "
                                       "check and try again.".format(fname))
