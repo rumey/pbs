@@ -88,13 +88,13 @@ class Fire(Audit):
         #validators=[MinValueValidator(0)], default=0.0)
     tenures = models.ManyToManyField(Tenure, blank=True)
 
-    @property
-    def further_ignitions(self):
-        return False
-
-    @property
-    def ignition_completed(self):
-        return False
+#    @property
+#    def further_ignitions(self):
+#        return False
+#
+#    @property
+#    def ignition_completed(self):
+#        return False
 
     def __str__(self):
         return self.fire_id
@@ -108,13 +108,14 @@ class PrescribedBurn(models.Model):
     date = models.DateField(auto_now_add=False)
 
     active = models.NullBooleanField(verbose_name="Burn Active?", null=True, blank=True)
-    further_ignitions = models.BooleanField(verbose_name="Further ignitions required?", blank=True)
-    ignition_completed = models.BooleanField(verbose_name="Ignition now completed?", blank=True)
+    further_ignitions = models.BooleanField(verbose_name="Further ignitions required?")
+    ignition_completed = models.BooleanField(verbose_name="Ignition now completed?")
     external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
     area = models.DecimalField(
         verbose_name="Achieved Yesterday", max_digits=12, decimal_places=1,
         help_text="Achieved yeserday area (in ha)",
         validators=[MinValueValidator(0)], null=True, blank=True)
+    tenures= models.TextField(verbose_name="Tenure?")
 
     @property
     def fire_type(self):
@@ -134,8 +135,13 @@ class PrescribedBurn(models.Model):
 #        if pb:
 #            return pb[0].area
 
-    def tenures(self):
-        return [t.name for t in self.prescription.tenures.all()]
+    def save(self, **kwargs):
+        # if tenures exist for pres, use these in self.tenures and allow user to modify
+        tenures = ', '.join([t.name for t in self.prescription.tenures.all()])
+        import ipdb; ipdb.set_trace()
+        if tenures:
+            self.tenures = tenures
+        super(PrescribedBurn, self).save(**kwargs)
 
     def __str__(self):
         return self.prescription.burn_id
