@@ -5,12 +5,14 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState
-from pbs.review.forms import BurnStateSummaryForm, PlannedBurnSummaryForm
+from pbs.review.models import BurnState, PlannedBurn, PrescribedBurn, Fire
+from pbs.review.forms import BurnStateSummaryForm, PlannedBurnForm, FireLoadForm
 from pbs.prescription.models import Prescription, Approval
 from datetime import datetime
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
+import itertools
+from django.contrib.admin.util import quote, unquote, flatten_fieldsets
 
 
 class BurnStateAdmin(DetailAdmin, BaseAdmin):
@@ -125,207 +127,343 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
         return TemplateResponse(request, self.epfp_review_template, context)
 
 
-#class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
-#    """
-#    The (current) Day's Planned Burns (Fire 268a)
-#    """
-#    #epfp_planned_burn_template = 'admin/review/epfp_planned_burn.html'
-#    epfp_planned_burn_template = 'admin/epfp_daily_burn_program.html'
-#
-#    def get_urls(self):
-#        """
-#        Add a view to clear the current prescription from the session
-#        """
-#        from django.conf.urls import patterns, url
-#
-#        def wrap(view):
-#            def wrapper(*args, **kwargs):
-#                return self.admin_site.admin_view(view)(*args, **kwargs)
-#            return update_wrapper(wrapper, view)
-#
-#        urlpatterns = patterns(
-#            '',
-#            url(r'^plannedburn/$',
-#                wrap(self.epfp_planned_burn),
-#                name='epfp_planned_burn'),
-#        )
-#
-#        return urlpatterns + super(PlannedBurnAdmin, self).get_urls()
-#
-#    def epfp_planned_burn(self, request, extra_context=None):
-#        """
-#        Display a list of the current day's planned burns
-#        """
-#        report_set = {'epfp_planned_burns'}
-#        report = request.GET.get('report', 'epfp_planned_burns')
-#        if report not in report_set:
-#            report = 'epfp_planned_burns'
-#
-#        title = "Today's Planned Burn Program"
-#
-#        # Use the region from the request.
-#        if request.REQUEST.has_key('date'):
-#            dt = request.REQUEST.get('date', None)
-#            if dt:
-#                dt = datetime.strptime(dt, '%Y-%m-%d')
-#        else:
-#            dt = date.today()
-#        queryset = PlannedBurn.objects.filter(date__gte=dt)
-#
-#        if request.REQUEST.has_key('region'):
-#            region = request.REQUEST.get('region', None)
-#            if region:
-#                queryset = queryset.filter(prescription__region=region)
-#
-#        if request.REQUEST.has_key('report'):
-#            report = request.REQUEST.get('report', None)
-#
+from pbs.admin import BaseAdmin
+from pbs.prescription.admin import PrescriptionMixin
+class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
+    fields = ("prescription", "date", "area", "est_start", "invite", "conditions")
+    #form = PlannedBurnForm
+
+#    def add_view(self, request, form_url='', extra_context=None):
+#        model = self.model
+##        import ipdb; ipdb.set_trace()
 #        context = {
-#            'title': title,
-#            'queryset': queryset.order_by('prescription__burn_id'),
-#            'form': PlannedBurnSummaryForm(request.GET),
-#            'report': report,
-#            'username': request.user.username,
-#            'date': dt.strftime('%Y-%m-%d')
+##            "user": request.user,
 #        }
+#        #form = PlannedBurnForm(initial={'user': request.user})
 #        context.update(extra_context or {})
-#        return TemplateResponse(request, self.epfp_planned_burn_template, context)
-#
-##    def endorse_authorise_summary(self, request, extra_context=None):
-##        """
-##        Display summaries of prescriptions, approvals and ignitions.
-##
-##        DEV:
-##
-##        """
-##        form = EndorseAuthoriseSummaryForm(request.GET)
-##
-##        report_set = {'summary', 'approvals', 'ignitions'}
-##        report = request.GET.get('report', 'summary')
-##        if report not in report_set:
-##            report = 'summary'
-##
-##        export_csv = True if request.GET.get('Export_CSV') == 'export_csv' else False
-##
-##        if request.GET.get('fromDate'):
-##            fromDate = request.GET.get('fromDate')
-##            fromDate = datetime.datetime.strptime(fromDate, '%d-%m-%Y').date()
-##        else:
-##            # default - beginning of financial year
-##            yr = datetime.date.today().year
-##            fromDate = datetime.date(yr, 7, 1)
-##
-##        if request.GET.get('toDate'):
-##            toDate = request.GET.get('toDate')
-##            toDate = datetime.datetime.strptime(toDate, '%d-%m-%Y').date()
-##        else:
-##            toDate = datetime.date.today()
-##
-##        burns = []
-##        if report == 'summary':
-##            title = _("Endorsements summary")
-##            queryset = Prescription.objects.filter(
-##                endorsement_status=Prescription.ENDORSEMENT_SUBMITTED)
-##        elif report == 'approvals':
-##            title = _("Approvals summary")
-##            queryset = Prescription.objects.filter(
-##                approval_status=Prescription.APPROVAL_SUBMITTED)
-##        elif report == 'ignitions':
-##            title = _("Ignitions summary")
-##            queryset = None
-##            burns = self.get_burns(fromDate, toDate)
-##        else:
-##            raise ValueError("Report {} must be in {}".format(report, report_set))
-##
-##        if export_csv:
-##            return self.export_to_csv(request, fromDate, toDate, burns)
-##        if queryset:
-##            queryset.prefetch_related('endorsing_roles')
-##
-##        if form.is_valid():
-##            region = form.cleaned_data.get('region', None)
-##            district = form.cleaned_data.get('district', None)
-##
-##            if region:
-##                queryset = queryset.filter(region=region)
-##
-##            if district:
-##                queryset = queryset.filter(district=district)
-##
-##        context = {
-##            'title': title,
-##            'prescriptions': queryset,
-##            'form': form,
-##            'report': report,
-##            'burns': burns,
-##            'fromDate': fromDate,
-##            'toDate': toDate,
-##        }
-##        context.update(extra_context or {})
-##        return TemplateResponse(request, "admin/endorse_authorise_summary.html", context,
-##                                current_app=self.name)
-#
-#
-#class OngoingBurnAdmin(DetailAdmin, BaseAdmin):
-#    """
-#    The Current Ongoing Burns (Fire 268b)
-#    """
-#    epfp_ongoing_burn_template = 'admin/review/epfp_ongoing_burn.html'
-#
-#    def get_urls(self):
-#        """
-#        Add a view to clear the current prescription from the session
-#        """
-#        from django.conf.urls import patterns, url
-#
-#        def wrap(view):
-#            def wrapper(*args, **kwargs):
-#                return self.admin_site.admin_view(view)(*args, **kwargs)
-#            return update_wrapper(wrapper, view)
-#
-#        urlpatterns = patterns(
-#            '',
-#            url(r'^epfp-ongoing/$',
-#                wrap(self.epfp_ongoing_burn),
-#                name='epfp_ongoing_burn'),
-#        )
-#
-#        return urlpatterns + super(OngoingBurnAdmin, self).get_urls()
-#
-#    def epfp_ongoing_burn(self, request, extra_context=None):
-#        """
-#        Display a list of the current ongoing burns
-#        """
-#        report_set = {'epfp_ongoing_burns'}
-#        report = request.GET.get('report', 'epfp_ongoing_burns')
-#        if report not in report_set:
-#            report = 'epfp_ongoing_burns'
-#
-#        title = "Summary of Current Fire Load"
-#
-#        # Use the region from the request.
-#        if request.REQUEST.has_key('date'):
-#            dt = request.REQUEST.get('date', None)
+#        return super(PlannedBurnAdmin, self).add_view(request, form_url, context)
+
+
+    def save_model(self, request, obj, form, change=True):
+        """ Form does not assign user, do it here """
+        obj.user = request.user
+        obj.save()
+
+
+    def get_urls(self):
+        """
+        Add an extra view to handle marking a treatment as complete.
+        """
+        from django.conf.urls import patterns, url
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        info = self.model._meta.app_label, self.model._meta.module_name
+
+        urlpatterns = patterns(
+            '',
+            url(r'^add/burn/(\d+)/$',
+                wrap(self.add_view),
+                name='%s_%s_add' % info),
+            url(r'^daily-burn-program/$',
+                wrap(self.daily_burn_program),
+                name='daily_burn_program'),
+
+        )
+        return urlpatterns + super(PlannedBurnAdmin, self).get_urls()
+
+
+    def daily_burn_program(self, request, extra_context=None):
+        """
+        Display a list of the current day's planned burns
+        """
+        report_set = {'epfp_planned', 'epfp_fireload', 'epfp_summary'}
+        report = request.GET.get('report', 'epfp_planned')
+        if report not in report_set:
+            report = 'epfp_planned'
+
+        if request.REQUEST.has_key('report'):
+            report = request.REQUEST.get('report', None)
+
+
+        # Use the region from the request.
+
+
+        if request.REQUEST.has_key('date'):
+            dt = request.REQUEST.get('date', None)
+            if dt:
+                dt = datetime.strptime(dt, '%Y-%m-%d')
+#        elif request.REQUEST.has_key('tab_date'):
+#            dt = request.REQUEST.get('tab_date', None)
 #            if dt:
-#                dt = datetime.strptime(dt, '%Y-%m-%d')
-#        else:
-#            dt = date.today()
-#        queryset = PlannedBurn.objects.filter(date__gte=dt)
+#                dt = datetime.datetime.strptime(dt, '%Y-%m-%d')
+        else:
+            dt = date.today()
+
+#        queryset= None
+        #import ipdb; ipdb.set_trace()
+        qs_planned = PlannedBurn.objects.filter(date=dt)
+        qs_burn = PrescribedBurn.objects.filter(date=dt)
+        qs_fire = Fire.objects.filter(date=dt)
+        #qs_fireload = FireLoad.objects.filter(prescription__date=dt, fire__date=dt)
+        if report=='epfp_planned':
+            title = "Today's Planned Burn Program"
+            #form = PlannedBurnForm(request.GET)
+#            pb = PrescribedBurn(user=request.user)
+            #form = PlannedBurnForm(initial={'user': request.user})
+            #form = PlannedBurnForm(request.POST or None, request=request)
+#            if form.is_valid():
+#                pb.save()
+        elif report=='epfp_fireload':
+            title = "Summary of Current Fire Load"
+            form = FireLoadForm(request.GET)
+        elif report=='epfp_summary':
+            title = "Summary of Current and Planned Fires"
+            qs_burn = qs_burn.filter(active=True)
+            qs_fire = qs_fire.filter(active=True)
+            #qs_fire = qs_fireload.filter(prescription__active=True, fire__active=True)
+            #qs_fireload = qs_fireload.filter(prescription__active=True, fire__active=True)
+            form = FireLoadForm(request.GET)
+            #queryset = ActiveBurn.objects.filter(date__gte=dt)
+
+        fire_type = 0
+        if request.REQUEST.has_key('fire_type'):
+            fire_type = int (request.REQUEST.get('fire_type', None))
+#            if fire_type == 1:
+#                qs_burn = qs_burn.filter(active=True)
+#            elif fire_type == 2:
+#                qs_fire = qs_fire.filter(active=True)
 #
-#        if request.REQUEST.has_key('region'):
-#            region = request.REQUEST.get('region', None)
-#            if region:
-#                queryset = queryset.filter(prescription__region=region)
-#
+
+        #import ipdb; ipdb.set_trace()
+        if request.REQUEST.has_key('region'):
+            region = request.REQUEST.get('region', None)
+            if region:
+                if report=='epfp_planned':
+                    qs_planned = qs_planned.filter(prescription__region=region)
+                else:
+                    qs_burn = qs_burn.filter(prescription__region=region)
+                    qs_fire = qs_fire.filter(region=region)
+
+        if request.REQUEST.has_key('district'):
+            district = request.REQUEST.get('district', None)
+            if district:
+                if report=='epfp_planned':
+                    qs_planned = qs_planned.filter(prescription__district=region)
+                else:
+                    qs_burn = qs_burn.filter(prescription__district=district)
+                    qs_fire = qs_fire.filter(district=district)
+
+        def qs_fireload(qs_burn, qs_fire, fire_type):
+            if fire_type == 1:
+                return qs_burn
+            elif fire_type == 2:
+                return qs_fire
+            return list(itertools.chain(qs_burn, qs_fire))
+
+        context = {
+            'title': title,
+            'qs_planned': qs_planned.order_by('prescription__burn_id') if qs_planned else [],
+            'qs_fireload': qs_fireload(qs_burn, qs_fire, fire_type),
+            #'form': form,
+            'report': report,
+            'username': request.user.username,
+            'date': dt.strftime('%Y-%m-%d'),
+            'fire_type': fire_type,
+
+            'active_burns_statewide': PrescribedBurn.objects.filter(active=True, date=dt).count(),
+            'active_burns_non_statewide': PrescribedBurn.objects.filter(active=True, date=dt, prescription__region__in=[6, 7, 8]).count(),
+            'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
+            'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
+
+        }
+        context.update(extra_context or {})
+        return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
+
+    def copy_prior_records(self, date):
+        """
+        Copy today's 'active' records to tomorrow
+        To be run via Cron
+        """
+
+        time_now = datetime.datetime.now().time()
+        today = datetime.date.today()
+        tomorrow = date + datetime.timedelta(days=1)
+        # copy permitted only after given time, and only for today to tomorrow
+        hour = 10
+        if date != today:
+            log.warn('WARNING: Cannot copy for date {}. Can only copy planned burn records from (current day) {} to tomorrow {}'.format(date, today, tomorrow))
+            return
+
+        if time_now.hour < hour and date != today:
+            log.warn('WARNING: cannot copy planned burn records to tomorrow, until after {} {}:00:00'.format(today.isoformat(), hour))
+            return
+
+        #only copy for today or tomorrow, and only copy if records for today/tomorrow don't already exist
+#        if date!=today or date!=tomorrow or (PrescribedBurn.objects.filter(active=True, date=date).count()>0 or Fire.objects.filter(active=True, date=date).count()>0):
+#            return
+
+        qs_active_fireload = PrescribedBurn.objects.filter(active=True, date=today)
+        qs_active_planned = Planned.objects.filter(active=True, date=today)
+
+        for i in qs_active_planned:
+            try:
+                i.pk = None
+                i.date = tomorrow
+                i.area=None
+                i.active=None
+                i.save()
+            except:
+                # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                pass
+
+
+class FireAdmin(DetailAdmin, BaseAdmin):
+    fields = ("fire_id", "name", "region", "district", "date", "active", "external_assist", "area", "tenures")
+
+#    def add_view(self, request, form_url='', extra_context=None):
+#        model = self.model
+#        import ipdb; ipdb.set_trace()
 #        context = {
-#            'title': title,
-#            'queryset': queryset.order_by('prescription__burn_id'),
-#            'form': PlannedBurnSummaryForm(request.GET),
-#            'report': report,
-#            'username': request.user.username,
-#            'date': dt.strftime('%Y-%m-%d')
+##            "user": request.user,
 #        }
+#        #form = PlannedBurnForm(initial={'user': request.user})
 #        context.update(extra_context or {})
-#        return TemplateResponse(request, self.epfp_ongoing_burn_template, context)
-#
-#
+#        return super(FireAdmin, self).add_view(request, form_url, context)
+
+    def _change_view(self, request, object_id, form_url='', extra_context=None):
+        """
+        Redirect to main review page on change.
+
+        This is done via 'auth.group'  permissions
+        ["view_fire", "review", "fire"] --> auto provides url --> review/fire/(\d+)/change
+        """
+        response = super(FireAdmin, self).change_view(request, object_id, form_url, extra_context)
+        # the below logic assumes, USER can be part of FMSB or DRFMS - not both
+        url = reverse('admin:fireload_view')
+        return HttpResponseRedirect(url)
+
+    def response_post_save_change(self, request, obj):
+        """
+        Override the redirect url after successful save of an existing
+        ContingencyAction.
+        """
+        url = reverse('admin:fireload_view')
+        return HttpResponseRedirect(url)
+#        url = reverse('admin:risk_contingency_changelist',
+#                      args=[str(obj.contingency.prescription.pk)])
+#        return HttpResponseRedirect(url)
+
+    def delete_view(self, request, object_id, extra_context=None):
+        """
+        Redirect to main review page on delete.
+
+        This is done via 'auth.group'  permissions
+        ["delete_fire", "review", "fire"] --> auto provides url --> review/fire/(\d+)/delete
+        """
+        response = super(FireAdmin, self).delete_view(request, object_id, extra_context)
+
+        if isinstance(response, HttpResponseRedirect):
+            url = reverse('admin:fireload_view')
+            return HttpResponseRedirect(url)
+        return response
+
+    def save_model(self, request, obj, form, change=True):
+        """ Form does not assign user, do it here """
+        obj.user = request.user
+        obj.save()
+
+
+    def get_urls(self):
+        """
+        Add an extra view to handle marking a treatment as complete.
+        """
+        from django.conf.urls import patterns, url
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        info = self.model._meta.app_label, self.model._meta.module_name
+
+        urlpatterns = patterns(
+            '',
+#            url(r'^add/fire/(\d+)/$',
+#                wrap(self.add_view),
+#                name='%s_%s_add' % info),
+            url(r'^daily-burn-program/fire$',
+                wrap(self.fireload_view),
+                name='fireload_view'),
+
+        )
+        return urlpatterns + super(FireAdmin, self).get_urls()
+
+
+    def fireload_view(self, request, extra_context=None):
+        """
+        Current fireLoad. Display a list of the current day fires
+        by chaining querysets PrescribedBurn and Fire to a single queryset
+        """
+
+        if request.REQUEST.has_key('date'):
+            dt = request.REQUEST.get('date', None)
+            if dt:
+                dt = datetime.strptime(dt, '%Y-%m-%d')
+        else:
+            dt = date.today()
+
+        #import ipdb; ipdb.set_trace()
+        qs_burn = PrescribedBurn.objects.filter(date=dt)
+        qs_fire = Fire.objects.filter(date=dt)
+
+        title = "Summary of Current Fire Load"
+#        form = FireLoadForm(request.GET)
+
+        fire_type = 0
+        if request.REQUEST.has_key('fire_type'):
+            fire_type = int (request.REQUEST.get('fire_type', None))
+
+        #import ipdb; ipdb.set_trace()
+        if request.REQUEST.has_key('region'):
+            region = request.REQUEST.get('region', None)
+            if region:
+                qs_burn = qs_burn.filter(prescription__region=region)
+                qs_fire = qs_fire.filter(region=region)
+
+        if request.REQUEST.has_key('district'):
+            district = request.REQUEST.get('district', None)
+            if district:
+                qs_burn = qs_burn.filter(prescription__district=district)
+                qs_fire = qs_fire.filter(district=district)
+
+        def qs_fireload(qs_burn, qs_fire, fire_type):
+            """ concatenate two queysets (if fire_type is ALL) """
+            if fire_type == 1:
+                return qs_burn
+            elif fire_type == 2:
+                return qs_fire
+            return list(itertools.chain(qs_burn, qs_fire))
+
+        context = {
+            'title': title,
+            'qs_fireload': qs_fireload(qs_burn, qs_fire, fire_type),
+            #'form': form,
+            'report': 'epfp_fireload',
+            'username': request.user.username,
+            'date': dt.strftime('%Y-%m-%d'),
+            'fire_type': fire_type,
+
+            'active_burns_statewide': PrescribedBurn.objects.filter(active=True, date=dt).count(),
+            'active_burns_non_statewide': PrescribedBurn.objects.filter(active=True, date=dt, prescription__region__in=[6, 7, 8]).count(),
+            'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
+            'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
+
+        }
+        context.update(extra_context or {})
+        return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
+
+

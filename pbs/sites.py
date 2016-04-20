@@ -24,7 +24,7 @@ from pbs.document.admin import DocumentAdmin
 from pbs.document.models import Document
 from pbs.forms import (UserForm, ProfileForm, PbsAdminAuthenticationForm,
     EndorseAuthoriseSummaryForm, BurnStateSummaryForm)
-from pbs.review.forms import PlannedBurnSummaryForm, OngoingBurnSummaryForm
+from pbs.review.forms import PlannedBurnForm#, OngoingBurnSummaryForm
 from pbs.implementation.admin import (BurningPrescriptionAdmin,
                                       EdgingPlanAdmin, LightingSequenceAdmin,
                                       ExclusionAreaAdmin, RoadSegmentAdmin,
@@ -61,7 +61,7 @@ from pbs.stakeholder.admin import (CriticalStakeholderAdmin,
 from pbs.stakeholder.models import (CriticalStakeholder, PublicContact,
                                     Notification)
 from pbs.review.models import (BurnState, PlannedBurn, PrescribedBurn, Fire)
-from pbs.review.admin import (BurnStateAdmin) #, PlannedBurnAdmin, OngoingBurnAdmin)
+from pbs.review.admin import (BurnStateAdmin, PlannedBurnAdmin, FireAdmin)
 
 from swingers.sauth.sites import AuditSite
 
@@ -117,9 +117,13 @@ class PrescriptionSite(AuditSite):
             url(r'^endorse-authorise/$',
                 wrap(self.endorse_authorise_summary),
                 name='endorse_authorise_summary'),
-            url(r'^daily-burn-program/$',
-                wrap(self.daily_burn_program),
-                name='daily_burn_program'),
+#            url(r'^daily-burn-program/$',
+#                wrap(self.daily_burn_program),
+#                name='daily_burn_program'),
+#            url(r'^daily-burn-program/add$',
+#                wrap(self.daily_burn_program_add),
+#                name='daily_burn_program_add'),
+
             url(r'^endorse-authorise/export_csv/$',
                 wrap(self.export_to_csv),
                 name='endorse_authorise_exportcsv'),
@@ -231,133 +235,6 @@ class PrescriptionSite(AuditSite):
         }
         return TemplateResponse(request, "admin/profile.html", context,
                                 current_app=self.name)
-
-    def daily_burn_program(self, request, extra_context=None):
-#        context = {}
-#        context.update(extra_context or {})
-#        return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context,
-#                                current_app=self.name)
-#
-#    def epfp_planned_burn(self, request, extra_context=None):
-        """
-        Display a list of the current day's planned burns
-        """
-        report_set = {'epfp_planned', 'epfp_fireload', 'epfp_summary'}
-        report = request.GET.get('report', 'epfp_planned')
-        if report not in report_set:
-            report = 'epfp_planned'
-
-        if request.REQUEST.has_key('report'):
-            report = request.REQUEST.get('report', None)
-
-
-        # Use the region from the request.
-
-
-        if request.REQUEST.has_key('date'):
-            dt = request.REQUEST.get('date', None)
-            if dt:
-                dt = datetime.datetime.strptime(dt, '%Y-%m-%d')
-#        elif request.REQUEST.has_key('tab_date'):
-#            dt = request.REQUEST.get('tab_date', None)
-#            if dt:
-#                dt = datetime.datetime.strptime(dt, '%Y-%m-%d')
-        else:
-            dt = datetime.date.today()
-
-#        queryset= None
-        #import ipdb; ipdb.set_trace()
-        qs_planned = PlannedBurn.objects.filter(date=dt)
-        qs_burn = PrescribedBurn.objects.filter(date=dt)
-        qs_fire = Fire.objects.filter(date=dt)
-        #qs_fireload = FireLoad.objects.filter(prescription__date=dt, fire__date=dt)
-        if report=='epfp_planned':
-            title = "Today's Planned Burn Program"
-            form = PlannedBurnSummaryForm(request.GET)
-        elif report=='epfp_fireload':
-            title = "Summary of Current Fire Load"
-            form = OngoingBurnSummaryForm(request.GET)
-        elif report=='epfp_summary':
-            title = "Summary of Current and Planned Fires"
-            qs_burn = qs_burn.filter(active=True)
-            qs_fire = qs_fire.filter(active=True)
-            #qs_fire = qs_fireload.filter(prescription__active=True, fire__active=True)
-            #qs_fireload = qs_fireload.filter(prescription__active=True, fire__active=True)
-            form = OngoingBurnSummaryForm(request.GET)
-            #queryset = ActiveBurn.objects.filter(date__gte=dt)
-
-        fire_type = 0
-        if request.REQUEST.has_key('fire_type'):
-            fire_type = int (request.REQUEST.get('fire_type', None))
-#            if fire_type == 1:
-#                qs_burn = qs_burn.filter(active=True)
-#            elif fire_type == 2:
-#                qs_fire = qs_fire.filter(active=True)
-#
-
-        #import ipdb; ipdb.set_trace()
-        if request.REQUEST.has_key('region'):
-            region = request.REQUEST.get('region', None)
-            if region:
-                if report=='epfp_planned':
-                    qs_planned = qs_planned.filter(prescription__region=region)
-                else:
-                    qs_burn = qs_burn.filter(prescription__region=region)
-                    qs_fire = qs_fire.filter(region=region)
-
-        if request.REQUEST.has_key('district'):
-            district = request.REQUEST.get('district', None)
-            if district:
-                if report=='epfp_planned':
-                    qs_planned = qs_planned.filter(prescription__district=region)
-                else:
-                    qs_burn = qs_burn.filter(prescription__district=district)
-                    qs_fire = qs_fire.filter(district=district)
-
-        def qs_fireload(qs_burn, qs_fire, fire_type):
-            if fire_type == 1:
-                return qs_burn
-            elif fire_type == 2:
-                return qs_fire
-            return list(itertools.chain(qs_burn, qs_fire))
-
-        context = {
-            'title': title,
-            'qs_planned': qs_planned.order_by('prescription__burn_id') if qs_planned else [],
-            'qs_fireload': qs_fireload(qs_burn, qs_fire, fire_type),
-            'form': form,
-            'report': report,
-            'username': request.user.username,
-            'date': dt.strftime('%Y-%m-%d'),
-            'fire_type': fire_type,
-
-            'active_burns_statewide': PrescribedBurn.objects.filter(active=True, date=dt).count(),
-            'active_burns_non_statewide': PrescribedBurn.objects.filter(active=True, date=dt, prescription__region__in=[6, 7, 8]).count(),
-            'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
-            'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
-
-        }
-        context.update(extra_context or {})
-        return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
-
-    def copy_prior_records(self, date):
-        today = datetime.date.today()
-        tomorrow = date + datetime.timedelta(days=1)
-        #only copy for today or tomorrow, and only copy if records for today/tomorrow don't already exist
-        if date!=today or date!=tomorrow or (PrescribedBurn.objects.filter(active=True, date=date).count()>0 or Fire.objects.filter(active=True, date=date).count()>0):
-            return
-
-        yesterday = date - datetime.timedelta(days=1)
-        qs_active_fireload = PrescribedBurn.objects.filter(active=True, date=yesterday)
-        qs_active_planned = Planned.objects.filter(active=True, date=yesterday)
-
-        for i in qs_active_planned:
-            i.pk = None
-            i.date = datetime.date(2016,4,13)
-            i.area=None
-            i.active=None
-            i.save()
-
 
     def endorse_authorise_summary(self, request, extra_context=None):
         """
@@ -621,8 +498,8 @@ site.register(PostBurnChecklist, PostBurnChecklistAdmin)
 site.register(OperationalOverview, OperationalOverviewAdmin)
 
 site.register(BurnState, BurnStateAdmin)
-#site.register(PlannedBurn, PlannedBurnAdmin)
-#site.register(OngoingBurn, OngoingBurnAdmin)
+site.register(PlannedBurn, PlannedBurnAdmin)
+site.register(Fire, FireAdmin)
 
 # add our own texify filter to the builtins here.
 add_to_builtins('pbs.prescription.templatetags.texify')
