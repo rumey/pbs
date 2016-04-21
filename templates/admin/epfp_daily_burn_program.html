@@ -84,6 +84,9 @@
                 <label for="id_region" class="control-label">Region</label>
                 {{ form.region }}
 
+                <label for="id_district" class="control-label">District</label>
+                {{ form.district }}
+
                 <input class="hidden" style="float: right;" name="report" value="epfp_planned">
             {% elif report == "epfp_fireload" %}
                 <label for="id_date" class="control-label">Date</label>
@@ -105,6 +108,9 @@
 
                 <label for="id_region" class="control-label">Region</label>
                 {{ form.region }}
+
+                <label for="id_district" class="control-label">District</label>
+                {{ form.district }}
 
                 <input class="hidden" style="float: right;" name="report" value="epfp_summary">
             {% endif %}
@@ -140,7 +146,7 @@
 
 <div>
     <p style=”float: left">Click on row to view the special conditions</p>
-    <a class="btn btn-small btn-info" style="float: right" href="{{ add_planned_burn }}"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
+    <a class="btn btn-small btn-info" style="float: right" href="{{ add_prescribed_burn }}"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
 </div>
 
 
@@ -169,12 +175,12 @@
     </tr>
   </thead>
   <tbody>
-    {% autopaginate qs_planned 25 %}
-    {% for qs in qs_planned %}
+    {% autopaginate qs_burn 25 %}
+    {% for qs in qs_burn %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
       <td>{{ qs.prescription.name }}</td>
-      <td>{{ qs.prescription.location }}</td>
+      <td>{{ qs.location }}</td>
       <td>{{ qs.prescription.purposes_list }}</td>
       {% comment %}
       <td>
@@ -189,8 +195,8 @@
       <td>{% if qs.contains_lga %}<div class="text-left"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.contains_dfes %}<div class="text-left"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.has_conditions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td><a id="edit-plannedburn" href="{% url 'admin:review_plannedburn_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
-      <td><a id="delete-plannedburn" href="{% url 'admin:review_plannedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+      <td><a id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
+      <td><a id="delete-plannedburn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
     {% if qs.has_conditions %}
     <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
@@ -210,7 +216,7 @@
 </div>
 
 
-<table id="sorted-table" class="table table-striped table-hover table-compressed">
+<table id="sorted-table" class="table table-hover table-compressed">
   <thead>
     <tr>
       <th rowspan="2">Burn ID</th>
@@ -218,7 +224,6 @@
       <th rowspan="2">Region</th>
       <th colspan="3"><div class="text-center">Burn Status</div></th>
       <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
-      <th rowspan="2"><div class="text-center">Tenure</div></th>
       <th rowspan="2"><div class="text-center">External Assist</div></th>
     </tr>
     <tr>
@@ -230,7 +235,7 @@
   <tbody>
     {% autopaginate qs_fireload 25 %}
     {% for qs in qs_fireload %}
-    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
+    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.fire_id}}">
       <td>
         {% if qs.prescription %}
            <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id  }}</a>
@@ -243,31 +248,102 @@
 
       <td>{% if qs.active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.ignition_completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% endif %}</td>
-      <td>
-        {% if qs.prescription %}
-            {% for tenure in qs.prescription.tenures.all %}
-                {{ tenure }}
-                <br>
-            {% endfor %}
-        {% else %}
-            {% for tenure in qs.tenures.all %}
-                {{ tenure }}
-                <br>
-            {% endfor %}
-        {% endif %}
-      </td>
-      <td>{% if qs.external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td><a id="edit-fire" href="{% url 'admin:review_fire_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
-      <td>
-        {% if qs.prescription %}
-            <a id="delete-fire" href="{% url 'admin:review_fire_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a>
-        {% else %}
-            <a id="delete-fire" href="{% url 'admin:review_fire_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a>
-        {% endif %}
-      </td>
+      <td>{% if qs.had_external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      {% if qs.prescription %}
+        <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
+        <td><a id="delete-burn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+      {% else %}
+        <td><a id="edit-fire" href="{% url 'admin:review_fire_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
+        <td><a id="delete-fire" href="{% url 'admin:review_fire_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+      {% endif %}
     </tr>
+    {% if qs.had_external_assist %}
+    <tr class="myCollapse row-details expand-child" id="{{qs.fire_id}}">
+       {% comment %}
+      <td colspan="11">External Assist: {{ qs.external_assist_str }}</td>
+       {% endcomment %}
+
+      <td colspan="10">
+          <table class="table table-bordered table-striped table-condensed">
+            <tbody>
+              <tr>
+                <th>Burn ID</th>
+                <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
+                <th colspan="3">Burn name</th>
+                <td>{{ qs.prescription.name }}</td>
+              </tr>
+              <tr>
+                <th>Region</th>
+                <td>{{ qs.prescription.region }}</td>
+                <th>District</th>
+                <td colspan="3">{{ qs.prescription.district }}</td>
+              </tr>
+              <tr>
+                <th>External Assist</th>
+                <td>{{ qs.external_assist_str }}</td>
+                <th>Tenure</th>
+                <td colspan="3">{{ qs.tenures }}</td>
+              </tr>
+
+              <tr>
+                <th>Aerial ignition?</th>
+                <td>{% if qs.prescription.aircraft_burn %}Aerial{% else %}Ground{% endif %}</td>
+                <th>Total ePFP area (ha)</th>
+                <td colspan="3">{{ qs.prescription.area }}</td>
+              </tr>
+              <tr>
+                <th>Risk level</th>
+                <td>{{ qs.prescription.maximum_risk_html }}</td>
+                <th>Contentious?</th>
+                <td colspan="3">{% if qs.prescription.contentious %}Yes{% else %}No{% endif %}</td>
+              </tr>
+              <tr>
+                <th>Block</th>
+                <td>{% if qs.prescription.forest_blocks %}{{ prescription.forest_blocks }}{% else %}None{% endif %}</td>
+                <th>Location</th>
+                <td colspan="3">{{ qs.prescription.location_text }}</td>
+              </tr>
+              <tr>
+                <th>Prohibited Period</th>
+                <td>{% if qs.prescription.prohibited_period %}{{ qs.prescription.prohibited_period }}{% else %}None{% endif %}</td>
+                <th>Burn Purpose(s)</th>
+                <td colspan="3">
+                  {% if qs.prescription.purposes %}
+                    {% for purpose in qs.prescription.purposes.all %}
+                      {{ purpose.name }}
+                      <br>
+                    {% endfor %}
+                  {% else %}
+                    None
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>Cell Name</th>
+                <td>
+                    {% for seq in qs.prescription.lightingsequence_set.all %}
+                      {{ seq.cellname }}
+                      <br>
+                    {% endfor %}
+                </td>
+                <th>Wind Direction</th>
+                <td colspan="3">
+                    {% for seq in qs.prescription.lightingsequence_set.all %}
+                      {{ seq.wind_dir }}
+                      <br>
+                    {% endfor %}
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </td>
+
+    </tr>
+    {% endif %}
+
     {% endfor %}
   </tbody>
 </table>
@@ -276,7 +352,7 @@
 {% paginate %}
 
 {% if report == "epfp_summary" %}
-<table id="sorted-table" class="table table-striped table-hover table-compressed">
+<table id="sorted-table" class="table table-hover table-compressed">
   <thead>
     <tr>
       <th rowspan="1"><div class="text-center">Burn ID</div></th>
@@ -288,8 +364,8 @@
     </tr>
   </thead>
   <tbody>
-    {% autopaginate qs_planned 25 %}
-    {% for qs in qs_planned %}
+    {% autopaginate qs_burn 25 %}
+    {% for qs in qs_burn %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td>
         {% if qs.prescription %}
@@ -302,7 +378,11 @@
       <td><div class="text-center">{{ qs.prescription.location }}</div></td>
       <td>{{ qs.prescription.purposes_list }}</td>
       <td><div class="text-center">{{ qs.area }}</div></td>
-      <td><div class="text-center">{{ qs.est_start }}</div></td>
+      <td>
+        {% if not qs.active %}
+          <div class="text-center">{{ qs.est_start }}</div>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
 
@@ -326,7 +406,7 @@ $(function(){
        target.toggleClass("in");
      });
 
-     $("#sorted-table td a").on('click', function (e) { e.stopPropagation(); })
+     $("#sorted-table td a").on('click', function (e) { e.stopPropagation(); });
 
     $("#sorted-table").tablesorter();
     $("#burns-table tr:contains('Total')").css("font-weight","bold");
@@ -336,15 +416,15 @@ $(function(){
     $("#id_csv").click(function () {
       var fromDate = $("#id_fromDate").val();
       var toDate = $("#id_toDate").val();
-      var urlStr = '?fromDate=' + fromDate + '&toDate=' + toDate + '&Export_CSV=export_csv'
+      var urlStr = '?fromDate=' + fromDate + '&toDate=' + toDate + '&Export_CSV=export_csv';
       $("#id_href").attr("href", urlStr);
     });
 
-    $("_report-tabs").click(function() {
+    $("#report-tabs").click(function() {
         var date = $("#id_date").val();
         console.log("date " + date);
         console.log("***********************************************************");
-        console.log("url " + {% url 'admin:daily_burn_program' %});
+        console.log("url " + "{% url 'admin:daily_burn_program' %}");
         $.ajax({
             type:"POST",
             url:"{% url 'admin:daily_burn_program' %}",

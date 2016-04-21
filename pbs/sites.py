@@ -24,7 +24,6 @@ from pbs.document.admin import DocumentAdmin
 from pbs.document.models import Document
 from pbs.forms import (UserForm, ProfileForm, PbsAdminAuthenticationForm,
     EndorseAuthoriseSummaryForm, BurnStateSummaryForm)
-from pbs.review.forms import PlannedBurnForm#, OngoingBurnSummaryForm
 from pbs.implementation.admin import (BurningPrescriptionAdmin,
                                       EdgingPlanAdmin, LightingSequenceAdmin,
                                       ExclusionAreaAdmin, RoadSegmentAdmin,
@@ -60,8 +59,8 @@ from pbs.stakeholder.admin import (CriticalStakeholderAdmin,
                                    PublicContactAdmin, NotificationAdmin)
 from pbs.stakeholder.models import (CriticalStakeholder, PublicContact,
                                     Notification)
-from pbs.review.models import (BurnState, PlannedBurn, PrescribedBurn, Fire)
-from pbs.review.admin import (BurnStateAdmin, PlannedBurnAdmin, FireAdmin)
+from pbs.review.models import (BurnState, PrescribedBurn, Fire)
+from pbs.review.admin import (BurnStateAdmin, PrescribedBurnAdmin, FireAdmin)
 
 from swingers.sauth.sites import AuditSite
 
@@ -498,7 +497,7 @@ site.register(PostBurnChecklist, PostBurnChecklistAdmin)
 site.register(OperationalOverview, OperationalOverviewAdmin)
 
 site.register(BurnState, BurnStateAdmin)
-site.register(PlannedBurn, PlannedBurnAdmin)
+site.register(PrescribedBurn, PrescribedBurnAdmin)
 site.register(Fire, FireAdmin)
 
 # add our own texify filter to the builtins here.
