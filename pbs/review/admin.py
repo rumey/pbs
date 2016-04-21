@@ -1,18 +1,18 @@
-from datetime import date
 from pbs.admin import BaseAdmin
 from swingers.admin import DetailAdmin
 from functools import update_wrapper
 from django.contrib.auth.models import Group
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PlannedBurn, PrescribedBurn, Fire
-from pbs.review.forms import BurnStateSummaryForm, PlannedBurnForm, FireLoadForm
+from pbs.review.models import BurnState, PrescribedBurn, Fire
+from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, FireLoadForm
 from pbs.prescription.models import Prescription, Approval
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 import itertools
 from django.contrib.admin.util import quote, unquote, flatten_fieldsets
+from django.conf import settings
 
 
 class BurnStateAdmin(DetailAdmin, BaseAdmin):
@@ -129,25 +129,23 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
 
 from pbs.admin import BaseAdmin
 from pbs.prescription.admin import PrescriptionMixin
-class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
-    fields = ("prescription", "date", "area", "est_start", "invite", "conditions")
+#class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
+class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
+    fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "area", "tenures", "location", "est_start", "invite", "conditions")
     #form = PlannedBurnForm
-
-#    def add_view(self, request, form_url='', extra_context=None):
-#        model = self.model
-##        import ipdb; ipdb.set_trace()
-#        context = {
-##            "user": request.user,
-#        }
-#        #form = PlannedBurnForm(initial={'user': request.user})
-#        context.update(extra_context or {})
-#        return super(PlannedBurnAdmin, self).add_view(request, form_url, context)
-
 
     def save_model(self, request, obj, form, change=True):
         """ Form does not assign user, do it here """
         obj.user = request.user
         obj.save()
+
+    def response_post_save_change(self, request, obj):
+        """
+        Override the redirect url after successful save of an existing
+        ContingencyAction.
+        """
+        url = reverse('admin:fireload_view')
+        return HttpResponseRedirect(url)
 
 
     def get_urls(self):
@@ -173,7 +171,7 @@ class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
                 name='daily_burn_program'),
 
         )
-        return urlpatterns + super(PlannedBurnAdmin, self).get_urls()
+        return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
 
 
     def daily_burn_program(self, request, extra_context=None):
@@ -202,16 +200,21 @@ class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
 #                dt = datetime.datetime.strptime(dt, '%Y-%m-%d')
         else:
             dt = date.today()
+            time_now = datetime.now().time()
+            if time_now.hour > settings.DAY_ROLLOVER_HOUR:
+                dt = dt + timedelta(days=1)
+
 
 #        queryset= None
         #import ipdb; ipdb.set_trace()
-        qs_planned = PlannedBurn.objects.filter(date=dt)
+        #qs_planned = PlannedBurn.objects.filter(date=dt)
         qs_burn = PrescribedBurn.objects.filter(date=dt)
         qs_fire = Fire.objects.filter(date=dt)
         #qs_fireload = FireLoad.objects.filter(prescription__date=dt, fire__date=dt)
         if report=='epfp_planned':
             title = "Today's Planned Burn Program"
-            #form = PlannedBurnForm(request.GET)
+            qs_burn = qs_burn.filter(status=PrescribedBurn.BURN_PLANNED)
+            form = PrescribedBurnForm(request.GET)
 #            pb = PrescribedBurn(user=request.user)
             #form = PlannedBurnForm(initial={'user': request.user})
             #form = PlannedBurnForm(request.POST or None, request=request)
@@ -222,7 +225,7 @@ class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
             form = FireLoadForm(request.GET)
         elif report=='epfp_summary':
             title = "Summary of Current and Planned Fires"
-            qs_burn = qs_burn.filter(active=True)
+            qs_burn = qs_burn.filter(status__in=[PrescribedBurn.BURN_PLANNED, PrescribedBurn.BURN_ACTIVE])
             qs_fire = qs_fire.filter(active=True)
             #qs_fire = qs_fireload.filter(prescription__active=True, fire__active=True)
             #qs_fireload = qs_fireload.filter(prescription__active=True, fire__active=True)
@@ -243,7 +246,7 @@ class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
             region = request.REQUEST.get('region', None)
             if region:
                 if report=='epfp_planned':
-                    qs_planned = qs_planned.filter(prescription__region=region)
+                    qs_burn = qs_burn.filter(prescription__region=region)
                 else:
                     qs_burn = qs_burn.filter(prescription__region=region)
                     qs_fire = qs_fire.filter(region=region)
@@ -252,7 +255,7 @@ class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
             district = request.REQUEST.get('district', None)
             if district:
                 if report=='epfp_planned':
-                    qs_planned = qs_planned.filter(prescription__district=region)
+                    qs_burn = qs_burn.filter(prescription__district=district)
                 else:
                     qs_burn = qs_burn.filter(prescription__district=district)
                     qs_fire = qs_fire.filter(district=district)
@@ -266,16 +269,16 @@ class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
 
         context = {
             'title': title,
-            'qs_planned': qs_planned.order_by('prescription__burn_id') if qs_planned else [],
+            'qs_burn': qs_burn.order_by('prescription__burn_id') if qs_burn else [],
             'qs_fireload': qs_fireload(qs_burn, qs_fire, fire_type),
-            #'form': form,
+            'form': form,
             'report': report,
             'username': request.user.username,
             'date': dt.strftime('%Y-%m-%d'),
             'fire_type': fire_type,
 
-            'active_burns_statewide': PrescribedBurn.objects.filter(active=True, date=dt).count(),
-            'active_burns_non_statewide': PrescribedBurn.objects.filter(active=True, date=dt, prescription__region__in=[6, 7, 8]).count(),
+            'active_burns_statewide': PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt).count(),
+            'active_burns_non_statewide': PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt, prescription__region__in=[6, 7, 8]).count(),
             'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
             'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
 
@@ -293,12 +296,11 @@ class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
         today = datetime.date.today()
         tomorrow = date + datetime.timedelta(days=1)
         # copy permitted only after given time, and only for today to tomorrow
-        hour = 10
         if date != today:
             log.warn('WARNING: Cannot copy for date {}. Can only copy planned burn records from (current day) {} to tomorrow {}'.format(date, today, tomorrow))
             return
 
-        if time_now.hour < hour and date != today:
+        if time_now.hour < settings.DAY_ROLLOVER_HOUR and date != today:
             log.warn('WARNING: cannot copy planned burn records to tomorrow, until after {} {}:00:00'.format(today.isoformat(), hour))
             return
 
@@ -322,7 +324,7 @@ class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
 
 
 class FireAdmin(DetailAdmin, BaseAdmin):
-    fields = ("fire_id", "name", "region", "district", "date", "active", "external_assist", "area", "tenures")
+    fields = ("fire_id", "name", "region", "district", "date", "active", "external_assist", "area", "tenures", "location")
 
 #    def add_view(self, request, form_url='', extra_context=None):
 #        model = self.model
@@ -353,9 +355,6 @@ class FireAdmin(DetailAdmin, BaseAdmin):
         """
         url = reverse('admin:fireload_view')
         return HttpResponseRedirect(url)
-#        url = reverse('admin:risk_contingency_changelist',
-#                      args=[str(obj.contingency.prescription.pk)])
-#        return HttpResponseRedirect(url)
 
     def delete_view(self, request, object_id, extra_context=None):
         """
@@ -415,13 +414,16 @@ class FireAdmin(DetailAdmin, BaseAdmin):
                 dt = datetime.strptime(dt, '%Y-%m-%d')
         else:
             dt = date.today()
+            time_now = datetime.now().time()
+            if time_now.hour > settings.DAY_ROLLOVER_HOUR:
+                dt = dt + timedelta(days=1)
 
-        #import ipdb; ipdb.set_trace()
-        qs_burn = PrescribedBurn.objects.filter(date=dt)
+
+        qs_burn = PrescribedBurn.objects.filter(date=dt).exclude(status=PrescribedBurn.BURN_PLANNED)
         qs_fire = Fire.objects.filter(date=dt)
 
         title = "Summary of Current Fire Load"
-#        form = FireLoadForm(request.GET)
+        form = FireLoadForm(request.GET)
 
         fire_type = 0
         if request.REQUEST.has_key('fire_type'):
@@ -451,14 +453,14 @@ class FireAdmin(DetailAdmin, BaseAdmin):
         context = {
             'title': title,
             'qs_fireload': qs_fireload(qs_burn, qs_fire, fire_type),
-            #'form': form,
+            'form': form,
             'report': 'epfp_fireload',
             'username': request.user.username,
             'date': dt.strftime('%Y-%m-%d'),
             'fire_type': fire_type,
 
-            'active_burns_statewide': PrescribedBurn.objects.filter(active=True, date=dt).count(),
-            'active_burns_non_statewide': PrescribedBurn.objects.filter(active=True, date=dt, prescription__region__in=[6, 7, 8]).count(),
+            'active_burns_statewide': PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt).count(),
+            'active_burns_non_statewide': PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt, prescription__region__in=[6, 7, 8]).count(),
             'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
             'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
 

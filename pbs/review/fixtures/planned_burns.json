@@ -1,80 +1,23 @@
 [
 {
   "pk": 1,
-  "model": "review.plannedburn",
+  "model": "review.externalassist",
   "fields": {
-    "prescription": 609,
-    "user": 228,
-    "date": "2016-04-11",
-    "area": 10.0,
-    "est_start": "11:59:59",
-    "invite": ["LGA", "DFES"],
-    "conditions": ""
+    "name": "Volunteers"
   }
 },
 {
   "pk": 2,
-  "model": "review.plannedburn",
+  "model": "review.externalassist",
   "fields": {
-    "prescription": 610,
-    "user": 228,
-    "date": "2016-04-11",
-    "area": 11.0,
-    "est_start": "13:59:59",
-    "invite": ["LGA"],
-    "conditions": "Special conditions go here ..."
+    "name": "DFES"
   }
 },
 {
   "pk": 3,
-  "model": "review.plannedburn",
+  "model": "review.externalassist",
   "fields": {
-    "prescription": 611,
-    "user": 228,
-    "date": "2016-04-11",
-    "area": 12.0,
-    "est_start": "09:59:59",
-    "invite": ["DFES"],
-    "conditions": ""
-  }
-},
-{
-  "pk": 4,
-  "model": "review.plannedburn",
-  "fields": {
-    "prescription": 620,
-    "user": 228,
-    "date": "2016-04-12",
-    "area": 10.0,
-    "est_start": "06:59:59",
-    "invite": ["LGA", "DFES"],
-    "conditions": ""
-  }
-},
-{
-  "pk": 5,
-  "model": "review.plannedburn",
-  "fields": {
-    "prescription": 621,
-    "user": 228,
-    "date": "2016-04-12",
-    "area": 11.0,
-    "est_start": "07:59:59",
-    "invite": ["LGA"],
-    "conditions": "Special conditions go here ..."
-  }
-},
-{
-  "pk": 6,
-  "model": "review.plannedburn",
-  "fields": {
-    "prescription": 622,
-    "user": 228,
-    "date": "2016-04-12",
-    "area": 12.0,
-    "est_start": "08:59:59",
-    "invite": ["DFES"],
-    "conditions": ""
+    "name": "DPaW Ext"
   }
 },
 
@@ -93,7 +36,44 @@
     "user": 228,
     "date": "2016-04-12",
     "active": "True",
-    "external_assist": "False",
+    "area": 0,
+    "tenures": [1,2]
+  }
+},
+{
+  "pk": 2,
+  "model": "review.fire",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
+    "fire_id": "SWC_002",
+    "name": "Description of SWC_001 ...",
+    "region": 7,
+    "district": 13,
+    "user": 228,
+    "date": "2016-04-12",
+    "active": "True",
+    "area": 0,
+    "tenures": [1,2]
+  }
+},
+{
+  "pk": 3,
+  "model": "review.fire",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
+    "fire_id": "SWC_003",
+    "name": "Description of SWC_001 ...",
+    "region": 7,
+    "district": 13,
+    "user": 228,
+    "date": "2016-04-12",
+    "active": "True",
     "area": 0,
     "tenures": [1,2]
   }
@@ -103,56 +83,114 @@
   "pk": 1,
   "model": "review.prescribedburn",
   "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
     "prescription": 611,
     "user": 228,
     "date": "2016-04-12",
-    "active": "True",
+    "status": 1,
     "further_ignitions": "False",
-    "ignition_completed": "False",
-    "external_assist": "False",
-    "area": 0
+    "area": 0,
+    "est_start": "13:59:59",
+    "invite": ["LGA"],
+    "conditions": "Special conditions go here ..."
   }
 },
 {
   "pk": 2,
   "model": "review.prescribedburn",
   "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
     "prescription": 613,
     "user": 228,
     "date": "2016-04-12",
-    "active": "False",
+    "status": 0,
     "further_ignitions": "True",
-    "ignition_completed": "False",
-    "external_assist": "True",
-    "area": 0
+    "area": 0,
+    "est_start": "14:59:59",
+    "invite": ["LGA"],
+    "conditions": "Special conditions go here ..."
   }
 },
 {
   "pk": 3,
   "model": "review.prescribedburn",
   "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
     "prescription": 614,
     "user": 228,
     "date": "2016-04-12",
-    "active": "True",
+    "status": 1,
     "further_ignitions": "False",
-    "ignition_completed": "True",
-    "external_assist": "False",
-    "area": 10
+    "area": 10,
+    "est_start": "15:59:59",
+    "invite": ["LGA"],
+    "conditions": "Special conditions go here ..."
   }
 },
 {
   "pk": 4,
   "model": "review.prescribedburn",
   "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
     "prescription": 615,
     "user": 228,
     "date": "2016-04-12",
-    "active": "True",
+    "status": 1,
     "further_ignitions": "False",
-    "ignition_completed": "True",
-    "external_assist": "False",
-    "area": 0
+    "area": 0,
+    "est_start": "16:59:59",
+    "invite": ["LGA"],
+    "conditions": ""
+  }
+},
+{
+  "pk": 5,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
+    "prescription": 616,
+    "user": 228,
+    "date": "2016-04-12",
+    "status": 0,
+    "further_ignitions": "False",
+    "area": 0,
+    "est_start": "17:59:59",
+    "invite": ["LGA"],
+    "conditions": "Special conditions go here ..."
+  }
+},
+{
+  "pk": 6,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
+    "prescription": 617,
+    "user": 228,
+    "date": "2016-04-12",
+    "status": 3,
+    "further_ignitions": "False",
+    "area": 0,
+    "est_start": "18:59:59",
+    "invite": ["LGA"],
+    "conditions": ""
   }
 }
 
