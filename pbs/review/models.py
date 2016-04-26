@@ -67,6 +67,20 @@ class Fire(Audit):
     location= models.TextField(verbose_name="Location", null=True, blank=True)
 
     @property
+    def tenures_str(self):
+        return ', '.join([t.name for t in self.tenures.all()])
+
+    @property
+    def had_external_assist(self):
+        if self.external_assist.all().count() > 0:
+            return True
+        return False
+
+    @property
+    def external_assist_str(self):
+        return ', '.join([i.name for i in self.external_assist.all()])
+
+    @property
     def status(self):
         if self.active:
             return self.FIRE_ACTIVE
@@ -128,7 +142,6 @@ class PrescribedBurn(Audit):
     location= models.TextField(verbose_name="Location", null=True, blank=True)
 
     est_start = models.TimeField('Estimated Start Time')
-    invite = models.CharField(verbose_name="Invite to Assist?", max_length=24, null=True, blank=True)
     conditions = models.TextField(verbose_name='Special Conditions', null=True, blank=True)
     approval_status = models.PositiveSmallIntegerField(
         verbose_name="Approval Status", choices=APPROVAL_CHOICES,
@@ -141,6 +154,14 @@ class PrescribedBurn(Audit):
         tomorrow = today + timedelta(days=1)
         if self.date < today or self.date > tomorrow:
             raise ValidationError("You must enter burn plans for today or tommorow's date only.")
+
+    def clean_sdo_approve(self):
+        """
+        Check that status 'Active' and 'Area burnt yesterday' are not Null.
+        Cannot approve if data is missing from 268b records
+        """
+        #TODO - 1254
+        pass
 
     @property
     def fire_id(self):
@@ -167,6 +188,10 @@ class PrescribedBurn(Audit):
         return False
 
     @property
+    def tenures_str(self):
+        return ', '.join([t.name for t in self.tenures.all()])
+
+    @property
     def had_external_assist(self):
         if self.external_assist.all().count() > 0:
             return True
@@ -184,9 +209,13 @@ class PrescribedBurn(Audit):
     def region(self):
         return self.prescription.region
 
+    @property
+    def district(self):
+        return self.prescription.district
+
     def save(self, **kwargs):
         super(PrescribedBurn, self).save(**kwargs)
-        tenures = ', '.join([t.name for t in self.prescription.tenures.all()])
+        tenures = self.tenures_str
         if not self.location:
             self.location = self.prescription.location
         if not self.tenures and tenures:
