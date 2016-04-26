@@ -163,15 +163,9 @@
       <th rowspan="2">Burn ID</th>
       <th rowspan="2">Name</th>
       <th rowspan="2"><div class="text-left">Location</div></th>
-      <th rowspan="2"><div class="text-left">Burn Purpose</div></th>
       <th rowspan="2"><div class="text-left">Area</div></th>
       <th rowspan="2"><div class="text-center">Est Start<br>WST</div></th>
-      <th colspan="2"><div class="text-center">Invite to Assist</div></th>
       <th rowspan="2"><div class="text-center">Special<br>Conditions</div></th>
-    </tr>
-    <tr>
-      <th> LGA </th>
-      <th> DFES </th>
     </tr>
   </thead>
   <tbody>
@@ -180,27 +174,60 @@
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
       <td>{{ qs.prescription.name }}</td>
-      <td>{{ qs.location }}</td>
-      <td>{{ qs.prescription.purposes_list }}</td>
-      {% comment %}
-      <td>
-        {% for purpose in qs.prescription.purposes_list %}
-            {{ purpose }}
-            <br>
-        {% endfor %}
-       </td>
-      {% endcomment %}
+      <td>{{ qs.prescription.location }}</td>
       <td><div class="text-center">{{ qs.area }}</div></td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
-      <td>{% if qs.contains_lga %}<div class="text-left"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.contains_dfes %}<div class="text-left"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.has_conditions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td><a id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       <td><a id="delete-plannedburn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
     {% if qs.has_conditions %}
     <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
-      <td colspan="11">{{ qs.conditions }}</td>
+
+      <td colspan="10">
+          <table class="table table-bordered table-striped table-condensed">
+            <tbody>
+              <tr>
+                <th>ID</th>
+                <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
+                <th colspan="3">Burn name</th>
+                <td>{{ qs.name }}</td>
+              </tr>
+              <tr>
+                <th>Region</th>
+                <td>{{ qs.region }}</td>
+                <th>District</th>
+                <td colspan="3">{{ qs.district }}</td>
+              </tr>
+              <tr>
+                <th>External Assist</th>
+                <td>{{ qs.external_assist_str }}</td>
+                <th>Tenure</th>
+                <td colspan="3">{{ qs.tenures_str }}</td>
+              </tr>
+
+              <tr>
+                <th>Burn Purpose</th>
+                <td>{{ qs.prescription.purposes_list }}</td>
+                <th>Special Conditions</th>
+                <td colspan="3">{{ qs.conditions }}</td>
+              </tr>
+              <tr>
+                <th>Prohibited Period</th>
+                <td>{% if qs.prescription.prohibited_period %}{{ qs.prescription.prohibited_period }}{% else %}None{% endif %}</td>
+                <th>Burn Purpose(s)</th>
+                <td colspan="3">
+                  {% for purpose in qs.prescription.purposes.all %}
+                  {{ purpose.name }}
+                  <br>
+                  {% endfor %}
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </td>
+
     </tr>
     {% endif %}
     {% endfor %}
@@ -221,7 +248,6 @@
     <tr>
       <th rowspan="2">Burn ID</th>
       <th rowspan="2">Name</th>
-      <th rowspan="2">Region</th>
       <th colspan="3"><div class="text-center">Burn Status</div></th>
       <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
       <th rowspan="2"><div class="text-center">External Assist</div></th>
@@ -244,7 +270,6 @@
         {% endif %}
       </td>
       <td>{{ qs.name }}</td>
-      <td>{{ qs.region }}</td>
 
       <td>{% if qs.active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
@@ -269,73 +294,51 @@
           <table class="table table-bordered table-striped table-condensed">
             <tbody>
               <tr>
-                <th>Burn ID</th>
-                <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
+                <th>ID</th>
+                {% if qs.prescription %}
+                  <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
+                {% else %}
+                <td>{{ qs.fire_id  }}</td>
+                {% endif %}
                 <th colspan="3">Burn name</th>
-                <td>{{ qs.prescription.name }}</td>
+                <td>{{ qs.name }}</td>
               </tr>
               <tr>
                 <th>Region</th>
-                <td>{{ qs.prescription.region }}</td>
+                <td>{{ qs.region }}</td>
                 <th>District</th>
-                <td colspan="3">{{ qs.prescription.district }}</td>
+                <td colspan="3">{{ qs.district }}</td>
               </tr>
               <tr>
                 <th>External Assist</th>
                 <td>{{ qs.external_assist_str }}</td>
                 <th>Tenure</th>
-                <td colspan="3">{{ qs.tenures }}</td>
+                <td colspan="3">{{ qs.tenures_str }}</td>
               </tr>
 
-              <tr>
-                <th>Aerial ignition?</th>
-                <td>{% if qs.prescription.aircraft_burn %}Aerial{% else %}Ground{% endif %}</td>
-                <th>Total ePFP area (ha)</th>
-                <td colspan="3">{{ qs.prescription.area }}</td>
-              </tr>
-              <tr>
-                <th>Risk level</th>
-                <td>{{ qs.prescription.maximum_risk_html }}</td>
-                <th>Contentious?</th>
-                <td colspan="3">{% if qs.prescription.contentious %}Yes{% else %}No{% endif %}</td>
-              </tr>
-              <tr>
-                <th>Block</th>
-                <td>{% if qs.prescription.forest_blocks %}{{ prescription.forest_blocks }}{% else %}None{% endif %}</td>
-                <th>Location</th>
-                <td colspan="3">{{ qs.prescription.location_text }}</td>
-              </tr>
-              <tr>
-                <th>Prohibited Period</th>
-                <td>{% if qs.prescription.prohibited_period %}{{ qs.prescription.prohibited_period }}{% else %}None{% endif %}</td>
-                <th>Burn Purpose(s)</th>
-                <td colspan="3">
-                  {% if qs.prescription.purposes %}
-                    {% for purpose in qs.prescription.purposes.all %}
-                      {{ purpose.name }}
-                      <br>
-                    {% endfor %}
-                  {% else %}
-                    None
-                  {% endif %}
-                </td>
-              </tr>
-              <tr>
-                <th>Cell Name</th>
-                <td>
-                    {% for seq in qs.prescription.lightingsequence_set.all %}
-                      {{ seq.cellname }}
-                      <br>
-                    {% endfor %}
-                </td>
-                <th>Wind Direction</th>
-                <td colspan="3">
-                    {% for seq in qs.prescription.lightingsequence_set.all %}
-                      {{ seq.wind_dir }}
-                      <br>
-                    {% endfor %}
-                </td>
-              </tr>
+              {% if qs.prescription %}
+                <tr>
+                    <th>Burn Purpose</th>
+                    <td>{{ qs.prescription.purposes_list }}</td>
+                    <th>Special Conditions</th>
+                    <td colspan="3">{{ qs.conditions }}</td>
+                </tr>
+                <tr>
+                    <th>Prohibited Period</th>
+                    <td>{% if qs.prescription.prohibited_period %}{{ qs.prescription.prohibited_period }}{% else %}None{% endif %}</td>
+                    <th>Burn Purpose(s)</th>
+                    <td colspan="3">
+                    {% if qs.prescription.purposes %}
+                        {% for purpose in qs.prescription.purposes.all %}
+                        {{ purpose.name }}
+                        <br>
+                        {% endfor %}
+                    {% else %}
+                        None
+                    {% endif %}
+                    </td>
+                </tr>
+              {% endif %}
 
             </tbody>
           </table>

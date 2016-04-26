@@ -36,6 +36,7 @@
     "user": 228,
     "date": "2016-04-12",
     "active": "True",
+    "external_assist": [1],
     "area": 0,
     "tenures": [1,2]
   }
@@ -55,6 +56,7 @@
     "user": 228,
     "date": "2016-04-12",
     "active": "True",
+    "external_assist": [2],
     "area": 0,
     "tenures": [1,2]
   }
@@ -94,7 +96,6 @@
     "further_ignitions": "False",
     "area": 0,
     "est_start": "13:59:59",
-    "invite": ["LGA"],
     "conditions": "Special conditions go here ..."
   }
 },
@@ -113,7 +114,6 @@
     "further_ignitions": "True",
     "area": 0,
     "est_start": "14:59:59",
-    "invite": ["LGA"],
     "conditions": "Special conditions go here ..."
   }
 },
@@ -129,10 +129,10 @@
     "user": 228,
     "date": "2016-04-12",
     "status": 1,
+    "external_assist": [3],
     "further_ignitions": "False",
     "area": 10,
     "est_start": "15:59:59",
-    "invite": ["LGA"],
     "conditions": "Special conditions go here ..."
   }
 },
@@ -151,7 +151,6 @@
     "further_ignitions": "False",
     "area": 0,
     "est_start": "16:59:59",
-    "invite": ["LGA"],
     "conditions": ""
   }
 },
@@ -170,7 +169,6 @@
     "further_ignitions": "False",
     "area": 0,
     "est_start": "17:59:59",
-    "invite": ["LGA"],
     "conditions": "Special conditions go here ..."
   }
 },
@@ -189,7 +187,6 @@
     "further_ignitions": "False",
     "area": 0,
     "est_start": "18:59:59",
-    "invite": ["LGA"],
     "conditions": ""
   }
 }

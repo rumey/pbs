@@ -13,6 +13,8 @@ from django.core.urlresolvers import reverse
 import itertools
 from django.contrib.admin.util import quote, unquote, flatten_fieldsets
 from django.conf import settings
+from pbs.admin import BaseAdmin
+from pbs.prescription.admin import PrescriptionMixin
 
 
 class BurnStateAdmin(DetailAdmin, BaseAdmin):
@@ -127,9 +129,6 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
         return TemplateResponse(request, self.epfp_review_template, context)
 
 
-from pbs.admin import BaseAdmin
-from pbs.prescription.admin import PrescriptionMixin
-#class PlannedBurnAdmin(DetailAdmin, BaseAdmin):
 class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "area", "tenures", "location", "est_start", "invite", "conditions")
     #form = PlannedBurnForm
