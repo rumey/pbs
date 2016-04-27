@@ -15,6 +15,7 @@ from django.contrib.admin.util import quote, unquote, flatten_fieldsets
 from django.conf import settings
 from pbs.admin import BaseAdmin
 from pbs.prescription.admin import PrescriptionMixin
+from django.contrib import admin
 
 
 class BurnStateAdmin(DetailAdmin, BaseAdmin):
@@ -128,14 +129,34 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
         context.update(extra_context or {})
         return TemplateResponse(request, self.epfp_review_template, context)
 
-
+from pbs.prescription.actions import delete_selected, archive_documents
 class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
-    fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "area", "tenures", "location", "est_start", "invite", "conditions")
+    #template = "admin/epfp_daily_burn_program.html"
+    fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "area", "tenures", "location", "est_start", "conditions")
+    #actions = ['my_action', 'my_other_action', admin.actions.delete_selected]
+    #actions = ['my_action', admin.actions.delete_selected]
+    actions = [delete_selected, archive_documents]
+
     #form = PlannedBurnForm
+    srm_group = Group.objects.get(name='State Regional Manager')
+    sdo_group = Group.objects.get(name='State Duty Officer')
+
+#    def get_actions(self, request):
+#        actions = super(PrescribedBurnAdmin, self).get_actions(request)
+#        if not request.user.has_perm('prescription.delete_prescription'):
+#            if actions['delete_selected']:
+#                del actions['delete_selected']
+#        if not request.user.has_perm('prescription.delete_prescription'):
+#            if actions['archive_documents']:
+#                del actions['archive_documents']
+#        return actions
+
+    def my_action(self):
+        pass
 
     def save_model(self, request, obj, form, change=True):
         """ Form does not assign user, do it here """
-        obj.user = request.user
+        #obj.user = request.user
         obj.save()
 
     def response_post_save_change(self, request, obj):
@@ -162,16 +183,49 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         urlpatterns = patterns(
             '',
+            url(r'^review/(\d+)/$',
+                wrap(self.changelist_view),
+                #name='%s_%s_changelist' % info),
+                name='review_review_changelist'),
             url(r'^add/burn/(\d+)/$',
                 wrap(self.add_view),
                 name='%s_%s_add' % info),
             url(r'^daily-burn-program/$',
                 wrap(self.daily_burn_program),
                 name='daily_burn_program'),
-
+            url(r'^daily-burn-program/(\d+)/fire_approve$',
+                wrap(self.approve_view),
+                name='approve_view'),
         )
         return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
 
+    def approve_view(self, request, object_id, form_url='', extra_context=None):
+        """
+        Redirect to main review page on change.
+
+        This is done via 'auth.group'  permissions
+        ["view_fire", "review", "fire"] --> auto provides url --> review/fire/(\d+)/change
+        """
+        import ipdb; ipdb.set_trace()
+        if self.sdo_group in request.user.groups.all():
+            pass
+        pass
+        # the below logic assumes, USER can be part of FMSB or DRFMS - not both
+#        if self.srm_group in request.user.groups.all():
+#            pass
+#            p = Prescription.objects.get(id=object_id)
+#            s, created = BurnState.objects.get_or_create(prescription=p, user=request.user, review_type='FMSB')
+#        elif self.drfms_group in request.user.groups.all():
+#            p = Prescription.objects.get(id=object_id)
+#            s, created = BurnState.objects.get_or_create(prescription=p, user=request.user, review_type='DRFMS')
+#
+#        # if state already exists, update review_date
+#        if not created:
+#            s.review_date = datetime.now()
+#            s.save()
+
+        url = reverse('admin:fireload_view')
+        return HttpResponseRedirect(url)
 
     def daily_burn_program(self, request, extra_context=None):
         """
@@ -371,7 +425,7 @@ class FireAdmin(DetailAdmin, BaseAdmin):
 
     def save_model(self, request, obj, form, change=True):
         """ Form does not assign user, do it here """
-        obj.user = request.user
+        #obj.user = request.user
         obj.save()
 
 
@@ -396,10 +450,16 @@ class FireAdmin(DetailAdmin, BaseAdmin):
             url(r'^daily-burn-program/fire$',
                 wrap(self.fireload_view),
                 name='fireload_view'),
-
+            url(r'^daily-burn-program/fire-submit',
+                wrap(self.fire_submit),
+                name='fire_submit'),
         )
         return urlpatterns + super(FireAdmin, self).get_urls()
 
+
+    def fire_submit(self, request, extra_context=None):
+        import ipdb; ipdb.set_trace()
+        pass
 
     def fireload_view(self, request, extra_context=None):
         """

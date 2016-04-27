@@ -32,6 +32,17 @@ class BurnState(models.Model):
             self.prescription, self.review_type, self.record)
 
 
+#@python_2_unicode_compatible
+#class ApprovingRole(models.Model):
+#    name = models.CharField(max_length=320)
+#
+#    def __str__(self):
+#        return self.name
+#
+#    class Meta:
+#        ordering = ['name']
+
+
 @python_2_unicode_compatible
 class ExternalAssist(models.Model):
     name = models.CharField(max_length=12)
@@ -47,6 +58,17 @@ class Fire(Audit):
     FIRE_ACTIVE = 1
     FIRE_INACTIVE = 2
 
+    APPROVAL_DRAFT = 1
+    APPROVAL_SUBMITTED = 2
+    APPROVAL_ENDORSED = 3
+    APPROVAL_APPROVED = 4
+    APPROVAL_CHOICES = (
+        (APPROVAL_DRAFT, 'Draft'),
+        (APPROVAL_SUBMITTED, 'Submitted'),
+        (APPROVAL_ENDORSED, 'Endorsed'),
+        (APPROVAL_APPROVED, 'Approved'),
+    )
+
     fire_id = models.CharField(verbose_name="Fire ID?", max_length=10, null=True, blank=True)
     name = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
     region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
@@ -54,7 +76,7 @@ class Fire(Audit):
         District, chained_field="region", chained_model_field="region",
         show_all=False, auto_choose=True, blank=True, null=True)
 
-    user = models.ForeignKey(User, help_text="User")
+    #user = models.ForeignKey(User, help_text="User")
     date = models.DateField(auto_now_add=False)
     active = models.NullBooleanField(verbose_name="Fire Active?", null=True, blank=True)
     #external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
@@ -65,6 +87,17 @@ class Fire(Audit):
         #validators=[MinValueValidator(0)], default=0.0)
     tenures = models.ManyToManyField(Tenure, blank=True)
     location= models.TextField(verbose_name="Location", null=True, blank=True)
+
+    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", blank=True, null=True, related_name='fire_submitted_by')
+    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", blank=True, null=True, related_name='fire_endorsed_by')
+    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", blank=True, null=True, related_name='fire_approved_by')
+
+    approval_status = models.PositiveSmallIntegerField(
+        verbose_name="Approval Status", choices=APPROVAL_CHOICES,
+        default=APPROVAL_DRAFT)
+    approval_status_modified = models.DateTimeField(
+        verbose_name="Approval Status Modified", editable=False, null=True)
+
 
     @property
     def tenures_str(self):
@@ -95,18 +128,37 @@ class Fire(Audit):
 #            self.tenures = tenures
 #        super(PrescribedBurn, self).save()
 
+    @property
+    def can_endorse(self):
+        """
+        Return true if this fire can be submitted for endorsement.
+        """
+        return (self.status == self.APPROVAL_SUBMITTED)
+
+    @property
+    def can_approve(self):
+        """
+        Return true if this fire can be submitted for Approval.
+        """
+        return (self.status == self.APPROVAL_ENDORSED)
+
     def __str__(self):
         return self.fire_id
 
     class Meta:
         unique_together = ('fire_id', 'date',)
+        verbose_name = 'Fire'
+        verbose_name_plural = 'Fires'
+        permissions = (
+            ("can_endorse", "Can endorse fire actions"),
+            ("can_approve", "Can approve fire actions"),
+        )
 
 class PrescribedBurn(Audit):
     BURN_PLANNED = 0
     BURN_ACTIVE = 1
     BURN_INACTIVE = 2
     BURN_COMPLETED = 3
-
     BURN_CHOICES = (
         (BURN_PLANNED, 'Planned'),
         (BURN_ACTIVE, 'Active'),
@@ -126,7 +178,7 @@ class PrescribedBurn(Audit):
     )
 
     prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
-    user = models.ForeignKey(User, help_text="User")
+    #user = models.ForeignKey(User, help_text="User")
     date = models.DateField(auto_now_add=False)
 
     status = models.PositiveSmallIntegerField(verbose_name="Burn Status", choices=BURN_CHOICES, null=True, blank=True)
@@ -143,6 +195,11 @@ class PrescribedBurn(Audit):
 
     est_start = models.TimeField('Estimated Start Time')
     conditions = models.TextField(verbose_name='Special Conditions', null=True, blank=True)
+
+    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", blank=True, null=True, related_name='burn_submitted_by')
+    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", blank=True, null=True, related_name='burn_endorsed_by')
+    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", blank=True, null=True, related_name='burn_approved_by')
+
     approval_status = models.PositiveSmallIntegerField(
         verbose_name="Approval Status", choices=APPROVAL_CHOICES,
         default=APPROVAL_DRAFT)
@@ -189,7 +246,7 @@ class PrescribedBurn(Audit):
 
     @property
     def tenures_str(self):
-        return ', '.join([t.name for t in self.tenures.all()])
+        return self.tenures #', '.join([t.name for t in self.tenures.all()])
 
     @property
     def had_external_assist(self):
@@ -213,6 +270,20 @@ class PrescribedBurn(Audit):
     def district(self):
         return self.prescription.district
 
+    @property
+    def can_endorse(self):
+        """
+        Return true if this fire can be submitted for endorsement.
+        """
+        return (self.status == self.APPROVAL_SUBMITTED)
+
+    @property
+    def can_approve(self):
+        """
+        Return true if this fire can be submitted for Approval.
+        """
+        return (self.status == self.APPROVAL_ENDORSED)
+
     def save(self, **kwargs):
         super(PrescribedBurn, self).save(**kwargs)
         tenures = self.tenures_str
@@ -227,6 +298,13 @@ class PrescribedBurn(Audit):
 
     class Meta:
         unique_together = ('prescription', 'date',)
+        verbose_name = 'Prescribed Burn'
+        verbose_name_plural = 'Prescribed Burns'
+        permissions = (
+            ("can_endorse", "Can endorse burns"),
+            ("can_approve", "Can approve burns"),
+        )
+
 
 
 

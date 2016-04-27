@@ -178,6 +178,7 @@
       <td><div class="text-center">{{ qs.area }}</div></td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
       <td>{% if qs.has_conditions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td><a id="submit-plannedburn" href="{% url 'admin:approve_view' qs.id %}" class="btn btn-mini alert-error"><i class="icon-ok"></i></a></td>
       <td><a id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       <td><a id="delete-plannedburn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
