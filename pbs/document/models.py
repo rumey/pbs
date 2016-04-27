@@ -24,7 +24,7 @@ def content_file_name(self, filename):
     else:
         extension = "pdf"
     return "uploads/{0}/{0}_{1}_{2}_{3}.{4}".format(
-        str(self.prescription.season).strip().replace(" ", "_"),
+        str(self.prescription.season).strip().replace("/", "_"),
         self.prescription.burn_id,
         self.descriptor.strip().replace(" ", "_"),
         timezone.localtime(self.document_created).isoformat(
