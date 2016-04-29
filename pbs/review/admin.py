@@ -8,7 +8,8 @@ from pbs.review.models import BurnState, PrescribedBurn, Fire
 from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, FireLoadForm
 from pbs.prescription.models import Prescription, Approval
 from datetime import datetime, date, timedelta
-from django.http import HttpResponseRedirect
+from django.utils import timezone
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 import itertools
 from django.contrib.admin.util import quote, unquote, flatten_fieldsets
@@ -16,6 +17,7 @@ from django.conf import settings
 from pbs.admin import BaseAdmin
 from pbs.prescription.admin import PrescriptionMixin
 from django.contrib import admin
+import json
 
 
 class BurnStateAdmin(DetailAdmin, BaseAdmin):
@@ -141,6 +143,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     srm_group = Group.objects.get(name='State Regional Manager')
     sdo_group = Group.objects.get(name='State Duty Officer')
 
+    form = PrescribedBurnForm
 #    def get_actions(self, request):
 #        actions = super(PrescribedBurnAdmin, self).get_actions(request)
 #        if not request.user.has_perm('prescription.delete_prescription'):
@@ -150,6 +153,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #            if actions['archive_documents']:
 #                del actions['archive_documents']
 #        return actions
+
+#    def queryset(self, request):
+#        qs = super(PrescribedBurnAdmin, self).queryset(request)
+#        import ipdb; ipdb.set_trace()
+#        return qs.filter(prescription__region=1)
 
     def my_action(self):
         pass
@@ -193,39 +201,156 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             url(r'^daily-burn-program/$',
                 wrap(self.daily_burn_program),
                 name='daily_burn_program'),
-            url(r'^daily-burn-program/(\d+)/fire_approve$',
-                wrap(self.approve_view),
-                name='approve_view'),
+            url(r'^daily-burn-program/fire_action',
+                wrap(self.action_view),
+                name='action_view'),
+
+            url(r'^daily-burn-program/test',
+                wrap(self.test_view),
+                name='test_view'),
+
         )
         return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
 
-    def approve_view(self, request, object_id, form_url='', extra_context=None):
-        """
-        Redirect to main review page on change.
+    def test_view(self, request, extra_context=None):
+        self.message_user(request, "My Test Message")
+        #return HttpResponse(json.dumps({'errors': form.errors}))
+        return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+        #return HttpResponse('http://localhost:8000/')
+        #return HttpResponseRedirect('http://localhost:8000/')
 
-        This is done via 'auth.group'  permissions
-        ["view_fire", "review", "fire"] --> auto provides url --> review/fire/(\d+)/change
-        """
-        import ipdb; ipdb.set_trace()
-        if self.sdo_group in request.user.groups.all():
-            pass
-        pass
-        # the below logic assumes, USER can be part of FMSB or DRFMS - not both
-#        if self.srm_group in request.user.groups.all():
-#            pass
-#            p = Prescription.objects.get(id=object_id)
-#            s, created = BurnState.objects.get_or_create(prescription=p, user=request.user, review_type='FMSB')
-#        elif self.drfms_group in request.user.groups.all():
-#            p = Prescription.objects.get(id=object_id)
-#            s, created = BurnState.objects.get_or_create(prescription=p, user=request.user, review_type='DRFMS')
-#
-#        # if state already exists, update review_date
-#        if not created:
-#            s.review_date = datetime.now()
-#            s.save()
+    #def action_view(self, request, object_id, form_url='', extra_context=None):
+    #def action_view(self, request, *args, **kwargs):
+    def action_view(self, request, extra_context=None):
+        referrer_url = request.META.get('HTTP_REFERER')
+        if request.POST.has_key('action'):
+            action = request.POST['action']
 
-        url = reverse('admin:fireload_view')
-        return HttpResponseRedirect(url)
+            if request.POST.has_key('data'):
+                if len(request.POST['data']) == 0:
+                    message = "No rows were selected"
+                    msg_type = "danger"
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+                data = [int(i.strip()) for i in request.POST['data'].split(',')]
+            else:
+                raise Http404('Could not get Data/Row IDs')
+
+            if request.POST.has_key('date'):
+                dt = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
+            else:
+                raise Http404('Could not get Date')
+        else:
+            raise Http404('Could not get Update Action command')
+
+        objects = PrescribedBurn.objects.filter(id__in=data)
+        #today = date.today()
+        today = date(2016,4,12)
+        tomorrow = today + timedelta(days=1)
+        yesterday = today - timedelta(days=1)
+        if action == "Submit":
+            not_draft = []
+            for obj in objects:
+                if obj.approval_status == obj.APPROVAL_DRAFT:
+                    obj.submitted_by = request.user
+                    obj.approval_status = obj.APPROVAL_SUBMITTED
+                    obj.approval_status_modified = timezone.now()
+                    obj.save()
+                    #self.message_user(request, "Successfully submitted.")
+                    message = "Successfully submitted."
+                    msg_type = "success"
+                else:
+                    not_draft.append(obj.prescription.burn_id)
+
+                if not_draft:
+                    #self.message_user(request, "Could not submit {}\n. Only DRAFT burns can be SUBMITTED".format(', '.join(not_draft)))
+                    message = "Could not submit {}\n. Only DRAFT burns can be SUBMITTED".format(', '.join(not_draft))
+                    msg_type = "danger"
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
+        elif action == "Endorse":
+            # TODO can approve records for today or tomorrow only?
+            if not (dt == today or dt == tomorrow):
+                message = "Can only endorse burns for today {}, or tomorrow {}.".format(today, tomorrow)
+                msg_type = "danger"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+                #self.message_user(request, "Can only endorse burns for today {}, or tomorrow {}.".format(today, tomorrow))
+                #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+
+            # Only Submitted plans can be endorsed
+            #submitted_objects = PrescribedBurn.objects.filter(date=date, )
+
+            not_submitted = []
+            for obj in objects:
+                if obj.approval_status == obj.APPROVAL_SUBMITTED:
+                    obj.endorsed_by = request.user
+                    obj.approval_status = obj.APPROVAL_ENDORSED
+                    obj.approval_status_modified = timezone.now()
+                    obj.save()
+                    #self.message_user(request, "Successfully submitted for endorsement")
+                    message = "Successfully submitted for endorsement."
+                    msg_type = "success"
+                else:
+                    not_submitted.append(obj.prescription.burn_id)
+
+                if not_submitted:
+                    message = "Could not endorse {}\n. Only SUBMITTED burns can be endorsed".format(', '.join(not_submitted))
+                    msg_type = "danger"
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
+                    #self.message_user(request, "Could not endorse {}\n. Only SUBMITTED burns can be endorsed".format(', '.join(not_submitted)))
+                    #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+
+        elif action == "Approve":
+            # TODO can approve records for today or tomorrow only?
+            if not (dt == today or dt == tomorrow):
+                message = "Can only approve burns for today {}, or tomorrow {}.".format(today, tomorrow)
+                msg_type = "danger"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
+                #self.message_user(request, "Can only approve burns for today {} or tomorrow {}".format(today, tomorrow))
+                #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+
+            # check that records copied from yesterday have 'Active' and 'Area Burnt Yesterday' fields set
+            yest_objects = PrescribedBurn.objects.filter(date=yesterday, status=PrescribedBurn.BURN_ACTIVE, approval_status=PrescribedBurn.APPROVAL_APPROVED)
+            copied_objects = PrescribedBurn.objects.filter(date=dt, prescription__burn_id__in=[obj.prescription.burn_id for obj in yest_objects])
+            unset_objects = list(set(copied_objects.filter(area__isnull=True)).union(copied_objects.filter(status__isnull=True)))
+            if len(unset_objects) > 0:
+                message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
+                    ', '.join([obj.prescription.burn_id for obj in unset_objects]))
+                msg_type = "danger"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
+#                self.message_user(request, "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
+#                    ', '.join([obj.prescription.burn_id for obj in unset_objects]))
+#                )
+#                return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+
+            not_endorsed = []
+            for obj in objects:
+                if obj.approval_status == obj.APPROVAL_ENDORSED:
+                    obj.approved_by = request.user
+                    obj.approval_status = obj.APPROVAL_APPROVED
+                    obj.approval_status_modified = timezone.now()
+                    obj.save()
+                    message = "Successfully submitted for approval."
+                    msg_type = "success"
+                    #self.message_user(request, "Successfully submitted for approved")
+                else:
+                    not_endorsed.append(obj.prescription.burn_id)
+
+                if not_endorsed:
+                    message = "Could not approve {}\n. Only ENDORSED burns can be approved".format(', '.join(not_endorsed))
+                    msg_type = "danger"
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
+                    #self.message_user(request, "Could not approve {}\n. Only ENDORSED burns can be Approved".format(', '.join(not_endorsed)))
+                    #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+
+        #url = reverse('admin:daily_burn_program')
+        #from django.contrib import messages
+        #messages.success(request, 'Your profile was updated.')
+        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+        #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
 
     def daily_burn_program(self, request, extra_context=None):
         """
@@ -238,10 +363,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         if request.REQUEST.has_key('report'):
             report = request.REQUEST.get('report', None)
-
-
-        # Use the region from the request.
-
 
         if request.REQUEST.has_key('date'):
             dt = request.REQUEST.get('date', None)
@@ -312,6 +433,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 else:
                     qs_burn = qs_burn.filter(prescription__district=district)
                     qs_fire = qs_fire.filter(district=district)
+
+        #import ipdb; ipdb.set_trace()
+        if request.REQUEST.has_key('approval_status'):
+            approval_status = map(int, request.REQUEST.getlist('approval_status'))
+            if approval_status:
+                if report=='epfp_planned':
+                    qs_burn = qs_burn.filter(approval_status__in=approval_status)
+                else:
+                    qs_burn = qs_burn.filter(approval_status__in=approval_status)
+                    qs_fire = qs_fire.filter(approval_status=approval_status)
 
         def qs_fireload(qs_burn, qs_fire, fire_type):
             if fire_type == 1:

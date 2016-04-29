@@ -87,6 +87,23 @@
                 <label for="id_district" class="control-label">District</label>
                 {{ form.district }}
 
+
+                <label for="id_approval_status" class="control-label">Approval</label>
+                {{ form.approval_status }}
+
+                {% comment %}
+                <div class="btn-group open">
+                    <button title="Approved" type="button" class="multiselect dropdown-toggle btn btn-default" data-toggle="dropdown"><span class="multiselect-selected-text">Approved</span> <b class="caret"></b></button>
+                    <ul class="multiselect-container dropdown-menu">
+                        <li><a tabindex="0"><label class="checkbox"><input value="1" type="checkbox"> Draft</label></a></li>
+                        <li><a tabindex="0"><label class="checkbox"><input value="2" type="checkbox"> Submitted</label></a></li>
+                        <li><a tabindex="0"><label class="checkbox"><input value="3" type="checkbox"> Endorsed</label></a></li>
+                        <li class="active"><a tabindex="0"><label class="checkbox"><input value="4" type="checkbox"> Approved</label></a></li>
+                    </ul>
+                </div>
+                {% endcomment %}
+
+
                 <input class="hidden" style="float: right;" name="report" value="epfp_planned">
             {% elif report == "epfp_fireload" %}
                 <label for="id_date" class="control-label">Date</label>
@@ -143,10 +160,17 @@
 </ul>
 
 {% if report == "epfp_planned" %}
-
 <div>
     <p style=”float: left">Click on row to view the special conditions</p>
-    <a class="btn btn-small btn-info" style="float: right" href="{{ add_prescribed_burn }}"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
+    <a class="btn/ btn-small btn-info" style="float: right" href="{{ add_prescribed_burn }}"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
+
+    <select id="actions">
+    <option value="0" selected="selected">----</option>
+    <option value="1">Submit</option>
+    <option value="2">Endorse</option>
+    <option value="3">Approve</option>
+    </select>
+    <button id="update-button" type="button" disabled>Update</button>
 </div>
 
 
@@ -157,28 +181,42 @@
 </a>
 {% endcomment %}
 
-<table id="sorted-table" class="table table-hover table-compressed">
+<table id="planned-table" class="table table-hover table-compressed">
   <thead>
     <tr>
+      <th rowspan="2"><input type="checkbox" name ="check_all" onClick=toggle(this) /></th>
       <th rowspan="2">Burn ID</th>
       <th rowspan="2">Name</th>
       <th rowspan="2"><div class="text-left">Location</div></th>
       <th rowspan="2"><div class="text-left">Area</div></th>
       <th rowspan="2"><div class="text-center">Est Start<br>WST</div></th>
+      <th colspan="3"><div class="text-center">Approval Status</div></th>
       <th rowspan="2"><div class="text-center">Special<br>Conditions</div></th>
     </tr>
+    <tr>
+      <th>Submitted</th>
+      <th>Endorsed</th>
+      <th>Approved</th>
+    </tr>
+
   </thead>
   <tbody>
     {% autopaginate qs_burn 25 %}
     {% for qs in qs_burn %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
+      <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
       <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
       <td>{{ qs.prescription.name }}</td>
       <td>{{ qs.prescription.location }}</td>
       <td><div class="text-center">{{ qs.area }}</div></td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
+      <td>{% if qs.submitted %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.endorsed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.approved %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.has_conditions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      {% comment %}
       <td><a id="submit-plannedburn" href="{% url 'admin:approve_view' qs.id %}" class="btn btn-mini alert-error"><i class="icon-ok"></i></a></td>
+      {% endcomment %}
       <td><a id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       <td><a id="delete-plannedburn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
@@ -403,14 +441,18 @@ $(function(){
        ev.preventDefault();
        var target;
        if (this.hasAttribute('data-target')) {
-     target = $(this.getAttribute('data-target'));
+         target = $(this.getAttribute('data-target'));
        } else {
-     target = $(this.getAttribute('href'));
+         target = $(this.getAttribute('href'));
        };
        target.toggleClass("in");
      });
 
+     $("#planned-table td a").on('click', function (e) { e.stopPropagation(); });
+     $("#planned-table td input").on('click', function (e) { e.stopPropagation(); });
+
      $("#sorted-table td a").on('click', function (e) { e.stopPropagation(); });
+     $("#sorted-table td input").on('click', function (e) { e.stopPropagation(); });
 
     $("#sorted-table").tablesorter();
     $("#burns-table tr:contains('Total')").css("font-weight","bold");
@@ -423,6 +465,7 @@ $(function(){
       var urlStr = '?fromDate=' + fromDate + '&toDate=' + toDate + '&Export_CSV=export_csv';
       $("#id_href").attr("href", urlStr);
     });
+
 
     $("#report-tabs").click(function() {
         var date = $("#id_date").val();
@@ -451,5 +494,97 @@ $(function(){
 //  });
 
 });
+
+function toggle(source) {
+    console.log('************************* ');
+    checkboxes = document.getElementsByName('chkbox');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        checkboxes[i].checked = source.checked;
+        //console.log('Checked ' + source.checked);
+        console.log('Checked ' + i);
+    }
+    //list(source)
+    //console.log(checked_list);
+};
+
+function list(source) {
+    checkboxes = document.getElementsByName('chkbox');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        // checkboxes[i].checked = source.checked;
+        console.log('Checked ' + source.checked);
+    }
+};
+
+function remove_rows() {
+    $("#table tr:has(td > input[type=checkbox]:checked)").remove();
+};
+
+$("#actions").click(function () {
+    if ($("#actions").val() == 0) {
+//        $("#update_button").disabled = true;
+        $('#update-button').prop("disabled", true);
+        console.log('True  ' + $("#actions").val() )
+    } else {
+        //$("#update_button").disabled = false;
+        $('#update-button').prop("disabled", false);
+        console.log('False ' + $("#actions").val() )
+    }
+});
+
+
+$('#update-button').click(function(){
+    checkboxes = document.getElementsByName('chkbox');
+    checked_list = []
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        if (checkboxes[i].checked) {
+            checked_list.push(parseInt(checkboxes[i].value))
+        }
+    }
+    //console.log("Actions " + $("#actions").val());
+
+    $.ajax({
+        type: 'POST',
+        url: "{% url 'admin:action_view' %}",
+        //url: "{% url 'admin:test_view' %}",
+        data: {
+            "action": $("#actions :selected").text(),
+            "data": checked_list.toString(),
+            "date": "{{date}}",
+            "csrfmiddlewaretoken": "{{ csrf_token }}",
+        },
+        success: function(response){
+            var response = JSON.parse(response);
+            //window.location.href = response.redirect; // to redirect
+            //location.reload();
+            $("#planned-table").load(window.location + " #planned-table");
+            //$("#id_approval_status").val(2); 
+            //$("#id_approval_status option[value='1']").attr("selected", true);
+            console.log("response.redirect " + response['redirect']);
+
+            $.growl(response.message, {
+                type: response.type,
+                delay: 4000,
+                allow_dismiss: true,
+                animate: {
+                  enter: 'animated bounceIn',
+                  exit: 'animated bounceOut'
+                },
+                offset: {
+                  x: 100,
+                  y: 20
+                }
+            });
+        }
+        //success: console.log('success - jm' + checked_list), //remove_rows(),
+    })
+});
+
+$('#id_approval_status').prop("multiple", "multiple");
+$('#_id_approval_status').multiselect();
+
+$('#id_approval_status').multiselect({
+    includeSelectAllOption: true,
+});
+$("#id_approval_status").multiselect('selectAll', false);
 </script>
 {% endblock %}

@@ -77,22 +77,26 @@
     "tenures": [1,2]
   }
 },
-
 {
   "pk": 1,
   "model": "review.prescribedburn",
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-04-12",
-    "modified": "2016-04-12",
-    "prescription": 611,
-    "date": "2016-04-12",
-    "status": 1,
+    "created": "2016-04-11",
+    "modified": "2016-04-11",
+    "prescription": 616,
+    "date": "2016-04-11",
+    "status": 2,
+    "approval_status": 4,
+    "approval_status_modified": "2016-04-11 18:18:18",
+    "submitted_by": ["jawaidm"],
+    "endorsed_by": ["jawaidm"],
+    "approved_by": ["jawaidm"],
     "further_ignitions": "False",
-    "area": 0,
-    "est_start": "13:59:59",
-    "conditions": "Special conditions go here ..."
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": ""
   }
 },
 {
@@ -101,15 +105,20 @@
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-04-12",
-    "modified": "2016-04-12",
-    "prescription": 613,
-    "date": "2016-04-12",
-    "status": 0,
-    "further_ignitions": "True",
-    "area": 0,
-    "est_start": "14:59:59",
-    "conditions": "Special conditions go here ..."
+    "created": "2016-04-11",
+    "modified": "2016-04-11",
+    "prescription": 617,
+    "date": "2016-04-11",
+    "status": 2,
+    "approval_status": 4,
+    "approval_status_modified": "2016-04-11 18:18:18",
+    "submitted_by": ["jawaidm"],
+    "endorsed_by": ["jawaidm"],
+    "approved_by": ["jawaidm"],
+    "further_ignitions": "False",
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": ""
   }
 },
 {
@@ -118,16 +127,19 @@
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-04-12",
-    "modified": "2016-04-12",
-    "prescription": 614,
-    "date": "2016-04-12",
+    "created": "2016-04-11",
+    "modified": "2016-04-11",
+    "prescription": 618,
+    "date": "2016-04-11",
     "status": 1,
-    "external_assist": [3],
+    "approval_status": 3,
+    "approval_status_modified": "2016-04-11 18:18:18",
+    "submitted_by": ["jawaidm"],
+    "endorsed_by": ["jawaidm"],
     "further_ignitions": "False",
-    "area": 10,
-    "est_start": "15:59:59",
-    "conditions": "Special conditions go here ..."
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": ""
   }
 },
 {
@@ -136,14 +148,19 @@
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-04-12",
-    "modified": "2016-04-12",
-    "prescription": 615,
-    "date": "2016-04-12",
-    "status": 1,
+    "created": "2016-04-11",
+    "modified": "2016-04-11",
+    "prescription": 619,
+    "date": "2016-04-11",
+    "status": 2,
+    "approval_status": 4,
+    "approval_status_modified": "2016-04-11 18:18:18",
+    "submitted_by": ["jawaidm"],
+    "endorsed_by": ["jawaidm"],
+    "approved_by": ["jawaidm"],
     "further_ignitions": "False",
-    "area": 0,
-    "est_start": "16:59:59",
+    "area": null,
+    "est_start": "18:59:59",
     "conditions": ""
   }
 },
@@ -155,12 +172,13 @@
     "modifier": ["jawaidm"],
     "created": "2016-04-12",
     "modified": "2016-04-12",
-    "prescription": 616,
+    "prescription": 611,
     "date": "2016-04-12",
-    "status": 0,
+    "status": 1,
+    "approval_status": 1,
     "further_ignitions": "False",
     "area": 0,
-    "est_start": "17:59:59",
+    "est_start": "13:59:59",
     "conditions": "Special conditions go here ..."
   }
 },
@@ -172,15 +190,54 @@
     "modifier": ["jawaidm"],
     "created": "2016-04-12",
     "modified": "2016-04-12",
-    "prescription": 617,
+    "prescription": 613,
     "date": "2016-04-12",
-    "status": 3,
+    "status": 1,
+    "approval_status": 1,
+    "further_ignitions": "True",
+    "area": 0,
+    "est_start": "14:59:59",
+    "conditions": "Special conditions go here ..."
+  }
+},
+{
+  "pk": 7,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
+    "prescription": 614,
+    "date": "2016-04-12",
+    "status": 1,
+    "approval_status": 1,
+    "external_assist": [3],
+    "further_ignitions": "False",
+    "area": 10,
+    "est_start": "15:59:59",
+    "conditions": "Special conditions go here ..."
+  }
+},
+{
+  "pk": 8,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-04-12",
+    "modified": "2016-04-12",
+    "prescription": 615,
+    "date": "2016-04-12",
+    "status": 1,
+    "approval_status": 1,
     "further_ignitions": "False",
     "area": 0,
-    "est_start": "18:59:59",
+    "est_start": "16:59:59",
     "conditions": ""
   }
 }
+
 
 ]
 
