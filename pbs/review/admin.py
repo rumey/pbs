@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn, Fire
-from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, FireLoadForm
+from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnEditForm, FireLoadFilterForm, PrescribedBurnFilterForm
 from pbs.prescription.models import Prescription, Approval
 from datetime import datetime, date, timedelta
 from django.utils import timezone
@@ -17,8 +17,14 @@ from django.conf import settings
 from pbs.admin import BaseAdmin
 from pbs.prescription.admin import PrescriptionMixin
 from django.contrib import admin
+from functools import update_wrapper, partial
+from django.core.exceptions import (FieldError, ValidationError,
+                                    PermissionDenied)
+from django.forms.models import modelform_factory
 import json
 
+import logging
+logger = logging.getLogger('pbs')
 
 class BurnStateAdmin(DetailAdmin, BaseAdmin):
     """
@@ -133,34 +139,19 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
 
 from pbs.prescription.actions import delete_selected, archive_documents
 class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
-    #template = "admin/epfp_daily_burn_program.html"
-    fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "area", "tenures", "location", "est_start", "conditions")
-    #actions = ['my_action', 'my_other_action', admin.actions.delete_selected]
-    #actions = ['my_action', admin.actions.delete_selected]
-    actions = [delete_selected, archive_documents]
+    #fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "planned_area", "area", "tenures", "location", "est_start", "conditions")
 
-    #form = PlannedBurnForm
     srm_group = Group.objects.get(name='State Regional Manager')
     sdo_group = Group.objects.get(name='State Duty Officer')
 
-    form = PrescribedBurnForm
-#    def get_actions(self, request):
-#        actions = super(PrescribedBurnAdmin, self).get_actions(request)
-#        if not request.user.has_perm('prescription.delete_prescription'):
-#            if actions['delete_selected']:
-#                del actions['delete_selected']
-#        if not request.user.has_perm('prescription.delete_prescription'):
-#            if actions['archive_documents']:
-#                del actions['archive_documents']
-#        return actions
+    #form = PrescribedBurnForm
 
-#    def queryset(self, request):
-#        qs = super(PrescribedBurnAdmin, self).queryset(request)
-#        import ipdb; ipdb.set_trace()
-#        return qs.filter(prescription__region=1)
-
-    def my_action(self):
-        pass
+    def get_form(self, request, obj=None, **kwargs):
+        #import ipdb; ipdb.set_trace()
+        if obj:
+            return PrescribedBurnEditForm
+        else:
+            return PrescribedBurnForm
 
     def save_model(self, request, obj, form, change=True):
         """ Form does not assign user, do it here """
@@ -209,15 +200,93 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 wrap(self.test_view),
                 name='test_view'),
 
+            url(r'^daily-burn-program/epfp',
+                wrap(self.prescription_view),
+                name='prescription_view'),
+            url(r'^daily-burn-program/copy_records',
+                wrap(self.copy_records),
+                name='copy_records'),
+
         )
         return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
+
+    def change_view(self, request, object_id, extra_context=None):
+
+#        if prescription is None:
+#            raise Http404(_('prescription object with primary key %(key)r '
+#                            'does not exist.') % {'key': prescription_id})
+#
+#        if request.method == 'POST' and "_saveasnew" in request.POST:
+#            opts = self.model._meta
+#            return self.add_view(request, prescription_id=prescription.id,
+#                                 form_url=reverse(
+#                                     'admin:%s_%s_add' %
+#                                     (opts.app_label, opts.module_name),
+#                                     args=[prescription.id],
+#                                     current_app=self.admin_site.name))
+#
+#        context = {
+#            'current': prescription
+#        }
+#        context.update(extra_context or {})
+        obj = self.get_object(request, unquote(object_id))
+        now = datetime.now()
+        today = now.date()
+        yesterday = today - timedelta(days=1)
+        time_now = now.time()
+        if obj.date < yesterday:
+            self.message_user(request, "Past burns cannot be edited")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        if not self.has_change_permission(request, obj):
+            self.message_user(request, "{} has no change permission".format(request.user))
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # check lockout time
+        if today >= obj.date and time_now.hour > settings.DAY_ROLLOVER_HOUR:
+            # only SDO can edit current day's burn after cut-off hour.
+            if self.sdo_group not in request.user.groups.all():
+                self.message_user(request, "Only a SDO role can edit this burn (after cut-off hour - {}:00)".format(settings.DAY_ROLLOVER_HOUR))
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        if obj.approval_status == PrescribedBurn.APPROVAL_APPROVED:
+            if self.sdo_group not in request.user.groups.all():
+                self.message_user(request, "Only a SDO role can edit an APPROVED burn")
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+        context = {}
+        context.update(extra_context or {})
+
+        return super(PrescribedBurnAdmin, self).change_view(
+            request, object_id, extra_context=context)
+
+
+
+    def prescription_view(self, request, extra_context=None):
+        if request.is_ajax():
+            if request.REQUEST.has_key('burn_id'):
+                burn_id = str( request.REQUEST.get('burn_id') )
+#                if not burn_id or burn_id.startswith('---'):
+#                    return
+                logger.info('burn_id '.format(burn_id))
+                p = Prescription.objects.filter(burn_id=burn_id)[0]
+                tenures = ', '.join([i.name for i in p.tenures.all()])
+                if len(p.location.split('|')) > 1:
+                    tokens = p.location.split('|')
+                    location = tokens[1] + 'km ' + tokens[2] + ' of ' + tokens[3]
+                else:
+                    #location = p.location
+                    location = None
+
+                return HttpResponse(json.dumps({"location": location, "tenures": tenures}))
+                #return HttpResponse(json.dumps({"location": epfp.location}))
+        return HttpResponse(json.dumps({"location": None, "tenures": None}))
 
     def test_view(self, request, extra_context=None):
         self.message_user(request, "My Test Message")
         #return HttpResponse(json.dumps({'errors': form.errors}))
         return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
-        #return HttpResponse('http://localhost:8000/')
-        #return HttpResponseRedirect('http://localhost:8000/')
 
     #def action_view(self, request, object_id, form_url='', extra_context=None):
     #def action_view(self, request, *args, **kwargs):
@@ -227,7 +296,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             action = request.POST['action']
 
             if request.POST.has_key('data'):
-                if len(request.POST['data']) == 0:
+                if len(request.POST['data']) == 0: # and action != "Copy Records":
                     message = "No rows were selected"
                     msg_type = "danger"
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
@@ -243,8 +312,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             raise Http404('Could not get Update Action command')
 
         objects = PrescribedBurn.objects.filter(id__in=data)
-        #today = date.today()
-        today = date(2016,4,12)
+        today = date.today()
+        #today = date(2016,4,12)
         tomorrow = today + timedelta(days=1)
         yesterday = today - timedelta(days=1)
         if action == "Submit":
@@ -307,13 +376,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 msg_type = "danger"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
 
-                #self.message_user(request, "Can only approve burns for today {} or tomorrow {}".format(today, tomorrow))
-                #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+            #self.copy_records(yesterday, today)
+            #unset_objects = self.check_rolled_records(today)
+            #self.copy_records(request)
+            unset_objects = self.check_rolled_records(dt)
 
-            # check that records copied from yesterday have 'Active' and 'Area Burnt Yesterday' fields set
-            yest_objects = PrescribedBurn.objects.filter(date=yesterday, status=PrescribedBurn.BURN_ACTIVE, approval_status=PrescribedBurn.APPROVAL_APPROVED)
-            copied_objects = PrescribedBurn.objects.filter(date=dt, prescription__burn_id__in=[obj.prescription.burn_id for obj in yest_objects])
-            unset_objects = list(set(copied_objects.filter(area__isnull=True)).union(copied_objects.filter(status__isnull=True)))
             if len(unset_objects) > 0:
                 message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
                     ', '.join([obj.prescription.burn_id for obj in unset_objects]))
@@ -325,6 +392,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #                )
 #                return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
 
+            import ipdb; ipdb.set_trace()
             not_endorsed = []
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_ENDORSED:
@@ -356,6 +424,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         """
         Display a list of the current day's planned burns
         """
+        #import ipdb; ipdb.set_trace()
         report_set = {'epfp_planned', 'epfp_fireload', 'epfp_summary'}
         report = request.GET.get('report', 'epfp_planned')
         if report not in report_set:
@@ -378,6 +447,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             if time_now.hour > settings.DAY_ROLLOVER_HOUR:
                 dt = dt + timedelta(days=1)
 
+        yesterday = dt - timedelta(days=1)
 
 #        queryset= None
         #import ipdb; ipdb.set_trace()
@@ -387,8 +457,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #qs_fireload = FireLoad.objects.filter(prescription__date=dt, fire__date=dt)
         if report=='epfp_planned':
             title = "Today's Planned Burn Program"
-            qs_burn = qs_burn.filter(status=PrescribedBurn.BURN_PLANNED)
-            form = PrescribedBurnForm(request.GET)
+            # assumes all burns entered on date dt are planned (for date dt)
+            #qs_burn = qs_burn.filter(status=PrescribedBurn.BURN_PLANNED).exclude(rolled=True)
+            #qs_burn = qs_burn.exclude(rolled=True)
+            form = PrescribedBurnFilterForm(request.GET)
+            #form = PrescribedBurnForm(request.GET)
 #            pb = PrescribedBurn(user=request.user)
             #form = PlannedBurnForm(initial={'user': request.user})
             #form = PlannedBurnForm(request.POST or None, request=request)
@@ -396,14 +469,18 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #                pb.save()
         elif report=='epfp_fireload':
             title = "Summary of Current Fire Load"
-            form = FireLoadForm(request.GET)
+            qs_burn = PrescribedBurn.objects.filter(date=yesterday, status__in=[PrescribedBurn.BURN_ACTIVE, PrescribedBurn.BURN_INACTIVE])
+            qs_fire = Fire.objects.filter(date=yesterday)
+            form = FireLoadFilterForm(request.GET)
+            #form = FireLoadForm(request.GET)
         elif report=='epfp_summary':
             title = "Summary of Current and Planned Fires"
-            qs_burn = qs_burn.filter(status__in=[PrescribedBurn.BURN_PLANNED, PrescribedBurn.BURN_ACTIVE])
+            qs_burn = qs_burn.filter(status__in=[PrescribedBurn.BURN_PLANNED, PrescribedBurn.BURN_ACTIVE], approval_status=PrescribedBurn.APPROVAL_APPROVED)
             qs_fire = qs_fire.filter(active=True)
             #qs_fire = qs_fireload.filter(prescription__active=True, fire__active=True)
             #qs_fireload = qs_fireload.filter(prescription__active=True, fire__active=True)
-            form = FireLoadForm(request.GET)
+            form = PrescribedBurnFilterForm(request.GET)
+            #form = FireLoadForm(request.GET)
             #queryset = ActiveBurn.objects.filter(date__gte=dt)
 
         fire_type = 0
@@ -470,42 +547,63 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
 
-    def copy_prior_records(self, date):
+    #def copy_records(self, today):
+    def copy_records(self, request, extra_context=None):
         """
-        Copy today's 'active' records to tomorrow
-        To be run via Cron
+        Copy yesterday's 'active' records to today
+        To be run via Cron?
         """
 
-        time_now = datetime.datetime.now().time()
-        today = datetime.date.today()
-        tomorrow = date + datetime.timedelta(days=1)
+        if request.POST.has_key('date'):
+            dt = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
+        else:
+            raise Http404('Could not get Date')
+
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+        if not (dt == today or dt == tomorrow):
+            message = "Can only copy records for today {}, or tomorrow {}.".format(today, tomorrow)
+            return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER'), "message": message, "type": "danger"}))
+
         # copy permitted only after given time, and only for today to tomorrow
-        if date != today:
-            log.warn('WARNING: Cannot copy for date {}. Can only copy planned burn records from (current day) {} to tomorrow {}'.format(date, today, tomorrow))
-            return
-
-        if time_now.hour < settings.DAY_ROLLOVER_HOUR and date != today:
-            log.warn('WARNING: cannot copy planned burn records to tomorrow, until after {} {}:00:00'.format(today.isoformat(), hour))
-            return
-
-        #only copy for today or tomorrow, and only copy if records for today/tomorrow don't already exist
-#        if date!=today or date!=tomorrow or (PrescribedBurn.objects.filter(active=True, date=date).count()>0 or Fire.objects.filter(active=True, date=date).count()>0):
+#        if dt != today:
+#            message = 'WARNING: Cannot copy for date {}. Can only copy planned burn records from yesterday {}, to today {}'.format(dt, yesterday, today)
+#            logger.warn(message)
 #            return
 
-        qs_active_fireload = PrescribedBurn.objects.filter(active=True, date=today)
-        qs_active_planned = Planned.objects.filter(active=True, date=today)
+        #today = date.today()
+        yesterday = dt - timedelta(days=1)
+        yest_objects = [i.prescription.burn_id for i in PrescribedBurn.objects.filter(
+            date=yesterday, status=PrescribedBurn.BURN_ACTIVE, approval_status__in=[PrescribedBurn.APPROVAL_ENDORSED, PrescribedBurn.APPROVAL_APPROVED])]
+        copied_objects = PrescribedBurn.objects.filter(date=dt, prescription__burn_id__in=yest_objects)
+        missing = list(set(yest_objects).difference(copied_objects))
 
-        for i in qs_active_planned:
+        #import ipdb; ipdb.set_trace()
+        for i in PrescribedBurn.objects.filter(prescription__burn_id__in=missing, date=yesterday):
             try:
                 i.pk = None
-                i.date = tomorrow
-                i.area=None
-                i.active=None
+                i.date = dt
+                i.area = None
+                i.status = 1
+                i.approval_status = PrescribedBurn.APPROVAL_ENDORSED
+                i.approved_by = None
+                i.rolled = True
                 i.save()
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, today))
                 pass
 
+    def check_rolled_records(self, today):
+        """
+        Verify Copied records have 'Active/Inactive' and 'Area' fields set,
+        return list of objects that are unset
+        """
+
+        rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True)
+        unset_objects = list(set(rolled_objects.filter(area__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
+
+        return unset_objects
 
 class FireAdmin(DetailAdmin, BaseAdmin):
     fields = ("fire_id", "name", "region", "district", "date", "active", "external_assist", "area", "tenures", "location")

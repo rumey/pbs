@@ -83,9 +83,8 @@ class Fire(Audit):
     #external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
     external_assist = models.ManyToManyField(ExternalAssist, blank=True)
     area = models.DecimalField(
-        verbose_name="Planned Fire Area (ha)", max_digits=12, decimal_places=1,
+        verbose_name="Fire Area (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0)], null=True, blank=True)
-        #validators=[MinValueValidator(0)], default=0.0)
     tenures = models.ManyToManyField(Tenure, blank=True)
     location= models.TextField(verbose_name="Location", null=True, blank=True)
 
@@ -98,6 +97,7 @@ class Fire(Audit):
         default=APPROVAL_DRAFT)
     approval_status_modified = models.DateTimeField(
         verbose_name="Approval Status Modified", editable=False, null=True)
+    rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", default=False)
 
 
     @property
@@ -189,9 +189,12 @@ class PrescribedBurn(Audit):
     further_ignitions = models.BooleanField(verbose_name="Further ignitions required?")
 #    external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
     external_assist = models.ManyToManyField(ExternalAssist, blank=True)
+    planned_area = models.DecimalField(
+        verbose_name="Planned Burn Area (ha)", max_digits=12, decimal_places=1,
+        validators=[MinValueValidator(0.0)])
     area = models.DecimalField(
         verbose_name="Area Achieved Yesterday (ha)", max_digits=12, decimal_places=1,
-        validators=[MinValueValidator(0.1)], null=True, blank=True)
+        validators=[MinValueValidator(0.0)], null=True, blank=True)
     tenures= models.TextField(verbose_name="Tenure")
     location= models.TextField(verbose_name="Location", null=True, blank=True)
 
@@ -207,11 +210,12 @@ class PrescribedBurn(Audit):
         default=APPROVAL_DRAFT)
     approval_status_modified = models.DateTimeField(
         verbose_name="Approval Status Modified", editable=False, null=True)
+    rolled = models.BooleanField(verbose_name="Burn Rolled from yesterday", default=False)
 
     def clean_date(self):
         today = date.today()
         tomorrow = today + timedelta(days=1)
-        if self.date < today or self.date > tomorrow:
+        if not self.pk and (self.date < today or self.date > tomorrow):
             raise ValidationError("You must enter burn plans for today or tommorow's date only.")
 
     def clean_sdo_approve(self):
@@ -298,14 +302,18 @@ class PrescribedBurn(Audit):
         """
         return (self.status == self.APPROVAL_ENDORSED)
 
-    def save(self, **kwargs):
-        super(PrescribedBurn, self).save(**kwargs)
-        tenures = self.tenures_str
-        if not self.location:
-            self.location = self.prescription.location
-        if not self.tenures and tenures:
-            self.tenures = tenures
-        super(PrescribedBurn, self).save()
+#    def save(self, **kwargs):
+#        super(PrescribedBurn, self).save(**kwargs)
+#        tenures = self.tenures_str
+#        if not self.location:
+#            if len(self.prescription.location.split('|')) > 1:
+#                tokens = self.prescription.location.split('|')
+#                self.location = tokens[1] + 'km ' + tokens[2] + ' of ' + tokens[3]
+#            else:
+#                self.location = self.prescription.location
+#        if not self.tenures and tenures:
+#            self.tenures = tenures
+#        super(PrescribedBurn, self).save()
 
     def __str__(self):
         return self.prescription.burn_id

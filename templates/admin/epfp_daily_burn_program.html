@@ -142,19 +142,19 @@
     <li id="planned-tab"  "{% if report == "epfp_planned" %} class="active"{% endif %}>
         <a href="{% url 'admin:daily_burn_program' %}?report=epfp_planned&date={{date}}">
             <i class="icon-tag"></i>
-            Planned
+            Planned (268a)
         </a>
     </li>
     <li id="fireload-tab" {% if report == "epfp_fireload" %} class="active"{% endif %}>
-        <a href="{% url 'admin:fireload_view' %}?date={{date}}">
+        <a href="{% url 'admin:daily_burn_program' %}?report=epfp_fireload&date={{date}}">
             <i class="icon-plus"></i>
-            Fire Load
+            Fire Load (268b)
         </a>
     </li>
     <li id="summary-tab"  "{% if report == "epfp_summary" %} class="active"{% endif %}>
         <a href="{% url 'admin:daily_burn_program' %}?report=epfp_summary&date={{date}}">
             <i class="icon-fire"></i>
-            Approved Burns
+            Approved Burns (268c)
         </a>
     </li>
 </ul>
@@ -169,6 +169,7 @@
     <option value="1">Submit</option>
     <option value="2">Endorse</option>
     <option value="3">Approve</option>
+    <option value="4">Copy Records</option>
     </select>
     <button id="update-button" type="button" disabled>Update</button>
 </div>
@@ -205,10 +206,10 @@
     {% for qs in qs_burn %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
-      <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
+      <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>{% if qs.rolled %}<font color="red"> (r)</font>{% endif %}</td>
       <td>{{ qs.prescription.name }}</td>
-      <td>{{ qs.prescription.location }}</td>
-      <td><div class="text-center">{{ qs.area }}</div></td>
+      <td>{{ qs.location }}</td>
+      <td><div class="text-center">{{ qs.planned_area }}</div></td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
       <td>{% if qs.submitted %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.endorsed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
@@ -251,18 +252,6 @@
                 <th>Special Conditions</th>
                 <td colspan="3">{{ qs.conditions }}</td>
               </tr>
-              <tr>
-                <th>Prohibited Period</th>
-                <td>{% if qs.prescription.prohibited_period %}{{ qs.prescription.prohibited_period }}{% else %}None{% endif %}</td>
-                <th>Burn Purpose(s)</th>
-                <td colspan="3">
-                  {% for purpose in qs.prescription.purposes.all %}
-                  {{ purpose.name }}
-                  <br>
-                  {% endfor %}
-                </td>
-              </tr>
-
             </tbody>
           </table>
         </td>
@@ -310,10 +299,10 @@
       </td>
       <td>{{ qs.name }}</td>
 
-      <td>{% if qs.active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% elif qs.active == None %}<font color="red">Unset</font>{% endif %}</td>
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% endif %}</td>
+      <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% elif qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% endif %}</td>
       <td>{% if qs.had_external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       {% if qs.prescription %}
         <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
@@ -519,6 +508,23 @@ function remove_rows() {
     $("#table tr:has(td > input[type=checkbox]:checked)").remove();
 };
 
+function growl(response) {
+    $.growl(response.message, {
+        type: response.type,
+        delay: 10000,
+        allow_dismiss: true,
+        animate: {
+            enter: 'animated bounceIn',
+            exit: 'animated bounceOut'
+        },
+        offset: {
+            x: 100,
+            y: 20
+        }
+    });
+};
+
+
 $("#actions").click(function () {
     if ($("#actions").val() == 0) {
 //        $("#update_button").disabled = true;
@@ -541,11 +547,18 @@ $('#update-button').click(function(){
         }
     }
     //console.log("Actions " + $("#actions").val());
+    
+    var urll;
+    if ($("#actions :selected").text() == "Copy Records") {
+        urll = "{% url 'admin:copy_records' %}";
+    } else {
+        urll = "{% url 'admin:action_view' %}";
+    }
 
     $.ajax({
         type: 'POST',
-        url: "{% url 'admin:action_view' %}",
-        //url: "{% url 'admin:test_view' %}",
+        //url: "{% url 'admin:action_view' %}",
+        url: urll,
         data: {
             "action": $("#actions :selected").text(),
             "data": checked_list.toString(),
@@ -561,23 +574,12 @@ $('#update-button').click(function(){
             //$("#id_approval_status option[value='1']").attr("selected", true);
             console.log("response.redirect " + response['redirect']);
 
-            $.growl(response.message, {
-                type: response.type,
-                delay: 4000,
-                allow_dismiss: true,
-                animate: {
-                  enter: 'animated bounceIn',
-                  exit: 'animated bounceOut'
-                },
-                offset: {
-                  x: 100,
-                  y: 20
-                }
-            });
+            growl(response);
         }
         //success: console.log('success - jm' + checked_list), //remove_rows(),
     })
 });
+
 
 $('#id_approval_status').prop("multiple", "multiple");
 $('#_id_approval_status').multiselect();
