@@ -214,9 +214,9 @@
       <td>{{ qs.location }}</td>
       <td><div class="text-center">{{ qs.planned_area }}</div></td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
-      <td>{% if qs.submitted %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.endorsed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.approved %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.submitted %}<div class="text-center" data-toggle="tooltip" title="{{ qs.submitted_by.get_full_name }} - {{ qs.submitted_date_str }}"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.endorsed %}<div class="text-center" data-toggle="tooltip" title="{{ qs.endorsed_by.get_full_name }} - {{ qs.endorsed_date_str }}"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.approved %}<div class="text-center data-toggle="tooltip" title="{{ qs.approved_by.get_full_name }} - {{ qs.approved_date_str }}""><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.has_conditions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       {% comment %}
       <td><a id="submit-plannedburn" href="{% url 'admin:approve_view' qs.id %}" class="btn btn-mini alert-error"><i class="icon-ok"></i></a></td>
@@ -255,6 +255,15 @@
                 <th>Special Conditions</th>
                 <td colspan="3">{{ qs.conditions }}</td>
               </tr>
+              <tr>
+                <th>Submitted</th>
+                <td>{{ qs.submitted_by.get_full_name}}<br>{{ qs.submitted_date_str }}</td>
+                <th>Endorsed</th>
+                <td>{{ qs.endorsed_by.get_full_name }}<br>{{ qs.endorsed_date_str }}</td>
+                <th>Approved</th>
+                <td>{{ qs.approved_by.get_full_name }}<br>{{ qs.approved_date_str }}</td>
+              </tr>
+
             </tbody>
           </table>
         </td>
@@ -274,10 +283,11 @@
 </div>
 
 
-<table id="sorted-table" class="table table-hover table-compressed">
+<table id="fireload-table" class="table table-hover table-compressed">
   <thead>
     <tr>
-      <th rowspan="2">Burn ID</th>
+      <th rowspan="2"><input type="checkbox" name ="check_all" onClick=toggle(this) /></th>
+      <th rowspan="2">ID</th>
       <th rowspan="2">Name</th>
       <th colspan="3"><div class="text-center">Burn Status</div></th>
       <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
@@ -293,6 +303,7 @@
     {% autopaginate qs_fireload 25 %}
     {% for qs in qs_fireload %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.fire_id}}">
+      <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
       <td>
         {% if qs.prescription %}
            <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id  }}</a>
@@ -443,6 +454,9 @@ $(function(){
      $("#planned-table td a").on('click', function (e) { e.stopPropagation(); });
      $("#planned-table td input").on('click', function (e) { e.stopPropagation(); });
 
+     $("#fireload-table td a").on('click', function (e) { e.stopPropagation(); });
+     $("#fireload-table td input").on('click', function (e) { e.stopPropagation(); });
+
      $("#sorted-table td a").on('click', function (e) { e.stopPropagation(); });
      $("#sorted-table td input").on('click', function (e) { e.stopPropagation(); });
 
@@ -581,6 +595,8 @@ $('#update-button').click(function(){
         }
         //success: console.log('success - jm' + checked_list), //remove_rows(),
     })
+
+    $('[data-toggle="tooltip"]').tooltip();   
 });
 
 
@@ -591,5 +607,7 @@ $('#id_approval_status').multiselect({
     includeSelectAllOption: true,
 });
 $("#id_approval_status").multiselect('selectAll', false);
+
+
 </script>
 {% endblock %}
