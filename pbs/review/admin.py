@@ -325,7 +325,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     obj.approval_status_modified = timezone.now()
                     obj.save()
                     #self.message_user(request, "Successfully submitted.")
-                    message = "Successfully submitted."
+                    count += 1
+                    message = "Successfully submitted {} burn{}".format(count, "s" if count>1 else "")
                     msg_type = "success"
                 else:
                     not_draft.append(obj.prescription.burn_id)
@@ -337,6 +338,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
 
         elif action == "Endorse":
+            if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
+                message = "Only a SRM and SDO roles can ENDORSE burns"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
             # TODO can approve records for today or tomorrow only?
             if not (dt == today or dt == tomorrow):
                 message = "Can only endorse burns for today {}, or tomorrow {}.".format(today, tomorrow)
@@ -349,14 +354,15 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             #submitted_objects = PrescribedBurn.objects.filter(date=date, )
 
             not_submitted = []
+            count = 0
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_SUBMITTED:
                     obj.endorsed_by = request.user
                     obj.approval_status = obj.APPROVAL_ENDORSED
                     obj.approval_status_modified = timezone.now()
                     obj.save()
-                    #self.message_user(request, "Successfully submitted for endorsement")
-                    message = "Successfully submitted for endorsement."
+                    count += 1
+                    message = "Successfully endorsed {} burn{}".format(count, "s" if count>1 else "")
                     msg_type = "success"
                 else:
                     not_submitted.append(obj.prescription.burn_id)
@@ -370,11 +376,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
 
         elif action == "Approve":
-            # TODO can approve records for today or tomorrow only?
+
+            if self.sdo_group not in request.user.groups.all():
+                message = "Only a SDO role can APPROVED burns"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
             if not (dt == today or dt == tomorrow):
                 message = "Can only approve burns for today {}, or tomorrow {}.".format(today, tomorrow)
-                msg_type = "danger"
-                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             #self.copy_records(yesterday, today)
             #unset_objects = self.check_rolled_records(today)
@@ -384,23 +393,19 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             if len(unset_objects) > 0:
                 message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
                     ', '.join([obj.prescription.burn_id for obj in unset_objects]))
-                msg_type = "danger"
-                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-#                self.message_user(request, "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
-#                    ', '.join([obj.prescription.burn_id for obj in unset_objects]))
-#                )
-#                return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
-
-            import ipdb; ipdb.set_trace()
+            #import ipdb; ipdb.set_trace()
             not_endorsed = []
+            count = 0
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_ENDORSED:
                     obj.approved_by = request.user
                     obj.approval_status = obj.APPROVAL_APPROVED
                     obj.approval_status_modified = timezone.now()
                     obj.save()
-                    message = "Successfully submitted for approval."
+                    count += 1
+                    message = "Successfully approved {} burn{}".format(count, "s" if count>1 else "")
                     msg_type = "success"
                     #self.message_user(request, "Successfully submitted for approved")
                 else:
@@ -408,17 +413,62 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
                 if not_endorsed:
                     message = "Could not approve {}\n. Only ENDORSED burns can be approved".format(', '.join(not_endorsed))
-                    msg_type = "danger"
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-                    #self.message_user(request, "Could not approve {}\n. Only ENDORSED burns can be Approved".format(', '.join(not_endorsed)))
-                    #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+        elif action == "Delete Approve":
+            if self.sdo_group not in request.user.groups.all():
+                message = "Only a SDO role can delete an APPROVAL"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-        #url = reverse('admin:daily_burn_program')
-        #from django.contrib import messages
-        #messages.success(request, 'Your profile was updated.')
+            count = 0
+            for obj in objects:
+                if obj.approval_status == obj.APPROVAL_APPROVED:
+                    obj.approved_by = None
+                    obj.approval_status = obj.APPROVAL_ENDORSED
+                    obj.approval_status_modified = timezone.now()
+                    obj.save()
+                    count += 1
+                    message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
+                    msg_type = "success"
+            if count == 0:
+                message = "No records deleted"
+                msg_type = "info"
+
+        elif action == "Delete Endorse":
+            if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
+                message = "Only a SRM and SDO roles can delete an ENDORSEMENT"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+            count = 0
+            for obj in objects:
+                if obj.approval_status == obj.APPROVAL_ENDORSED:
+                    obj.endorsed_by = None
+                    obj.approval_status = obj.APPROVAL_SUBMITTED
+                    obj.approval_status_modified = timezone.now()
+                    obj.save()
+                    count += 1
+                    message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
+                    msg_type = "success"
+            if count == 0:
+                message = "No records deleted"
+                msg_type = "info"
+
+        elif action == "Delete Submit":
+            count = 0
+            for obj in objects:
+                if obj.approval_status == obj.APPROVAL_SUBMITTED:
+                    obj.submitted_by = None
+                    obj.approval_status = obj.APPROVAL_DRAFT
+                    obj.approval_status_modified = timezone.now()
+                    obj.save()
+                    count += 1
+                    message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
+                    msg_type = "success"
+            if count == 0:
+                message = "No records deleted"
+                msg_type = "info"
+
         return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
-        #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
 
     def daily_burn_program(self, request, extra_context=None):
         """
@@ -579,6 +629,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         missing = list(set(yest_objects).difference(copied_objects))
 
         #import ipdb; ipdb.set_trace()
+        count = 0
         for i in PrescribedBurn.objects.filter(prescription__burn_id__in=missing, date=yesterday):
             try:
                 i.pk = None
@@ -589,10 +640,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 i.approved_by = None
                 i.rolled = True
                 i.save()
+                count += 1
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
                 logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, today))
                 pass
+
+        message = "{} records ".format(count)  if count > 1 else "{} record ".format(count) + "copied"
+        return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER'), "message": message, "type": "info"}))
 
     def check_rolled_records(self, today):
         """
