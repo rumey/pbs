@@ -179,6 +179,8 @@ class PrescribedBurn(Audit):
         (APPROVAL_APPROVED, 'Approved'),
     )
 
+    fmt = "%Y-%m-%d %H:%M"
+
     prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
     #user = models.ForeignKey(User, help_text="User")
     date = models.DateField(auto_now_add=False)
@@ -202,8 +204,11 @@ class PrescribedBurn(Audit):
     conditions = models.TextField(verbose_name='Special Conditions', null=True, blank=True)
 
     submitted_by = models.ForeignKey(User, verbose_name="Submitting User", blank=True, null=True, related_name='burn_submitted_by')
+    submitted_date = models.DateTimeField(editable=False, null=True)
     endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", blank=True, null=True, related_name='burn_endorsed_by')
+    endorsed_date = models.DateTimeField(editable=False, null=True)
     approved_by = models.ForeignKey(User, verbose_name="Approving Officer", blank=True, null=True, related_name='burn_approved_by')
+    approved_date = models.DateTimeField(editable=False, null=True)
 
     approval_status = models.PositiveSmallIntegerField(
         verbose_name="Approval Status", choices=APPROVAL_CHOICES,
@@ -237,6 +242,18 @@ class PrescribedBurn(Audit):
     @property
     def approved(self):
         return True if self.approved_by else False
+
+    @property
+    def submitted_date_str(self):
+        return self.submitted_date.strftime('%Y-%m-%d %H:%M')
+
+    @property
+    def endorsed_date_str(self):
+        return self.endorsed_date.strftime('%Y-%m-%d %H:%M')
+
+    @property
+    def approved_date_str(self):
+        return self.approved_date.strftime('%Y-%m-%d %H:%M')
 
     @property
     def fire_id(self):
