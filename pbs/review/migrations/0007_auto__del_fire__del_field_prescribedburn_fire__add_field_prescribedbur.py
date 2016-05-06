@@ -8,15 +8,60 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'PrescribedBurn.planned_area'
-        db.add_column(u'review_prescribedburn', 'planned_area',
-                      self.gf('django.db.models.fields.DecimalField')(default=0, max_digits=12, decimal_places=1),
+        # Deleting model 'Fire'
+        db.delete_table(u'review_fire')
+
+        # Deleting field 'PrescribedBurn.fire'
+        db.delete_column(u'review_prescribedburn', 'fire_id')
+
+        # Adding field 'PrescribedBurn.fire_id'
+        db.add_column(u'review_prescribedburn', 'fire_id',
+                      self.gf('django.db.models.fields.CharField')(max_length=10, null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'PrescribedBurn.fire_name'
+        db.add_column(u'review_prescribedburn', 'fire_name',
+                      self.gf('django.db.models.fields.TextField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'PrescribedBurn.region'
+        db.add_column(u'review_prescribedburn', 'region',
+                      self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'PrescribedBurn.district'
+        db.add_column(u'review_prescribedburn', 'district',
+                      self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['prescription.District'], null=True, blank=True),
                       keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting field 'PrescribedBurn.planned_area'
-        db.delete_column(u'review_prescribedburn', 'planned_area')
+        # Adding model 'Fire'
+        db.create_table(u'review_fire', (
+            ('name', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('district', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['prescription.District'], null=True, blank=True)),
+            ('region', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
+            ('fire_id', self.gf('django.db.models.fields.CharField')(max_length=10, null=True, blank=True)),
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+        ))
+        db.send_create_signal(u'review', ['Fire'])
+
+        # Adding field 'PrescribedBurn.fire'
+        db.add_column(u'review_prescribedburn', 'fire',
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['review.Fire'], null=True, blank=True),
+                      keep_default=False)
+
+        # Deleting field 'PrescribedBurn.fire_id'
+        db.delete_column(u'review_prescribedburn', 'fire_id')
+
+        # Deleting field 'PrescribedBurn.fire_name'
+        db.delete_column(u'review_prescribedburn', 'fire_name')
+
+        # Deleting field 'PrescribedBurn.region'
+        db.delete_column(u'review_prescribedburn', 'region')
+
+        # Deleting field 'PrescribedBurn.district'
+        db.delete_column(u'review_prescribedburn', 'district_id')
 
 
     models = {
@@ -185,15 +230,15 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '12'})
         },
-        u'review.fire': {
-            'Meta': {'unique_together': "(('fire_id', 'date'),)", 'object_name': 'Fire'},
+        u'review.fire2': {
+            'Meta': {'unique_together': "(('fire_id', 'date'),)", 'object_name': 'Fire2'},
             'active': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
             'approval_status': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '1'}),
             'approval_status_modified': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'approved_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'fire_approved_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'area': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'creator': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_fire_created'", 'to': u"orm['auth.User']"}),
+            'creator': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_fire2_created'", 'to': u"orm['auth.User']"}),
             'date': ('django.db.models.fields.DateField', [], {}),
             'district': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['prescription.District']", 'null': 'True', 'blank': 'True'}),
             'endorsed_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'fire_endorsed_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
@@ -202,7 +247,7 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'location': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'modifier': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_fire_modified'", 'to': u"orm['auth.User']"}),
+            'modifier': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_fire2_modified'", 'to': u"orm['auth.User']"}),
             'name': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'region': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'rolled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -213,15 +258,20 @@ class Migration(SchemaMigration):
             'Meta': {'unique_together': "(('prescription', 'date'),)", 'object_name': 'PrescribedBurn'},
             'approval_status': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '1'}),
             'approval_status_modified': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            'approved_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'burn_approved_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'approved_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'approved_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'approved_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'area': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
             'conditions': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'creator': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_prescribedburn_created'", 'to': u"orm['auth.User']"}),
             'date': ('django.db.models.fields.DateField', [], {}),
-            'endorsed_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'burn_endorsed_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'district': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['prescription.District']", 'null': 'True', 'blank': 'True'}),
+            'endorsed_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'endorsed_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'endorsed_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'est_start': ('django.db.models.fields.TimeField', [], {}),
             'external_assist': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['review.ExternalAssist']", 'symmetrical': 'False', 'blank': 'True'}),
+            'fire_id': ('django.db.models.fields.CharField', [], {'max_length': '10', 'null': 'True', 'blank': 'True'}),
+            'fire_name': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'further_ignitions': ('django.db.models.fields.BooleanField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'location': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
@@ -229,9 +279,11 @@ class Migration(SchemaMigration):
             'modifier': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_prescribedburn_modified'", 'to': u"orm['auth.User']"}),
             'planned_area': ('django.db.models.fields.DecimalField', [], {'max_digits': '12', 'decimal_places': '1'}),
             'prescription': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'prescribed_burn'", 'null': 'True', 'to': u"orm['prescription.Prescription']"}),
+            'region': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'rolled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'submitted_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'burn_submitted_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'submitted_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'submitted_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'submitted_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'tenures': ('django.db.models.fields.TextField', [], {})
         }
     }

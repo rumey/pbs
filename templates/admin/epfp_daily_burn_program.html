@@ -157,6 +157,10 @@
             Approved Burns (268c)
         </a>
     </li>
+    <div style="float: right">
+    <a id="id_href" href=""><button id="id_csv" class="csv_btn btn-primary">Export As CSV</button></a></p>
+    <a value="Preview Part A" class="btn pull-right" href="{% url 'admin:create_dailyburns_pdf' %}?template=daily_burn_program"><i class="icon-print"></i> Create PDF</a>
+    </div>
 </ul>
 
 {% if report == "epfp_planned" %}
@@ -279,7 +283,7 @@
 {% if report == "epfp_fireload" %}
 <div>
     <p style=”float: left">Click on row to view the special conditions</p>
-    <a class="btn btn-small btn-info" style="float: right" href="{{ add_fire }}"><i class="icon-plus icon-white"></i> Add Fire</a>
+    <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Fire</a>
 </div>
 
 
@@ -466,9 +470,8 @@ $(function(){
     $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
 
     $("#id_csv").click(function () {
-      var fromDate = $("#id_fromDate").val();
-      var toDate = $("#id_toDate").val();
-      var urlStr = '?fromDate=' + fromDate + '&toDate=' + toDate + '&Export_CSV=export_csv';
+      var report_date = $("#id_date").val();
+      var urlStr = '?date=' + report_date + '&Export_CSV=export_csv';
       $("#id_href").attr("href", urlStr);
     });
 
@@ -568,6 +571,8 @@ $('#update-button').click(function(){
     var urll;
     if ($("#actions :selected").text() == "Copy Records") {
         urll = "{% url 'admin:copy_records' %}";
+//    } else if ($("#actions :selected").text() == "Export as CSV") {
+//        urll = "{% url 'admin:daily_burn_program_exportcsv' %}";
     } else {
         urll = "{% url 'admin:action_view' %}";
     }

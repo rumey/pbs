@@ -1,6 +1,6 @@
 from django import forms
 from pbs.prescription.models import Region, District
-from pbs.review.models import PrescribedBurn, Fire
+from pbs.review.models import PrescribedBurn
 from datetime import datetime, timedelta
 from django.conf import settings
 
@@ -65,7 +65,8 @@ class PrescribedBurnForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        exclude = ('area','region', 'district', 'submitted_by', 'endorsed_by', 'approved_by', 'approval_status', 'rolled',)
+        exclude = ('submitted_by', 'endorsed_by', 'approved_by', 'approval_status', 'rolled',)
+        #exclude = ('area','region', 'district', 'submitted_by', 'endorsed_by', 'approved_by', 'approval_status', 'rolled',)
         #fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "planned_area", "tenures", "location", "est_start", "conditions")
 
 #    def __init__(self, *args, **kwargs):
@@ -109,10 +110,10 @@ class PrescribedBurnEditForm(forms.ModelForm):
         model = PrescribedBurn
         exclude = ('region', 'district', 'submitted_by', 'endorsed_by', 'approved_by', 'approval_status', 'rolled',)
 
-class FireForm(forms.ModelForm):
-    class Meta:
-        model = Fire
-        exclude = ('user', )
+#class FireForm(forms.ModelForm):
+#    class Meta:
+#        model = Fire
+#        exclude = ('user', )
 
 
 class PrescribedBurnFilterForm(forms.Form):
@@ -124,4 +125,13 @@ class FireLoadFilterForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
     district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
     fire_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Fires')])
+
+#class FireForm(forms.ModelForm):
+#    class Meta:
+#        model = Fire
+
+class FireFormSet(forms.ModelForm):
+    class Meta:
+        model = PrescribedBurn
+        exclude = ('prescription', )
 

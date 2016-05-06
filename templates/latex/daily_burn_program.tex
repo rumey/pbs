@@ -1,0 +1,7 @@
+{% extends "latex/base.tex" %}
+{% block content %}
+\part{Part A - Daily Burn Program}
+\section{Section A - Daily Burn Summary}
+\fancyfoot[L]{ \leftmark\newlineSection A1 last modified {{ prescription.modified|default:"" }}\quadPDF Created On {{ timestamp } } }
+\subsubsection{Daily Burn Summary}
+{% endblock %}

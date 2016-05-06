@@ -4,7 +4,7 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PrescribedBurn, Fire
+from pbs.review.models import BurnState, PrescribedBurn
 from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnEditForm, FireLoadFilterForm, PrescribedBurnFilterForm
 from pbs.prescription.models import Prescription, Approval
 from datetime import datetime, date, timedelta
@@ -21,7 +21,14 @@ from functools import update_wrapper, partial
 from django.core.exceptions import (FieldError, ValidationError,
                                     PermissionDenied)
 from django.forms.models import modelform_factory
+from django.contrib.admin import helpers
+from django.utils.translation import ugettext as _, ugettext_lazy
+import unicodecsv
 import json
+import os
+from django.template.loader import render_to_string
+from django.template import RequestContext
+import subprocess
 
 import logging
 logger = logging.getLogger('pbs')
@@ -141,17 +148,62 @@ from pbs.prescription.actions import delete_selected, archive_documents
 class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     #fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "planned_area", "area", "tenures", "location", "est_start", "conditions")
 
-    srm_group = Group.objects.get(name='State Regional Manager')
-    sdo_group = Group.objects.get(name='State Duty Officer')
+    #srm_group = Group.objects.get(name='State Regional Manager')
+    #sdo_group = Group.objects.get(name='State Duty Officer')
 
     #form = PrescribedBurnForm
+    @property
+    def srm_group(self):
+        return Group.objects.get(name='State Regional Manager')
+
+    @property
+    def sdo_group(self):
+        return Group.objects.get(name='State Duty Officer')
 
     def get_form(self, request, obj=None, **kwargs):
-        #import ipdb; ipdb.set_trace()
-        if obj:
+        import ipdb; ipdb.set_trace()
+        if request.path.endswith('addfire'):
+            from django.forms import inlineformset_factory
+            FireFormSet = inlineformset_factory(Fire, PrescribedBurn, fields=('date',))
+            return AddFireForm
+        elif obj:
             return PrescribedBurnEditForm
         else:
             return PrescribedBurnForm
+
+    def addfire_view(self, request):
+        """
+        A custom view to display section A1 of an ePFP.
+        """
+        if request.method == "POST":
+            import ipdb; ipdb.set_trace()
+        else:
+            #form = PrescribedBurnForm()
+            form = FireForm()
+            formset = FireFormSet()
+            fireform = FireForm()
+            burnform = PrescribedBurnForm()
+
+        admin_form = helpers.AdminForm(
+            form, [(None, {'fields': list(form.base_fields)})],
+            self.get_prepopulated_fields(request, None),
+            self.get_readonly_fields(request, None),
+            model_admin=self
+        )
+        media = self.media + admin_form.media
+
+        context = {
+            'form': admin_form,
+            'formset': formset,
+            'fireform': fireform,
+            'burnform': burnform,
+            'media': media,
+        }
+
+        addfire_template = 'admin/review/prescribedburn/add_fire.html'
+        return TemplateResponse(request, addfire_template,
+                                context, current_app=self.admin_site.name)
+
 
     def save_model(self, request, obj, form, change=True):
         """ Form does not assign user, do it here """
@@ -206,6 +258,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             url(r'^daily-burn-program/copy_records',
                 wrap(self.copy_records),
                 name='copy_records'),
+            url(r'^addfire',
+                wrap(self.addfire_view),
+                #name='%s_%s_add' % info),
+                name='addfire_view'),
+            url(r'^daily-burn-program/export_csv/$',
+                wrap(self.export_to_csv),
+                name='daily_burn_program_exportcsv'),
+            url(r'^daily-burn-program/pdf',
+                wrap(self.pdflatex),
+                name='create_dailyburns_pdf'),
 
         )
         return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
@@ -264,6 +326,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
 
     def prescription_view(self, request, extra_context=None):
+        """
+        Used for pre-populating location and tenures fields in PrescribedBurnForm, via ajax call
+        """
         if request.is_ajax():
             if request.REQUEST.has_key('burn_id'):
                 burn_id = str( request.REQUEST.get('burn_id') )
@@ -291,6 +356,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     #def action_view(self, request, object_id, form_url='', extra_context=None):
     #def action_view(self, request, *args, **kwargs):
     def action_view(self, request, extra_context=None):
+        if request.POST.has_key('date'):
+            dt = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
+        else:
+            raise Http404('Could not get Date')
+
+        if request.POST.get('Export_CSV') == 'export_csv':
+            return self.export_to_csv(request, dt)
+
         referrer_url = request.META.get('HTTP_REFERER')
         if request.POST.has_key('action'):
             action = request.POST['action']
@@ -304,15 +377,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             else:
                 raise Http404('Could not get Data/Row IDs')
 
-            if request.POST.has_key('date'):
-                dt = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
-            else:
-                raise Http404('Could not get Date')
         else:
             raise Http404('Could not get Update Action command')
 
         objects = PrescribedBurn.objects.filter(id__in=data)
         today = date.today()
+        now = timezone.now()
         #today = date(2016,4,12)
         tomorrow = today + timedelta(days=1)
         yesterday = today - timedelta(days=1)
@@ -321,8 +391,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_DRAFT:
                     obj.submitted_by = request.user
+                    obj.submitted_date = now
                     obj.approval_status = obj.APPROVAL_SUBMITTED
-                    obj.approval_status_modified = timezone.now()
+                    obj.approval_status_modified = now
                     obj.save()
                     #self.message_user(request, "Successfully submitted.")
                     count += 1
@@ -358,8 +429,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_SUBMITTED:
                     obj.endorsed_by = request.user
+                    obj.endorsed_date = now
                     obj.approval_status = obj.APPROVAL_ENDORSED
-                    obj.approval_status_modified = timezone.now()
+                    obj.approval_status_modified = now
                     obj.save()
                     count += 1
                     message = "Successfully endorsed {} burn{}".format(count, "s" if count>1 else "")
@@ -401,8 +473,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_ENDORSED:
                     obj.approved_by = request.user
+                    obj.approved_date = now
                     obj.approval_status = obj.APPROVAL_APPROVED
-                    obj.approval_status_modified = timezone.now()
+                    obj.approval_status_modified = now
                     obj.save()
                     count += 1
                     message = "Successfully approved {} burn{}".format(count, "s" if count>1 else "")
@@ -424,8 +497,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_APPROVED:
                     obj.approved_by = None
+                    obj.approved_date = None
                     obj.approval_status = obj.APPROVAL_ENDORSED
-                    obj.approval_status_modified = timezone.now()
+                    obj.approval_status_modified = now
                     obj.save()
                     count += 1
                     message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
@@ -443,8 +517,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_ENDORSED:
                     obj.endorsed_by = None
+                    obj.endorsed_date = None
                     obj.approval_status = obj.APPROVAL_SUBMITTED
-                    obj.approval_status_modified = timezone.now()
+                    obj.approval_status_modified = now
                     obj.save()
                     count += 1
                     message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
@@ -458,8 +533,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_SUBMITTED:
                     obj.submitted_by = None
+                    obj.submitted_date = None
                     obj.approval_status = obj.APPROVAL_DRAFT
-                    obj.approval_status_modified = timezone.now()
+                    obj.approval_status_modified = now
                     obj.save()
                     count += 1
                     message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
@@ -499,11 +575,13 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         yesterday = dt - timedelta(days=1)
 
+        if request.GET.get('Export_CSV') == 'export_csv':
+            return self.export_to_csv(request, dt)
 #        queryset= None
         #import ipdb; ipdb.set_trace()
         #qs_planned = PlannedBurn.objects.filter(date=dt)
         qs_burn = PrescribedBurn.objects.filter(date=dt)
-        qs_fire = Fire.objects.filter(date=dt)
+        #qs_fire = Fire.objects.filter(date=dt)
         #qs_fireload = FireLoad.objects.filter(prescription__date=dt, fire__date=dt)
         if report=='epfp_planned':
             title = "Today's Planned Burn Program"
@@ -520,13 +598,13 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         elif report=='epfp_fireload':
             title = "Summary of Current Fire Load"
             qs_burn = PrescribedBurn.objects.filter(date=yesterday, status__in=[PrescribedBurn.BURN_ACTIVE, PrescribedBurn.BURN_INACTIVE])
-            qs_fire = Fire.objects.filter(date=yesterday)
+            #s_fire = Fire.objects.filter(date=yesterday)
             form = FireLoadFilterForm(request.GET)
             #form = FireLoadForm(request.GET)
         elif report=='epfp_summary':
             title = "Summary of Current and Planned Fires"
             qs_burn = qs_burn.filter(status__in=[PrescribedBurn.BURN_PLANNED, PrescribedBurn.BURN_ACTIVE], approval_status=PrescribedBurn.APPROVAL_APPROVED)
-            qs_fire = qs_fire.filter(active=True)
+            #qs_fire = qs_fire.filter(active=True)
             #qs_fire = qs_fireload.filter(prescription__active=True, fire__active=True)
             #qs_fireload = qs_fireload.filter(prescription__active=True, fire__active=True)
             form = PrescribedBurnFilterForm(request.GET)
@@ -550,7 +628,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     qs_burn = qs_burn.filter(prescription__region=region)
                 else:
                     qs_burn = qs_burn.filter(prescription__region=region)
-                    qs_fire = qs_fire.filter(region=region)
+                    #qs_fire = qs_fire.filter(region=region)
 
         if request.REQUEST.has_key('district'):
             district = request.REQUEST.get('district', None)
@@ -559,7 +637,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     qs_burn = qs_burn.filter(prescription__district=district)
                 else:
                     qs_burn = qs_burn.filter(prescription__district=district)
-                    qs_fire = qs_fire.filter(district=district)
+                    #qs_fire = qs_fire.filter(district=district)
 
         #import ipdb; ipdb.set_trace()
         if request.REQUEST.has_key('approval_status'):
@@ -569,19 +647,20 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     qs_burn = qs_burn.filter(approval_status__in=approval_status)
                 else:
                     qs_burn = qs_burn.filter(approval_status__in=approval_status)
-                    qs_fire = qs_fire.filter(approval_status=approval_status)
+                    #qs_fire = qs_fire.filter(approval_status=approval_status)
 
-        def qs_fireload(qs_burn, qs_fire, fire_type):
-            if fire_type == 1:
-                return qs_burn
-            elif fire_type == 2:
-                return qs_fire
-            return list(itertools.chain(qs_burn, qs_fire))
+#        def qs_fireload(qs_burn, qs_fire, fire_type):
+#            if fire_type == 1:
+#                return qs_burn
+#            elif fire_type == 2:
+#                return qs_fire
+#            return list(itertools.chain(qs_burn, qs_fire))
 
         context = {
             'title': title,
-            'qs_burn': qs_burn.order_by('prescription__burn_id') if qs_burn else [],
-            'qs_fireload': qs_fireload(qs_burn, qs_fire, fire_type),
+            #'qs_burn': qs_burn.order_by('prescription__burn_id') if qs_burn else [],
+            'qs_burn': qs_burn, # if qs_burn else [],
+            'qs_fireload': qs_burn, #qs_fireload(qs_burn, qs_fire, fire_type),
             'form': form,
             'report': report,
             'username': request.user.username,
@@ -590,8 +669,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
             'active_burns_statewide': PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt).count(),
             'active_burns_non_statewide': PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt, prescription__region__in=[6, 7, 8]).count(),
-            'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
-            'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
+#            'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
+#            'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
 
         }
         context.update(extra_context or {})
@@ -629,6 +708,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         missing = list(set(yest_objects).difference(copied_objects))
 
         #import ipdb; ipdb.set_trace()
+        now = timezone.now()
         count = 0
         for i in PrescribedBurn.objects.filter(prescription__burn_id__in=missing, date=yesterday):
             try:
@@ -637,7 +717,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 i.area = None
                 i.status = 1
                 i.approval_status = PrescribedBurn.APPROVAL_ENDORSED
+                i.approval_status_modified = now
                 i.approved_by = None
+                i.approved_date = None
+                i.endorsed_date = now
                 i.rolled = True
                 i.save()
                 count += 1
@@ -646,7 +729,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, today))
                 pass
 
-        message = "{} records ".format(count)  if count > 1 else "{} record ".format(count) + "copied"
+        message = "{} record{} copied".format(count, "s" if count > 1 else "")
         return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER'), "message": message, "type": "info"}))
 
     def check_rolled_records(self, today):
@@ -659,6 +742,159 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         unset_objects = list(set(rolled_objects.filter(area__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
 
         return unset_objects
+
+    def export_to_csv(self, request, report_date):
+
+#        if request.POST.has_key('date'):
+#            report_date = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
+#        else:
+#            raise Http404('Could not get Date')
+
+        query_list = []
+        id_list = []
+
+        for pb in PrescribedBurn.objects.filter(date=report_date):
+            if pb.prescription:
+                fire_id = pb.prescription.burn_id
+                name = pb.prescription.name
+                region = str(pb.prescription.region)
+                district = str(pb.prescription.district)
+            else:
+                fire_id = pb.fire_id
+                name = pb.fire_name
+                region = str(pb.region)
+                district = str(pb.district)
+
+            fire_type = pb.fire_type
+            dt = pb.date.strftime('%Y-%m-%d')
+            burn_status = pb.get_status_display()
+            further_ignitions = "Yes" if pb.further_ignitions else ""
+            external_assist = ', '.join([i.name for i in pb.external_assist.all()])
+            planned_area = pb.planned_area
+            area = pb.area
+            tenures = pb.tenures
+            location = pb.location
+            est_start = pb.est_start
+            conditions = pb.conditions
+            approval_status = pb.get_approval_status_display()
+            approval_status_modified = pb.approval_status_modified.strftime('%Y-%m-%d %H:%M') if pb.approval_status_modified else ""
+            submitted = pb.submitted_by.get_full_name() + " " + pb.submitted_date_str if pb.submitted_by else ""
+            endorsed = pb.endorsed_by.get_full_name() + " " + pb.endorsed_date_str if pb.endorsed_by else ""
+            approved = pb.approved_by.get_full_name() + " " + pb.approved_date_str if pb.approved_by else ""
+            rolled = "Yes" if pb.rolled else ""
+
+            query_list.append([fire_id, name, region, district, fire_type,
+                               dt, burn_status, further_ignitions, external_assist,
+                               planned_area, area, tenures, location, est_start,
+                               conditions, approval_status, approval_status_modified,
+                               submitted, endorsed, approved, rolled])
+
+        filename = 'export_daily_burn_program_{0}.csv'.format(report_date.strftime('%d%b%Y'))
+        response = HttpResponse(content_type="text/csv")
+        response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
+        writer = unicodecsv.writer(response, quoting=unicodecsv.QUOTE_ALL)
+
+        writer.writerow(["Fire ID", "Name", "Region", "District", "Type",
+            "Date", "Burn Status", "Further Ignitions", "External Assist",
+            "Planned Area", "Actual Area", "Tenures", "Location", "Est Start",
+            "Conditions", "Approval Status" , "Approval Status Modified",
+            "Submitted", "Endorsed", "Approved", "Rolled"])
+
+        for row in query_list:
+            writer.writerow([unicode(s).encode("utf-8") for s in row])
+
+        return response
+    export_to_csv.short_description = ugettext_lazy("Export to CSV")
+
+    #def pdflatex(self, request, object_id):
+    def pdflatex(self, request):
+        #import ipdb; ipdb.set_trace()
+        obj = Prescription.objects.get(id=620)
+        template = request.GET.get("template", "pfp")
+        response = HttpResponse(content_type='application/pdf')
+        texname = template + ".tex"
+        filename = template + ".pdf"
+        now = timezone.localtime(timezone.now())
+        timestamp = now.isoformat().rsplit(
+            ".")[0].replace(":", "")
+        #fire_id = obj.prescription.burn_id if obj.prescription else obj.fire_id
+#        downloadname = "{0}_{1}_{2}_{3}".format(
+#            obj.season.replace('/', '-'), "fire_id", timestamp, filename).replace(
+#                ' ', '_')
+        downloadname = "daily_burn_program"
+        error_response = HttpResponse(content_type='text/html')
+        errortxt = downloadname.replace(".pdf", ".errors.txt.html")
+        error_response['Content-Disposition'] = (
+            '{0}; filename="{1}"'.format(
+            "inline", errortxt))
+
+        subtitles = {
+            "daily_burn_program": "Part A - Daily Burn Program",
+        }
+        embed = False if request.GET.get("embed") == "false" else True
+        context = {
+            'current': obj,
+            'prescription': obj,
+            'embed': embed,
+            'headers': request.GET.get("headers", True),
+            'title': request.GET.get("title", "Prescribed Fire Plan"),
+            'subtitle': subtitles.get(template, ""),
+            'timestamp': now,
+            'downloadname': downloadname,
+            'settings': settings,
+            'baseurl': request.build_absolute_uri("/")[:-1]
+        }
+        if request.GET.get("download", False) is False:
+            disposition = "inline"
+        else:
+            disposition = "attachment"
+        response['Content-Disposition'] = (
+            '{0}; filename="{1}"'.format(
+                disposition, downloadname))
+
+        directory = os.path.join(settings.MEDIA_ROOT, 'prescriptions',
+                                    str(obj.season), obj.burn_id + os.sep)
+        if not os.path.exists(directory):
+            logger.debug("Making a new directory: {}".format(directory))
+            os.makedirs(directory)
+
+        logger.debug('Starting  render_to_string step')
+        err_msg = None
+        try:
+            output = render_to_string(
+                "latex/" + template + ".tex", context,
+                context_instance=RequestContext(request))
+        except Exception as e:
+            import traceback
+            err_msg = u"PDF tex template render failed (might be missing attachments):"
+            logger.debug(err_msg + "\n{}".format(e))
+
+            error_response.write(err_msg + "\n\n{0}\n\n{1}".format(e,traceback.format_exc()))
+            return error_response
+
+#        import ipdb; ipdb.set_trace()
+        with open(directory + texname, "w") as f:
+            f.write(output.encode('utf-8'))
+            logger.debug("Writing to {}".format(directory + texname))
+
+        logger.debug("Starting PDF rendering process ...")
+        cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
+        logger.debug("Running: {0}".format(" ".join(cmd)))
+        subprocess.call(cmd)
+
+#        if not os.path.exists(filename):
+#            logger.debug("No PDF appeared to be rendered, returning the contents of the log instead.")
+#            filename = filename.replace(".pdf", ".log")
+#            error_response.write(open(filename).read())
+#            return error_response
+
+        logger.debug("Reading PDF output from {}".format(filename))
+        response.write(open(directory + filename).read())
+        logger.debug("Finally: returning PDF response.")
+        return response
+
+
+
 
 class FireAdmin(DetailAdmin, BaseAdmin):
     fields = ("fire_id", "name", "region", "district", "date", "active", "external_assist", "area", "tenures", "location")

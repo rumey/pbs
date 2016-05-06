@@ -16,18 +16,25 @@ class Migration(SchemaMigration):
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
             ('prescription', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='prescribed_burn', null=True, to=orm['prescription.Prescription'])),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
+            ('fire', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='fireload', null=True, to=orm['review.Fire'])),
             ('date', self.gf('django.db.models.fields.DateField')()),
             ('status', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
             ('further_ignitions', self.gf('django.db.models.fields.BooleanField')()),
+            ('planned_area', self.gf('django.db.models.fields.DecimalField')(max_digits=12, decimal_places=1)),
             ('area', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
             ('tenures', self.gf('django.db.models.fields.TextField')()),
             ('location', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
             ('est_start', self.gf('django.db.models.fields.TimeField')()),
-            ('invite', self.gf('django.db.models.fields.CharField')(max_length=24, null=True, blank=True)),
             ('conditions', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('submitted_by', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='submitted_by', null=True, to=orm['auth.User'])),
+            ('submitted_date', self.gf('django.db.models.fields.DateTimeField')(null=True)),
+            ('endorsed_by', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='endorsed_by', null=True, to=orm['auth.User'])),
+            ('endorsed_date', self.gf('django.db.models.fields.DateTimeField')(null=True)),
+            ('approved_by', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='approved_by', null=True, to=orm['auth.User'])),
+            ('approved_date', self.gf('django.db.models.fields.DateTimeField')(null=True)),
             ('approval_status', self.gf('django.db.models.fields.PositiveSmallIntegerField')(default=1)),
             ('approval_status_modified', self.gf('django.db.models.fields.DateTimeField')(null=True)),
+            ('rolled', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
         db.send_create_signal(u'review', ['PrescribedBurn'])
 
@@ -43,6 +50,51 @@ class Migration(SchemaMigration):
         # Adding unique constraint on 'PrescribedBurn', fields ['prescription', 'date']
         db.create_unique(u'review_prescribedburn', ['prescription_id', 'date'])
 
+        # Adding model 'Fire2'
+        db.create_table(u'review_fire2', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('creator', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'review_fire2_created', to=orm['auth.User'])),
+            ('modifier', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'review_fire2_modified', to=orm['auth.User'])),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
+            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
+            ('fire_id', self.gf('django.db.models.fields.CharField')(max_length=10, null=True, blank=True)),
+            ('name', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('region', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
+            ('district', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['prescription.District'], null=True, blank=True)),
+            ('date', self.gf('django.db.models.fields.DateField')()),
+            ('active', self.gf('django.db.models.fields.NullBooleanField')(null=True, blank=True)),
+            ('area', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
+            ('location', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('submitted_by', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='fire_submitted_by', null=True, to=orm['auth.User'])),
+            ('endorsed_by', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='fire_endorsed_by', null=True, to=orm['auth.User'])),
+            ('approved_by', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='fire_approved_by', null=True, to=orm['auth.User'])),
+            ('approval_status', self.gf('django.db.models.fields.PositiveSmallIntegerField')(default=1)),
+            ('approval_status_modified', self.gf('django.db.models.fields.DateTimeField')(null=True)),
+            ('rolled', self.gf('django.db.models.fields.BooleanField')(default=False)),
+        ))
+        db.send_create_signal(u'review', ['Fire2'])
+
+        # Adding M2M table for field external_assist on 'Fire2'
+        m2m_table_name = db.shorten_name(u'review_fire2_external_assist')
+        db.create_table(m2m_table_name, (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('fire2', models.ForeignKey(orm[u'review.fire2'], null=False)),
+            ('externalassist', models.ForeignKey(orm[u'review.externalassist'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['fire2_id', 'externalassist_id'])
+
+        # Adding M2M table for field tenures on 'Fire2'
+        m2m_table_name = db.shorten_name(u'review_fire2_tenures')
+        db.create_table(m2m_table_name, (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('fire2', models.ForeignKey(orm[u'review.fire2'], null=False)),
+            ('tenure', models.ForeignKey(orm[u'prescription.tenure'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['fire2_id', 'tenure_id'])
+
+        # Adding unique constraint on 'Fire2', fields ['fire_id', 'date']
+        db.create_unique(u'review_fire2', ['fire_id', 'date'])
+
         # Adding model 'Fire'
         db.create_table(u'review_fire', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -54,34 +106,8 @@ class Migration(SchemaMigration):
             ('name', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
             ('region', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
             ('district', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['prescription.District'], null=True, blank=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('date', self.gf('django.db.models.fields.DateField')()),
-            ('active', self.gf('django.db.models.fields.NullBooleanField')(null=True, blank=True)),
-            ('area', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
-            ('location', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
         ))
         db.send_create_signal(u'review', ['Fire'])
-
-        # Adding M2M table for field external_assist on 'Fire'
-        m2m_table_name = db.shorten_name(u'review_fire_external_assist')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('fire', models.ForeignKey(orm[u'review.fire'], null=False)),
-            ('externalassist', models.ForeignKey(orm[u'review.externalassist'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['fire_id', 'externalassist_id'])
-
-        # Adding M2M table for field tenures on 'Fire'
-        m2m_table_name = db.shorten_name(u'review_fire_tenures')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('fire', models.ForeignKey(orm[u'review.fire'], null=False)),
-            ('tenure', models.ForeignKey(orm[u'prescription.tenure'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['fire_id', 'tenure_id'])
-
-        # Adding unique constraint on 'Fire', fields ['fire_id', 'date']
-        db.create_unique(u'review_fire', ['fire_id', 'date'])
 
         # Adding model 'ExternalAssist'
         db.create_table(u'review_externalassist', (
@@ -92,8 +118,8 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        # Removing unique constraint on 'Fire', fields ['fire_id', 'date']
-        db.delete_unique(u'review_fire', ['fire_id', 'date'])
+        # Removing unique constraint on 'Fire2', fields ['fire_id', 'date']
+        db.delete_unique(u'review_fire2', ['fire_id', 'date'])
 
         # Removing unique constraint on 'PrescribedBurn', fields ['prescription', 'date']
         db.delete_unique(u'review_prescribedburn', ['prescription_id', 'date'])
@@ -104,14 +130,17 @@ class Migration(SchemaMigration):
         # Removing M2M table for field external_assist on 'PrescribedBurn'
         db.delete_table(db.shorten_name(u'review_prescribedburn_external_assist'))
 
+        # Deleting model 'Fire2'
+        db.delete_table(u'review_fire2')
+
+        # Removing M2M table for field external_assist on 'Fire2'
+        db.delete_table(db.shorten_name(u'review_fire2_external_assist'))
+
+        # Removing M2M table for field tenures on 'Fire2'
+        db.delete_table(db.shorten_name(u'review_fire2_tenures'))
+
         # Deleting model 'Fire'
         db.delete_table(u'review_fire')
-
-        # Removing M2M table for field external_assist on 'Fire'
-        db.delete_table(db.shorten_name(u'review_fire_external_assist'))
-
-        # Removing M2M table for field tenures on 'Fire'
-        db.delete_table(db.shorten_name(u'review_fire_tenures'))
 
         # Deleting model 'ExternalAssist'
         db.delete_table(u'review_externalassist')
@@ -284,45 +313,69 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '12'})
         },
         u'review.fire': {
-            'Meta': {'unique_together': "(('fire_id', 'date'),)", 'object_name': 'Fire'},
-            'active': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
-            'area': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
+            'Meta': {'object_name': 'Fire'},
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'creator': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_fire_created'", 'to': u"orm['auth.User']"}),
+            'district': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['prescription.District']", 'null': 'True', 'blank': 'True'}),
+            'fire_id': ('django.db.models.fields.CharField', [], {'max_length': '10', 'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'modifier': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_fire_modified'", 'to': u"orm['auth.User']"}),
+            'name': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'region': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'})
+        },
+        u'review.fire2': {
+            'Meta': {'unique_together': "(('fire_id', 'date'),)", 'object_name': 'Fire2'},
+            'active': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
+            'approval_status': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '1'}),
+            'approval_status_modified': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
+            'approved_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'fire_approved_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'area': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'creator': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_fire2_created'", 'to': u"orm['auth.User']"}),
             'date': ('django.db.models.fields.DateField', [], {}),
             'district': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['prescription.District']", 'null': 'True', 'blank': 'True'}),
+            'endorsed_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'fire_endorsed_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'external_assist': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['review.ExternalAssist']", 'symmetrical': 'False', 'blank': 'True'}),
             'fire_id': ('django.db.models.fields.CharField', [], {'max_length': '10', 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'location': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'modifier': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_fire_modified'", 'to': u"orm['auth.User']"}),
+            'modifier': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_fire2_modified'", 'to': u"orm['auth.User']"}),
             'name': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'region': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'tenures': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['prescription.Tenure']", 'symmetrical': 'False', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']"})
+            'rolled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'submitted_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'fire_submitted_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'tenures': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['prescription.Tenure']", 'symmetrical': 'False', 'blank': 'True'})
         },
         u'review.prescribedburn': {
             'Meta': {'unique_together': "(('prescription', 'date'),)", 'object_name': 'PrescribedBurn'},
             'approval_status': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '1'}),
             'approval_status_modified': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
+            'approved_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'approved_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'approved_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'area': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
             'conditions': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'creator': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_prescribedburn_created'", 'to': u"orm['auth.User']"}),
             'date': ('django.db.models.fields.DateField', [], {}),
+            'endorsed_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'endorsed_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'endorsed_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'est_start': ('django.db.models.fields.TimeField', [], {}),
             'external_assist': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['review.ExternalAssist']", 'symmetrical': 'False', 'blank': 'True'}),
+            'fire': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'fireload'", 'null': 'True', 'to': u"orm['review.Fire']"}),
             'further_ignitions': ('django.db.models.fields.BooleanField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'invite': ('django.db.models.fields.CharField', [], {'max_length': '24', 'null': 'True', 'blank': 'True'}),
             'location': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'modifier': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_prescribedburn_modified'", 'to': u"orm['auth.User']"}),
+            'planned_area': ('django.db.models.fields.DecimalField', [], {'max_digits': '12', 'decimal_places': '1'}),
             'prescription': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'prescribed_burn'", 'null': 'True', 'to': u"orm['prescription.Prescription']"}),
+            'rolled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'status': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'tenures': ('django.db.models.fields.TextField', [], {}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']"})
+            'submitted_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'submitted_by'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'submitted_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
+            'tenures': ('django.db.models.fields.TextField', [], {})
         }
     }
 
