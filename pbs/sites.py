@@ -59,7 +59,7 @@ from pbs.stakeholder.admin import (CriticalStakeholderAdmin,
                                    PublicContactAdmin, NotificationAdmin)
 from pbs.stakeholder.models import (CriticalStakeholder, PublicContact,
                                     Notification)
-from pbs.review.models import (BurnState, PrescribedBurn, Fire)
+from pbs.review.models import (BurnState, PrescribedBurn)
 from pbs.review.admin import (BurnStateAdmin, PrescribedBurnAdmin, FireAdmin)
 
 from swingers.sauth.sites import AuditSite
@@ -498,7 +498,6 @@ site.register(OperationalOverview, OperationalOverviewAdmin)
 
 site.register(BurnState, BurnStateAdmin)
 site.register(PrescribedBurn, PrescribedBurnAdmin)
-site.register(Fire, FireAdmin)
 
 # add our own texify filter to the builtins here.
 add_to_builtins('pbs.prescription.templatetags.texify')

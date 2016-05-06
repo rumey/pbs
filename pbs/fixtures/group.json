@@ -247,7 +247,6 @@
   "fields": {
     "name": "State Regional Manager",
     "permissions": [
-      ["can_endorse", "review", "fire"],
       ["can_endorse", "review", "prescribedburn"]
     ]
   }
@@ -258,8 +257,6 @@
   "fields": {
     "name": "State Duty Officer",
     "permissions": [
-      ["can_endorse", "review", "fire"],
-      ["can_approve", "review", "fire"],
       ["can_endorse", "review", "prescribedburn"],
       ["can_approve", "review", "prescribedburn"]
     ]

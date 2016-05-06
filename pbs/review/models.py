@@ -55,7 +55,7 @@ class ExternalAssist(models.Model):
 
 
 @python_2_unicode_compatible
-class Fire(Audit):
+class Fire2(Audit):
     FIRE_ACTIVE = 1
     FIRE_INACTIVE = 2
 
@@ -155,6 +155,15 @@ class Fire(Audit):
             ("can_approve", "Can approve fire actions"),
         )
 
+#class Fire(models.Model):
+#    fire_id = models.CharField(verbose_name="Fire ID?", max_length=10, null=True, blank=True)
+#    name = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
+#    region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
+#    district = ChainedForeignKey(
+#        District, chained_field="region", chained_model_field="region",
+#        show_all=False, auto_choose=True, blank=True, null=True)
+
+
 @python_2_unicode_compatible
 class PrescribedBurn(Audit):
     BURN_PLANNED = 1
@@ -182,10 +191,19 @@ class PrescribedBurn(Audit):
     fmt = "%Y-%m-%d %H:%M"
 
     prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
-    #user = models.ForeignKey(User, help_text="User")
+    #fire = models.ForeignKey(Fire, null=True, blank=True)
+
+    # Required for Fire records
+    fire_id = models.CharField(verbose_name="Fire ID?", max_length=10, null=True, blank=True)
+    fire_name = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
+    region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
+    district = ChainedForeignKey(
+        District, chained_field="region", chained_model_field="region",
+        show_all=False, auto_choose=True, blank=True, null=True)
+
     date = models.DateField(auto_now_add=False)
 
-    status = models.PositiveSmallIntegerField(verbose_name="Burn Status", choices=BURN_CHOICES, null=True, blank=True)
+    status = models.PositiveSmallIntegerField(verbose_name="Fire Status", choices=BURN_CHOICES, null=True, blank=True)
 #    active = models.NullBooleanField(verbose_name="Burn Active?", null=True, blank=True)
 
     further_ignitions = models.BooleanField(verbose_name="Further ignitions required?")
@@ -195,7 +213,7 @@ class PrescribedBurn(Audit):
         verbose_name="Planned Burn Area (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)])
     area = models.DecimalField(
-        verbose_name="Area Achieved Yesterday (ha)", max_digits=12, decimal_places=1,
+        verbose_name="Area Burnt Yesterday (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
     tenures= models.TextField(verbose_name="Tenure")
     location= models.TextField(verbose_name="Location", null=True, blank=True)
@@ -203,11 +221,11 @@ class PrescribedBurn(Audit):
     est_start = models.TimeField('Estimated Start Time')
     conditions = models.TextField(verbose_name='Special Conditions', null=True, blank=True)
 
-    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", blank=True, null=True, related_name='burn_submitted_by')
+    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", blank=True, null=True, related_name='submitted_by')
     submitted_date = models.DateTimeField(editable=False, null=True)
-    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", blank=True, null=True, related_name='burn_endorsed_by')
+    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", blank=True, null=True, related_name='endorsed_by')
     endorsed_date = models.DateTimeField(editable=False, null=True)
-    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", blank=True, null=True, related_name='burn_approved_by')
+    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", blank=True, null=True, related_name='approved_by')
     approved_date = models.DateTimeField(editable=False, null=True)
 
     approval_status = models.PositiveSmallIntegerField(
@@ -215,7 +233,7 @@ class PrescribedBurn(Audit):
         default=APPROVAL_DRAFT)
     approval_status_modified = models.DateTimeField(
         verbose_name="Approval Status Modified", editable=False, null=True)
-    rolled = models.BooleanField(verbose_name="Burn Rolled from yesterday", default=False)
+    rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", default=False)
 
     def clean_date(self):
         today = date.today()
@@ -230,6 +248,10 @@ class PrescribedBurn(Audit):
         """
         #TODO - 1254
         pass
+
+    @property
+    def fire_type(self):
+        return "Burn" if self.prescription else "Fire"
 
     @property
     def submitted(self):
@@ -256,7 +278,7 @@ class PrescribedBurn(Audit):
         return self.approved_date.strftime('%Y-%m-%d %H:%M')
 
     @property
-    def fire_id(self):
+    def fire_idd(self):
         return self.prescription.burn_id
 
     @property
@@ -298,25 +320,19 @@ class PrescribedBurn(Audit):
         return self.prescription.name
 
     @property
-    def region(self):
-        return self.prescription.region
+    def get_region(self):
+        return self.prescription.region if self.prescription else self.region
 
     @property
-    def district(self):
-        return self.prescription.district
+    def get_district(self):
+        return self.prescription.district if self.prescription else self.district
 
     @property
     def can_endorse(self):
-        """
-        Return true if this fire can be submitted for endorsement.
-        """
         return (self.status == self.APPROVAL_SUBMITTED)
 
     @property
     def can_approve(self):
-        """
-        Return true if this fire can be submitted for Approval.
-        """
         return (self.status == self.APPROVAL_ENDORSED)
 
 #    def save(self, **kwargs):
@@ -333,7 +349,7 @@ class PrescribedBurn(Audit):
 #        super(PrescribedBurn, self).save()
 
     def __str__(self):
-        return self.prescription.burn_id
+        return self.prescription.burn_id if self.prescription else self.fire_id
 
     class Meta:
         unique_together = ('prescription', 'date',)
