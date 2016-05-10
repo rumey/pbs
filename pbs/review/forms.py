@@ -119,6 +119,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
 class PrescribedBurnFilterForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
     district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
+    approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
 
 
 class FireLoadFilterForm(forms.Form):

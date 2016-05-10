@@ -157,16 +157,29 @@
             Approved Burns (268c)
         </a>
     </li>
-    <div style="float: right">
-    <a id="id_href" href=""><button id="id_csv" class="csv_btn btn-primary">Export As CSV</button></a></p>
-    <a value="Preview Part A" class="btn pull-right" href="{% url 'admin:create_dailyburns_pdf' %}?template=daily_burn_program"><i class="icon-print"></i> Create PDF</a>
-    </div>
+<div class="dropdown btn btn-medium" style="float: right">
+  <a id="dropdown_btn" data-target="#" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+    Create PDF
+    <span class="caret"></span>
+  </a>
+
+  <ul class="dropdown-menu" aria-labelledby="dropdown-btn">
+    <li><a value="all_form268" href="{% url 'admin:create_dailyburns_pdf' %}?date={{date}}&template=daily_burn_program">All Forms</a></li>
+    <li><a value="form268a" href="javascript: pdf_url('form268a');">Form 268a</a></li>
+    <li><a value="form268b" href="javascript: pdf_url('form268b');">Form 268b</a></li>
+    <li><a value="form268c" href="javascript: pdf_url('form268c');">Form 268c</a></li>
+    <li><a value="export_csv" href="{% url 'admin:daily_burn_program_exportcsv' %}?date={{date}}&Export_CSV=export_csv">Export CSV</a></li>
+  </ul>
+</div>
+
+
+
 </ul>
 
 {% if report == "epfp_planned" %}
 <div>
     <p style=”float: left">Click on row to view the special conditions</p>
-    <a class="btn/ btn-small btn-info" style="float: right" href="{{ add_prescribed_burn }}"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
+    <a class="btn btn-small btn-info" style="float: right" href="{{ add_prescribed_burn }}"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
 
     <select id="actions">
     <option value="0" selected="selected">----</option>
@@ -442,6 +455,13 @@
 {% paginate %}
 
 
+<div id="dialog-message" title="Region Error" style="display: none;">
+  <p>
+    <span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
+    You MUST select a Region.
+  </p>
+</div>
+
 <script>
 $(function(){
      $("[data-toggle=myCollapse]").click(function( ev ) {
@@ -493,6 +513,17 @@ $(function(){
         });
     });
 
+    pdf_url = function(form_name) {
+        // created to allow region to be passed to admin.py
+        var region = $("#id_region").val();
+        //console.log("REGION " + region);
+        if (region) {
+            location.href = "{% url 'admin:create_dailyburns_pdf' %}?date={{date}}&template=" + form_name + "&region=" + region; //$("#id_region").val();
+        } else {
+            dialog_msg();
+        }
+    };
+
 //  $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
 //        console.log("***********************************************************");
 //    if (ui.index == 1) {
@@ -503,6 +534,18 @@ $(function(){
 //  });
 
 });
+
+dialog_msg = function() {
+    $( "#dialog-message" ).dialog({
+    modal: true,
+    buttons: {
+        Ok: function() {
+        $( this ).dialog( "close" );
+        }
+    }
+    });
+};
+
 
 function toggle(source) {
     console.log('************************* ');
@@ -612,6 +655,7 @@ $('#id_approval_status').multiselect({
     includeSelectAllOption: true,
 });
 $("#id_approval_status").multiselect('selectAll', false);
+
 
 
 </script>
