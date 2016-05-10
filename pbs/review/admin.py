@@ -6,7 +6,7 @@ from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn
 from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnEditForm, FireLoadFilterForm, PrescribedBurnFilterForm
-from pbs.prescription.models import Prescription, Approval
+from pbs.prescription.models import Prescription, Approval, Region
 from datetime import datetime, date, timedelta
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -360,9 +360,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             dt = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
         else:
             raise Http404('Could not get Date')
-
-        if request.POST.get('Export_CSV') == 'export_csv':
-            return self.export_to_csv(request, dt)
 
         referrer_url = request.META.get('HTTP_REFERER')
         if request.POST.has_key('action'):
@@ -743,12 +740,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         return unset_objects
 
-    def export_to_csv(self, request, report_date):
+    def export_to_csv(self, request, extra_context=None):
 
-#        if request.POST.has_key('date'):
-#            report_date = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
-#        else:
-#            raise Http404('Could not get Date')
+        if request.GET.has_key('date'):
+            report_date = datetime.strptime(request.GET.get('date'), '%Y-%m-%d').date()
+        else:
+            raise Http404('Could not get Date')
 
         query_list = []
         id_list = []
@@ -806,8 +803,19 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return response
     export_to_csv.short_description = ugettext_lazy("Export to CSV")
 
-    #def pdflatex(self, request, object_id):
     def pdflatex(self, request):
+        if request.GET.has_key('date'):
+            report_date = datetime.strptime(request.GET.get('date'), '%Y-%m-%d').date()
+        else:
+            raise Http404('Could not get Date')
+        prescribed_burns = PrescribedBurn.objects.filter(date=report_date)
+
+        if request.GET.has_key('region'):
+            region = request.GET.get('region', None)
+            prescribed_burns = prescribed_burns.filter(prescription__region=region)
+
+        endorsed_by = set([i.endorsed_by.get_full_name() for i in prescribed_burns if i.endorsed_by])
+        approved_by = set([i.approved_by.get_full_name() for i in prescribed_burns if i.approved_by])
         #import ipdb; ipdb.set_trace()
         obj = Prescription.objects.get(id=620)
         template = request.GET.get("template", "pfp")
@@ -826,13 +834,26 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         errortxt = downloadname.replace(".pdf", ".errors.txt.html")
         error_response['Content-Disposition'] = (
             '{0}; filename="{1}"'.format(
-            "inline", errortxt))
+            #"inline", errortxt))
+            "attachment", errortxt))
 
         subtitles = {
-            "daily_burn_program": "Part A - Daily Burn Program",
+            #"daily_burn_program": "Part A - Daily Burn Program",
+            "form268a": "268a - Planned Burns",
+            "form268b": "268b - Fire Load",
+            "form268c": "268c - Approved Burns",
         }
         embed = False if request.GET.get("embed") == "false" else True
+        #import ipdb; ipdb.set_trace()
         context = {
+            'user': request.user.get_full_name(),
+            'date': datetime.now().strftime('%d %b %Y'),
+            'region': Region.objects.get(id=int(region)).name,
+            'time': datetime.now().strftime('%H:%M'),
+            'state_regional_manager': datetime.now().strftime('%H:%M'),
+            'prescribed_burns': prescribed_burns,
+            'endorsed_by': ', '.join(endorsed_by),
+            'approved_by': ', '.join(approved_by),
             'current': obj,
             'prescription': obj,
             'embed': embed,
@@ -844,10 +865,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'settings': settings,
             'baseurl': request.build_absolute_uri("/")[:-1]
         }
-        if request.GET.get("download", False) is False:
-            disposition = "inline"
-        else:
-            disposition = "attachment"
+#        if request.GET.get("download", False) is False:
+#            disposition = "inline"
+#        else:
+#            disposition = "attachment"
+        disposition = "attachment"
         response['Content-Disposition'] = (
             '{0}; filename="{1}"'.format(
                 disposition, downloadname))
