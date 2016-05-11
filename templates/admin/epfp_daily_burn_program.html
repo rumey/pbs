@@ -189,7 +189,8 @@
     <option value="4">Delete Submit</option>
     <option value="5">Delete Endorse</option>
     <option value="6">Delete Approve</option>
-    <option value="7">Copy Records</option>
+    <option value="7">Delete Record</option>
+    <option value="8">Copy Record to Tomorrow</option>
     </select>
     <button id="update-button" type="button" disabled>Update</button>
 </div>
@@ -612,14 +613,7 @@ $('#update-button').click(function(){
     //console.log("Actions " + $("#actions").val());
     
     var urll;
-    if ($("#actions :selected").text() == "Copy Records") {
-        urll = "{% url 'admin:copy_records' %}";
-//    } else if ($("#actions :selected").text() == "Export as CSV") {
-//        urll = "{% url 'admin:daily_burn_program_exportcsv' %}";
-    } else {
-        urll = "{% url 'admin:action_view' %}";
-    }
-
+    urll = "{% url 'admin:action_view' %}";
     $.ajax({
         type: 'POST',
         //url: "{% url 'admin:action_view' %}",

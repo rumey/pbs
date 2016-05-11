@@ -1,7 +1,7 @@
 from pbs.admin import BaseAdmin
 from swingers.admin import DetailAdmin
 from functools import update_wrapper
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn
@@ -29,6 +29,7 @@ import os
 from django.template.loader import render_to_string
 from django.template import RequestContext
 import subprocess
+import sys, traceback
 
 import logging
 logger = logging.getLogger('pbs')
@@ -215,7 +216,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         Override the redirect url after successful save of an existing
         ContingencyAction.
         """
-        url = reverse('admin:fireload_view')
+        #url = reverse('admin:fireload_view')
+        url = reverse('admin:daily_burn_program')
         return HttpResponseRedirect(url)
 
 
@@ -255,9 +257,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             url(r'^daily-burn-program/epfp',
                 wrap(self.prescription_view),
                 name='prescription_view'),
-            url(r'^daily-burn-program/copy_records',
-                wrap(self.copy_records),
-                name='copy_records'),
+#            url(r'^daily-burn-program/copy_records',
+#                wrap(self.copy_records),
+#                name='copy_records'),
             url(r'^addfire',
                 wrap(self.addfire_view),
                 #name='%s_%s_add' % info),
@@ -454,9 +456,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "Can only approve burns for today {}, or tomorrow {}.".format(today, tomorrow)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-            #self.copy_records(yesterday, today)
-            #unset_objects = self.check_rolled_records(today)
-            #self.copy_records(request)
+            # copy yesterdays ongoing active records to today
+            self.copy_ongoing_records(dt)
             unset_objects = self.check_rolled_records(dt)
 
             if len(unset_objects) > 0:
@@ -502,7 +503,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
                     msg_type = "success"
             if count == 0:
-                message = "No records deleted"
+                message = "No records 'Approve' status removed"
                 msg_type = "info"
 
         elif action == "Delete Endorse":
@@ -522,7 +523,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
                     msg_type = "success"
             if count == 0:
-                message = "No records deleted"
+                message = "No records 'Endorse' status removed"
                 msg_type = "info"
 
         elif action == "Delete Submit":
@@ -538,7 +539,30 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
                     msg_type = "success"
             if count == 0:
-                message = "No records deleted"
+                message = "No records 'Submitted' status removed"
+                msg_type = "info"
+
+        elif action == "Delete Record":
+            count = objects.count()
+            objects.delete()
+            if objects.count() == 0:
+                message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
+                msg_type = "success"
+            else:
+                message = "Failed to delete {} submitted burn{} (Records: {})".format(
+                    objects.count(),
+                    "s" if objects.count()>1 else "",
+                    ', '.join([i.fire_id for i in objects])
+                )
+                msg_type = "danger"
+
+        elif action == "Copy Record to Tomorrow":
+            if not (dt == today or dt == tomorrow):
+                message = "Can only copy records for today {}, or tomorrow {}.".format(today, tomorrow)
+                msg_type = "danger"
+            else:
+                count = self.copy_planned_records(dt, objects)
+                message = "{} record{} copied".format(count, "s" if count > 1 else "")
                 msg_type = "info"
 
         return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
@@ -673,23 +697,19 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
 
-    #def copy_records(self, today):
-    def copy_records(self, request, extra_context=None):
+    def _copy_ongoing_records(self, dt):
         """
         Copy yesterday's 'active' records to today
-        To be run via Cron?
-        """
 
-        if request.POST.has_key('date'):
-            dt = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
-        else:
-            raise Http404('Could not get Date')
+        268b - Automatically copy all records from yesterday that were Active when 268a Region Endorsement occurs,
+        except for Active and Area Burnt Yesterday
+        """
 
         today = date.today()
         tomorrow = today + timedelta(days=1)
         if not (dt == today or dt == tomorrow):
-            message = "Can only copy records for today {}, or tomorrow {}.".format(today, tomorrow)
-            return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER'), "message": message, "type": "danger"}))
+            # Can only copy records for today, or tomorrow
+            return
 
         # copy permitted only after given time, and only for today to tomorrow
 #        if dt != today:
@@ -701,33 +721,129 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         yesterday = dt - timedelta(days=1)
         yest_objects = [i.prescription.burn_id for i in PrescribedBurn.objects.filter(
             date=yesterday, status=PrescribedBurn.BURN_ACTIVE, approval_status__in=[PrescribedBurn.APPROVAL_ENDORSED, PrescribedBurn.APPROVAL_APPROVED])]
-        copied_objects = PrescribedBurn.objects.filter(date=dt, prescription__burn_id__in=yest_objects)
+        copied_objects = PrescribedBurn.objects.filter(date=dt, prescription__burn_id__in=yest_objects).exclude(status=PrescribedBurn.BURN_PLANNED)
         missing = list(set(yest_objects).difference(copied_objects))
 
         #import ipdb; ipdb.set_trace()
         now = timezone.now()
+        admin = User.objects.get(username='admin')
         count = 0
         for i in PrescribedBurn.objects.filter(prescription__burn_id__in=missing, date=yesterday):
             try:
                 i.pk = None
                 i.date = dt
                 i.area = None
-                i.status = 1
-                i.approval_status = PrescribedBurn.APPROVAL_ENDORSED
+                i.status = None
+                i.approval_status = PrescribedBurn.APPROVAL_SUBMITTED
                 i.approval_status_modified = now
+                i.endorsed_by = None
+                i.endorsed_date = None
                 i.approved_by = None
                 i.approved_date = None
-                i.endorsed_date = now
+                i.submitted_by = admin
+                i.submitted_date = now
                 i.rolled = True
                 i.save()
                 count += 1
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
-                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, today))
+                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, dt))
                 pass
 
-        message = "{} record{} copied".format(count, "s" if count > 1 else "")
-        return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER'), "message": message, "type": "info"}))
+
+    #def copy_ongoing_records(self, request, extra_context=None):
+    def copy_ongoing_records(self, dt):
+        """
+        Copy today's 'active' records to tomorrow
+
+        268b - Automatically copy all records from yesterday that were Active when 268a Region Endorsement occurs,
+        except for Active and Area Burnt Yesterday
+        """
+
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+        if not (dt == today or dt == tomorrow):
+            # Can only copy records for today, or tomorrow
+            return
+
+        # copy permitted only after given time, and only for today to tomorrow
+#        if dt != today:
+#            message = 'WARNING: Cannot copy for date {}. Can only copy planned burn records from yesterday {}, to today {}'.format(dt, yesterday, today)
+#            logger.warn(message)
+#            return
+
+        #today = date.today()
+        tomorrow = dt - timedelta(days=1) # relative to dt
+        objects = [i.prescription.burn_id for i in PrescribedBurn.objects.filter(
+            date=dt, status=PrescribedBurn.BURN_ACTIVE, approval_status__in=[PrescribedBurn.APPROVAL_ENDORSED, PrescribedBurn.APPROVAL_APPROVED])]
+        copied_objects = PrescribedBurn.objects.filter(date=tomorrow, prescription__burn_id__in=objects).exclude(status=PrescribedBurn.BURN_PLANNED)
+        missing = list(set(objects).difference(copied_objects))
+
+        import ipdb; ipdb.set_trace()
+        now = timezone.now()
+        admin = User.objects.get(username='admin')
+        count = 0
+        for i in PrescribedBurn.objects.filter(prescription__burn_id__in=missing, date=dt):
+            try:
+                i.pk = None
+                i.date = tomorrow
+                i.area = None
+                i.status = None
+                i.approval_status = PrescribedBurn.APPROVAL_SUBMITTED
+                i.approval_status_modified = now
+                i.endorsed_by = None
+                i.endorsed_date = None
+                i.approved_by = None
+                i.approved_date = None
+                i.submitted_by = admin
+                i.submitted_date = now
+                i.rolled = True
+                i.save()
+                count += 1
+            except:
+                # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, tomorrow))
+                pass
+
+    def copy_planned_records(self, dt, objects):
+        """
+        Copy today's 'planned' records to tomorrow
+        """
+        today = date.today()
+        tomorrow = today + timedelta(days=1) # actual tomorrow's date
+        if not (dt == today or dt == tomorrow):
+            message = "Can only copy records for today {}, or tomorrow {}.".format(today, tomorrow)
+            return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER'), "message": message, "type": "danger"}))
+
+        #import ipdb; ipdb.set_trace()
+        now = timezone.now()
+        admin = User.objects.get(username='admin')
+        tomorrow = dt + timedelta(days=1) # relative to dt
+        count = 0
+        for i in objects:
+            try:
+                i.pk = None
+                i.date = tomorrow
+                i.area = None
+                i.status = 1
+                i.approval_status = PrescribedBurn.APPROVAL_SUBMITTED
+                i.approval_status_modified = now
+                i.endorsed_by = None
+                i.endorsed_date = None
+                i.approved_by = None
+                i.approved_date = None
+                i.submitted_by = admin
+                i.submitted_date = now
+                i.rolled = True
+                i.save()
+                count += 1
+            except:
+                # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, tomorrow))
+                traceback.print_exc(file=sys.stdout)
+                pass
+
+        return count
 
     def check_rolled_records(self, today):
         """
@@ -735,7 +851,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return list of objects that are unset
         """
 
-        rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True)
+        rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(status=PrescribedBurn.BURN_PLANNED)
         unset_objects = list(set(rolled_objects.filter(area__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
 
         return unset_objects
@@ -834,8 +950,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         errortxt = downloadname.replace(".pdf", ".errors.txt.html")
         error_response['Content-Disposition'] = (
             '{0}; filename="{1}"'.format(
-            #"inline", errortxt))
-            "attachment", errortxt))
+            "inline", errortxt))
 
         subtitles = {
             #"daily_burn_program": "Part A - Daily Burn Program",
