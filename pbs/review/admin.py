@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group, User
 from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn
-from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnEditForm, FireLoadFilterForm, PrescribedBurnFilterForm
+from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnEditForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm
 from pbs.prescription.models import Prescription, Approval, Region
 from datetime import datetime, date, timedelta
 from django.utils import timezone
@@ -162,15 +162,24 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return Group.objects.get(name='State Duty Officer')
 
     def get_form(self, request, obj=None, **kwargs):
-        import ipdb; ipdb.set_trace()
-        if request.path.endswith('addfire'):
-            from django.forms import inlineformset_factory
-            FireFormSet = inlineformset_factory(Fire, PrescribedBurn, fields=('date',))
-            return AddFireForm
-        elif obj:
-            return PrescribedBurnEditForm
-        else:
-            return PrescribedBurnForm
+        #import ipdb; ipdb.set_trace()
+        if request.GET.has_key('form'):
+            if request.REQUEST.get('form')=='add_fire':
+                return FireForm
+            if request.REQUEST.get('form')=='edit_fire':
+                return FireEditForm
+            if request.REQUEST.get('form')=='add_burn':
+                return PrescribedBurnForm
+            if request.REQUEST.get('form')=='edit_burn':
+                return PrescribedBurnEditForm
+#            from django.forms import inlineformset_factory
+#            FireFormSet = inlineformset_factory(Fire, PrescribedBurn, fields=('date',))
+#            return AddFireForm
+
+#        elif obj:
+#            return PrescribedBurnEditForm
+#        else:
+#            return PrescribedBurnForm
 
     def addfire_view(self, request):
         """
@@ -209,6 +218,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     def save_model(self, request, obj, form, change=True):
         """ Form does not assign user, do it here """
         #obj.user = request.user
+        if obj.prescription:
+            obj.form_name = 1
+        else:
+            obj.form_name = 2
         obj.save()
 
     def response_post_save_change(self, request, obj):
@@ -293,6 +306,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #            'current': prescription
 #        }
 #        context.update(extra_context or {})
+        #import ipdb; ipdb.set_trace()
         obj = self.get_object(request, unquote(object_id))
         now = datetime.now()
         today = now.date()
@@ -607,8 +621,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         if report=='epfp_planned':
             title = "Today's Planned Burn Program"
             # assumes all burns entered on date dt are planned (for date dt)
-            #qs_burn = qs_burn.filter(status=PrescribedBurn.BURN_PLANNED).exclude(rolled=True)
             #qs_burn = qs_burn.exclude(rolled=True)
+            qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268A)
             form = PrescribedBurnFilterForm(request.GET)
             #form = PrescribedBurnForm(request.GET)
 #            pb = PrescribedBurn(user=request.user)
@@ -618,13 +632,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #                pb.save()
         elif report=='epfp_fireload':
             title = "Summary of Current Fire Load"
-            qs_burn = PrescribedBurn.objects.filter(date=yesterday, status__in=[PrescribedBurn.BURN_ACTIVE, PrescribedBurn.BURN_INACTIVE])
+            #qs_burn = qs_burn.filter(status__in=[PrescribedBurn.BURN_ACTIVE, PrescribedBurn.BURN_INACTIVE, None], form_name=PrescribedBurn.FORM_268B)
+            qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268B).exclude(status=PrescribedBurn.BURN_COMPLETED)
             #s_fire = Fire.objects.filter(date=yesterday)
             form = FireLoadFilterForm(request.GET)
             #form = FireLoadForm(request.GET)
         elif report=='epfp_summary':
             title = "Summary of Current and Planned Fires"
-            qs_burn = qs_burn.filter(status__in=[PrescribedBurn.BURN_PLANNED, PrescribedBurn.BURN_ACTIVE], approval_status=PrescribedBurn.APPROVAL_APPROVED)
+            qs_burn = qs_burn.filter(status=PrescribedBurn.BURN_ACTIVE, approval_status=PrescribedBurn.APPROVAL_APPROVED)
             #qs_fire = qs_fire.filter(active=True)
             #qs_fire = qs_fireload.filter(prescription__active=True, fire__active=True)
             #qs_fireload = qs_fireload.filter(prescription__active=True, fire__active=True)
@@ -635,11 +650,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         fire_type = 0
         if request.REQUEST.has_key('fire_type'):
             fire_type = int (request.REQUEST.get('fire_type', None))
-#            if fire_type == 1:
-#                qs_burn = qs_burn.filter(active=True)
-#            elif fire_type == 2:
-#                qs_fire = qs_fire.filter(active=True)
-#
+            if fire_type == 1:
+                qs_burn = qs_burn.filter(fire_id__isnull=True)
+            elif fire_type == 2:
+                qs_burn = qs_burn.filter(prescription__isnull=True)
+
 
         #import ipdb; ipdb.set_trace()
         if request.REQUEST.has_key('region'):
@@ -721,7 +736,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         yesterday = dt - timedelta(days=1)
         yest_objects = [i.prescription.burn_id for i in PrescribedBurn.objects.filter(
             date=yesterday, status=PrescribedBurn.BURN_ACTIVE, approval_status__in=[PrescribedBurn.APPROVAL_ENDORSED, PrescribedBurn.APPROVAL_APPROVED])]
-        copied_objects = PrescribedBurn.objects.filter(date=dt, prescription__burn_id__in=yest_objects).exclude(status=PrescribedBurn.BURN_PLANNED)
+        copied_objects = PrescribedBurn.objects.filter(date=dt, prescription__burn_id__in=yest_objects).exclude(form_name=PrescribedBurn.FORM_268A)
         missing = list(set(yest_objects).difference(copied_objects))
 
         #import ipdb; ipdb.set_trace()
@@ -773,13 +788,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #            return
 
         #today = date.today()
-        tomorrow = dt - timedelta(days=1) # relative to dt
+        tomorrow = dt + timedelta(days=1) # relative to dt
         objects = [i.prescription.burn_id for i in PrescribedBurn.objects.filter(
             date=dt, status=PrescribedBurn.BURN_ACTIVE, approval_status__in=[PrescribedBurn.APPROVAL_ENDORSED, PrescribedBurn.APPROVAL_APPROVED])]
-        copied_objects = PrescribedBurn.objects.filter(date=tomorrow, prescription__burn_id__in=objects).exclude(status=PrescribedBurn.BURN_PLANNED)
+        copied_objects = PrescribedBurn.objects.filter(date=tomorrow, prescription__burn_id__in=objects).exclude(form_name=PrescribedBurn.FORM_268B)
         missing = list(set(objects).difference(copied_objects))
 
-        import ipdb; ipdb.set_trace()
         now = timezone.now()
         admin = User.objects.get(username='admin')
         count = 0
@@ -851,8 +865,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return list of objects that are unset
         """
 
-        rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(status=PrescribedBurn.BURN_PLANNED)
+        rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(form_name=PrescribedBurn.FORM_268A).exclude(status=PrescribedBurn.BURN_COMPLETED)
         unset_objects = list(set(rolled_objects.filter(area__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
+        import ipdb; ipdb.set_trace()
 
         return unset_objects
 

@@ -179,7 +179,10 @@
 {% if report == "epfp_planned" %}
 <div>
     <p style=”float: left">Click on row to view the special conditions</p>
+    {% comment %}
     <a class="btn btn-small btn-info" style="float: right" href="{{ add_prescribed_burn }}"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
+    {% endcomment %}
+    <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_burn"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
 
     <select id="actions">
     <option value="0" selected="selected">----</option>
@@ -225,6 +228,7 @@
   <tbody>
     {% autopaginate qs_burn 25 %}
     {% for qs in qs_burn %}
+    {% if qs.prescription %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
       <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>{% if qs.rolled %}<font color="red"> (r)</font>{% endif %}</td>
@@ -239,7 +243,7 @@
       {% comment %}
       <td><a id="submit-plannedburn" href="{% url 'admin:approve_view' qs.id %}" class="btn btn-mini alert-error"><i class="icon-ok"></i></a></td>
       {% endcomment %}
-      <td><a id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
+      <td><a id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       <td><a id="delete-plannedburn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
     {% if qs.has_conditions %}
@@ -288,6 +292,7 @@
 
     </tr>
     {% endif %}
+    {% endif %}
     {% endfor %}
   </tbody>
 </table>
@@ -297,7 +302,10 @@
 {% if report == "epfp_fireload" %}
 <div>
     <p style=”float: left">Click on row to view the special conditions</p>
+    {% comment %}
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Fire</a>
+    {% endcomment %}
+    <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_fire"><i class="icon-plus icon-white"></i> Add Fire</a>
 </div>
 
 
@@ -307,6 +315,7 @@
       <th rowspan="2"><input type="checkbox" name ="check_all" onClick=toggle(this) /></th>
       <th rowspan="2">ID</th>
       <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th colspan="3"><div class="text-center">Burn Status</div></th>
       <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
       <th rowspan="2"><div class="text-center">External Assist</div></th>
@@ -330,6 +339,7 @@
         {% endif %}
       </td>
       <td>{{ qs.name }}</td>
+      <td>{{ qs.fire_type }}</td>
 
       <td>{% if qs.active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% elif qs.active == None %}<font color="red">Unset</font>{% endif %}</td>
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
@@ -337,12 +347,11 @@
       <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% elif qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% endif %}</td>
       <td>{% if qs.had_external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       {% if qs.prescription %}
-        <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
-        <td><a id="delete-burn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+        <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       {% else %}
-        <td><a id="edit-fire" href="{% url 'admin:review_fire_change' qs.id %}" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
-        <td><a id="delete-fire" href="{% url 'admin:review_fire_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+        <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_fire" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       {% endif %}
+      <td><a id="delete-burn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
     {% if qs.had_external_assist %}
     <tr class="myCollapse row-details expand-child" id="{{qs.fire_id}}">

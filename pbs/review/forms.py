@@ -11,8 +11,8 @@ class BurnStateSummaryForm(forms.Form):
 
 
 class PrescribedBurnForm(forms.ModelForm):
-    region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
-    district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
+    #region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
+    #district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
 
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnForm, self).__init__(*args, **kwargs)
@@ -24,6 +24,7 @@ class PrescribedBurnForm(forms.ModelForm):
         prescriptions = self.fields['prescription'].queryset
         #self.fields['prescription'].queryset = prescriptions.filter(region=1)
         self.fields['prescription'].queryset = prescriptions.all()
+        #self.fields['prescription'].queryset = self.reviewed_prescriptions()
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
         now = datetime.now()
@@ -37,11 +38,6 @@ class PrescribedBurnForm(forms.ModelForm):
         self.fields['date'].widget.attrs.update({'value': date_str})
         self.fields['est_start'].widget.attrs.update({'value': now.strftime('%H:%M')})
         self.initial['status'] = 1
-        #self.fields['location'].queryset = prescription.location
-        #self.fields['region'].widget = forms.HiddenInput()
-        #self.fields['district'].widget = forms.HiddenInput()
-
-        #self.fields['prescription'].queryset = self.reviewed_prescriptions()
 
     def reviewed_prescriptions(self):
         """
@@ -54,44 +50,15 @@ class PrescribedBurnForm(forms.ModelForm):
                 reviewed.append(p.id)
         return prescriptions.filter(id__in=reviewed)
 
-#    def save(self):
-#        now = datetime.now()
-#        today = now.date()
-#        time_now = now.time()
-#
-#        import ipdb; ipdb.set_trace()
-#        self.fields['date'] = today.strftime('%Y-%m-%d')
-#        super(PrescribedBurnForm, self).save()
-
     class Meta:
         model = PrescribedBurn
-        exclude = ('submitted_by', 'endorsed_by', 'approved_by', 'approval_status', 'rolled',)
-        #exclude = ('area','region', 'district', 'submitted_by', 'endorsed_by', 'approved_by', 'approval_status', 'rolled',)
-        #fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "planned_area", "tenures", "location", "est_start", "conditions")
+        exclude = ('fire_id', 'fire_name', 'region', 'district', 'status', 'area', 'approval_status', 'further_ignitions', 'form_name',)
 
-#    def __init__(self, *args, **kwargs):
-#        super(PrescribedBurnForm, self).__init__(*args, **kwargs)
-#        import ipdb; ipdb.set_trace()
-#        #self._user = kwargs.pop('user')
-#        if kwargs.has_key('initial') and kwargs['initial'].has_key('user'):
-#            self._user = kwargs['initial']['user']
-#            self.fields['user'] = kwargs['initial']['user']
-#
-#    #area = forms.DecimalField(widget=forms.HiddenInput(), initial=)
-#    class Meta:
-#        #model = PlannedBurn
-#        exclude = ('user', )
-#
+
 class PrescribedBurnEditForm(forms.ModelForm):
-    region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
-    district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
 
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnEditForm, self).__init__(*args, **kwargs)
-        #import ipdb; ipdb.set_trace()
-        if kwargs.has_key('initial') and kwargs['initial'].has_key('user'):
-            self._user = kwargs['initial']['user']
-            self.fields['user'] = kwargs['initial']['user']
 
         prescriptions = self.fields['prescription'].queryset
         #self.fields['prescription'].queryset = prescriptions.filter(region=1)
@@ -103,18 +70,32 @@ class PrescribedBurnEditForm(forms.ModelForm):
         tomorrow = today + timedelta(days=1)
         time_now = now.time()
         date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
-        #self.fields['date'].widget.attrs.update({'value': date_str})
-        #self.fields['est_start'].widget.attrs.update({'value': now.strftime('%H:%M')})
-        #self.initial['status'] = 1
+
     class Meta:
         model = PrescribedBurn
-        exclude = ('region', 'district', 'submitted_by', 'endorsed_by', 'approved_by', 'approval_status', 'rolled',)
+        exclude = ('fire_id', 'fire_name', 'region', 'district', 'status', 'area', 'approval_status', 'further_ignitions', 'form_name',)
 
-#class FireForm(forms.ModelForm):
-#    class Meta:
-#        model = Fire
-#        exclude = ('user', )
+class FireForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(FireForm, self).__init__(*args, **kwargs)
+        #import ipdb; ipdb.set_trace()
+        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
+        now = datetime.now()
+        today = now.date()
+        tomorrow = today + timedelta(days=1)
+        time_now = now.time()
+        date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
+        self.fields['date'].widget.attrs.update({'value': date_str})
+
+    class Meta:
+        model = PrescribedBurn
+        exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
+
+class FireEditForm(forms.ModelForm):
+    class Meta:
+        model = PrescribedBurn
+        exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
 
 class PrescribedBurnFilterForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
