@@ -352,7 +352,7 @@ class PrescribedBurn(Audit):
         return self.prescription.burn_id if self.prescription else self.fire_id
 
     class Meta:
-        unique_together = ('prescription', 'date',)
+        unique_together = ('prescription', 'date', 'status',)
         verbose_name = 'Prescribed Burn'
         verbose_name_plural = 'Prescribed Burns'
         permissions = (
