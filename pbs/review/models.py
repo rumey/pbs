@@ -166,12 +166,10 @@ class Fire2(Audit):
 
 @python_2_unicode_compatible
 class PrescribedBurn(Audit):
-    BURN_PLANNED = 1
-    BURN_ACTIVE = 2
-    BURN_INACTIVE = 3
-    BURN_COMPLETED = 4
+    BURN_ACTIVE = 1
+    BURN_INACTIVE = 2
+    BURN_COMPLETED = 3
     BURN_CHOICES = (
-        (BURN_PLANNED, 'Planned'),
         (BURN_ACTIVE, 'Active'),
         (BURN_INACTIVE, 'Inactive'),
         (BURN_COMPLETED, 'Completed')
@@ -188,6 +186,13 @@ class PrescribedBurn(Audit):
         (APPROVAL_APPROVED, 'Approved'),
     )
 
+    FORM_268A = 1
+    FORM_268B = 2
+    FORM_NAME_CHOICES = (
+        (FORM_268A, 'Form 268a'),
+        (FORM_268B, 'Form 268b'),
+    )
+
     fmt = "%Y-%m-%d %H:%M"
 
     prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
@@ -202,30 +207,31 @@ class PrescribedBurn(Audit):
         show_all=False, auto_choose=True, blank=True, null=True)
 
     date = models.DateField(auto_now_add=False)
+    form_name = models.PositiveSmallIntegerField(verbose_name="Form Name (268a / 268b)", choices=FORM_NAME_CHOICES, editable=True)
 
     status = models.PositiveSmallIntegerField(verbose_name="Fire Status", choices=BURN_CHOICES, null=True, blank=True)
 #    active = models.NullBooleanField(verbose_name="Burn Active?", null=True, blank=True)
 
-    further_ignitions = models.BooleanField(verbose_name="Further ignitions required?")
+    further_ignitions = models.NullBooleanField(verbose_name="Further ignitions required?")
 #    external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
     external_assist = models.ManyToManyField(ExternalAssist, blank=True)
     planned_area = models.DecimalField(
         verbose_name="Planned Burn Area (ha)", max_digits=12, decimal_places=1,
-        validators=[MinValueValidator(0.0)])
+        validators=[MinValueValidator(0.0)], null=True, blank=True)
     area = models.DecimalField(
         verbose_name="Area Burnt Yesterday (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
     tenures= models.TextField(verbose_name="Tenure")
     location= models.TextField(verbose_name="Location", null=True, blank=True)
 
-    est_start = models.TimeField('Estimated Start Time')
+    est_start = models.TimeField('Estimated Start Time', null=True, blank=True)
     conditions = models.TextField(verbose_name='Special Conditions', null=True, blank=True)
 
-    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", blank=True, null=True, related_name='submitted_by')
+    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", editable=False, blank=True, null=True, related_name='submitted_by')
     submitted_date = models.DateTimeField(editable=False, null=True)
-    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", blank=True, null=True, related_name='endorsed_by')
+    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", editable=False, blank=True, null=True, related_name='endorsed_by')
     endorsed_date = models.DateTimeField(editable=False, null=True)
-    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", blank=True, null=True, related_name='approved_by')
+    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", editable=False, blank=True, null=True, related_name='approved_by')
     approved_date = models.DateTimeField(editable=False, null=True)
 
     approval_status = models.PositiveSmallIntegerField(
@@ -233,7 +239,10 @@ class PrescribedBurn(Audit):
         default=APPROVAL_DRAFT)
     approval_status_modified = models.DateTimeField(
         verbose_name="Approval Status Modified", editable=False, null=True)
-    rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", default=False)
+    rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
+
+    def clean_form_name(self):
+        import ipdb; ipdb.set_trace()
 
     def clean_date(self):
         today = date.today()
@@ -352,7 +361,7 @@ class PrescribedBurn(Audit):
         return self.prescription.burn_id if self.prescription else self.fire_id
 
     class Meta:
-        unique_together = ('prescription', 'date', 'status',)
+        unique_together = ('prescription', 'date', 'form_name',)
         verbose_name = 'Prescribed Burn'
         verbose_name_plural = 'Prescribed Burns'
         permissions = (
