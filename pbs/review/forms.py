@@ -16,7 +16,6 @@ class PrescribedBurnForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnForm, self).__init__(*args, **kwargs)
-        #import ipdb; ipdb.set_trace()
         if kwargs.has_key('initial') and kwargs['initial'].has_key('user'):
             self._user = kwargs['initial']['user']
             self.fields['user'] = kwargs['initial']['user']
@@ -25,6 +24,7 @@ class PrescribedBurnForm(forms.ModelForm):
         #self.fields['prescription'].queryset = prescriptions.filter(region=1)
         self.fields['prescription'].queryset = prescriptions.all()
         #self.fields['prescription'].queryset = self.reviewed_prescriptions()
+        self.fields['planned_area'].required=True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
         now = datetime.now()
@@ -81,6 +81,11 @@ class FireForm(forms.ModelForm):
         #import ipdb; ipdb.set_trace()
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
+        self.fields['region'].required = True
+        self.fields['district'].required = True
+        self.fields['fire_id'].required = True
+        self.fields['fire_name'].required = True
+        self.fields['area'].label = 'Area Burnt (ha)'
         now = datetime.now()
         today = now.date()
         tomorrow = today + timedelta(days=1)
@@ -90,12 +95,14 @@ class FireForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
+        #exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
 
 class FireEditForm(forms.ModelForm):
     class Meta:
         model = PrescribedBurn
-        exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
+#        exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
+        fields = ('region', 'district', 'fire_name', 'fire_id', 'date', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
 
 class PrescribedBurnFilterForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())

@@ -199,9 +199,9 @@ class PrescribedBurn(Audit):
     #fire = models.ForeignKey(Fire, null=True, blank=True)
 
     # Required for Fire records
-    fire_id = models.CharField(verbose_name="Fire ID?", max_length=10, null=True, blank=True)
-    fire_name = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
-    region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
+    fire_id = models.CharField(verbose_name="ID", max_length=10, null=True, blank=True)
+    fire_name = models.TextField(verbose_name="Name", null=True, blank=True)
+    region = models.PositiveSmallIntegerField(choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     district = ChainedForeignKey(
         District, chained_field="region", chained_model_field="region",
         show_all=False, auto_choose=True, blank=True, null=True)
@@ -241,8 +241,27 @@ class PrescribedBurn(Audit):
         verbose_name="Approval Status Modified", editable=False, null=True)
     rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
 
-    def clean_form_name(self):
-        import ipdb; ipdb.set_trace()
+    def clean_fire_id(self):
+        if not self.fire_id or str(self.fire_id)[0] in ('-', '+') or not str(self.fire_id).isdigit():
+            raise ValidationError("You must enter numeric digit with 3 characters (001 - 999).")
+
+        if int(self.fire_id)<1 or int(self.fire_id)>999:
+            raise ValidationError("Value must be in range (001 - 999).")
+#        import ipdb; ipdb.set_trace()
+
+        fire_id = "%s_%s" % (self.district.code, self.fire_id)
+        if PrescribedBurn.objects.filter(fire_id=fire_id, date=self.date).count() > 0:
+            raise ValidationError("{} already exists for date {}".format(fire_id, self.date))
+
+        self.fire_id = fire_id
+
+
+
+        try:
+                num=int(self.fir_id)
+                print "S contains only digits"
+        except:
+                print "S doesn't contain digits ONLY"
 
     def clean_date(self):
         today = date.today()
