@@ -686,6 +686,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     endorsement.prescription = obj
                     endorsement.endorsed = (
                         request.POST.get('_dont_endorse') is None)
+                    endorsement.creator = request.user
+                    endorsement.modifier = request.user
                     endorsement.save()
                     group = Group.objects.get(name='ePFP Application Administrator')
                     assign_perm('delete_endorsement', group, endorsement)
