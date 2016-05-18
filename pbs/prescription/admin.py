@@ -905,6 +905,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 if form.is_valid():
                     approval = form.save(commit=False)
                     approval.prescription = obj
+                    approval.creator = request.user
+                    approval.modifier = request.user
                     approval.save()
                     obj.approval_status = obj.APPROVAL_APPROVED
                     obj.approval_status_modified = timezone.now()
@@ -980,6 +982,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 # close the burn
                 post_state = obj.post_state
                 post_state.closure_declaration = True
+                if not post_state.creator:
+                    post_state.creator = request.user
+                post_state.modifier = request.user
                 post_state.save()
                 obj.status = obj.STATUS_CLOSED
                 obj.status_modified = timezone.now()

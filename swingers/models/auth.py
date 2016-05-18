@@ -13,6 +13,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 # we can't do `from swingers import models` because that causes circular import
 from swingers.models import Model, ForeignKey, DateTimeField
+from django.core.exceptions import ObjectDoesNotExist
 
 
 logger = logging.getLogger("log." + __name__)
@@ -63,12 +64,17 @@ class Audit(Model):
         else:
             created = False
 
-        #import ipdb; ipdb.set_trace() 
-        if hasattr(self, "prescription") and self.prescription:
+        try:
             if not self.creator and not self.pk:
                 self.creator = self.prescription.creator
             if not self.modifier:
                 self.modifier = self.prescription.modifier
+        except ObjectDoesNotExist:
+            if self.prescription:
+                self.creator = self.prescription.creator
+                self.modifier = self.prescription.modifier
+            else:
+                raise Exception("Cannot set object.creator: {}".format(self))
 
         super(Audit, self).save(*args, **kwargs)
 
