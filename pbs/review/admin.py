@@ -28,6 +28,7 @@ import json
 import os
 from django.template.loader import render_to_string
 from django.template import RequestContext
+from django.db.models import Q
 import subprocess
 import sys, traceback
 
@@ -160,6 +161,13 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     @property
     def sdo_group(self):
         return Group.objects.get(name='State Duty Officer')
+
+    def get_context_data(self, **kwargs):
+        context = super(PrescribedBurnAdmin, self).get_context_data(**kwargs)
+        #obj = self.get_object()
+        context['title'] = ' 1234'
+
+        return context
 
     def get_form(self, request, obj=None, **kwargs):
         #import ipdb; ipdb.set_trace()
@@ -638,14 +646,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             form = FireLoadFilterForm(request.GET)
             #form = FireLoadForm(request.GET)
         elif report=='epfp_summary':
+            # form C - only burns (Active and Planned)
             title = "Summary of Current and Planned Fires"
-            qs_burn = qs_burn.filter(status=PrescribedBurn.BURN_ACTIVE, approval_status=PrescribedBurn.APPROVAL_APPROVED)
-            #qs_fire = qs_fire.filter(active=True)
-            #qs_fire = qs_fireload.filter(prescription__active=True, fire__active=True)
-            #qs_fireload = qs_fireload.filter(prescription__active=True, fire__active=True)
+            qs_burn = qs_burn.filter(Q(status=PrescribedBurn.BURN_ACTIVE) | Q(approval_status=PrescribedBurn.APPROVAL_APPROVED), Q(date=dt)).exclude(prescription__isnull=True).exclude(status=2)
             form = PrescribedBurnFilterForm(request.GET)
-            #form = FireLoadForm(request.GET)
-            #queryset = ActiveBurn.objects.filter(date__gte=dt)
 
         fire_type = 0
         if request.REQUEST.has_key('fire_type'):
@@ -660,20 +664,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         if request.REQUEST.has_key('region'):
             region = request.REQUEST.get('region', None)
             if region:
-                if report=='epfp_planned':
-                    qs_burn = qs_burn.filter(prescription__region=region)
-                else:
-                    qs_burn = qs_burn.filter(prescription__region=region)
-                    #qs_fire = qs_fire.filter(region=region)
+                #qs_burn = qs_burn.filter(prescription__region=region)
+                qs_burn = qs_burn.filter(region=region)
 
         if request.REQUEST.has_key('district'):
             district = request.REQUEST.get('district', None)
             if district:
-                if report=='epfp_planned':
-                    qs_burn = qs_burn.filter(prescription__district=district)
-                else:
-                    qs_burn = qs_burn.filter(prescription__district=district)
-                    #qs_fire = qs_fire.filter(district=district)
+                #qs_burn = qs_burn.filter(prescription__district=district)
+                qs_burn = qs_burn.filter(district=district)
 
         #import ipdb; ipdb.set_trace()
         if request.REQUEST.has_key('approval_status'):
@@ -692,6 +690,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #                return qs_fire
 #            return list(itertools.chain(qs_burn, qs_fire))
 
+        qs_active = PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt)
         context = {
             'title': title,
             #'qs_burn': qs_burn.order_by('prescription__burn_id') if qs_burn else [],
@@ -703,8 +702,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'date': dt.strftime('%Y-%m-%d'),
             'fire_type': fire_type,
 
-            'active_burns_statewide': PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt).count(),
-            'active_burns_non_statewide': PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt, prescription__region__in=[6, 7, 8]).count(),
+            'active_burns_statewide': qs_active.exclude(prescription__isnull=True).count(),
+            'active_burns_non_statewide': qs_active.filter(region__in=[6, 7, 8]).exclude(prescription__isnull=True).count(),
+            'active_fires_statewide': qs_active.exclude(fire_id__isnull=True).count(),
+            'active_fires_non_statewide': qs_active.filter(region__in=[6, 7, 8]).exclude(fire_id__isnull=True).count(),
 #            'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
 #            'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
 

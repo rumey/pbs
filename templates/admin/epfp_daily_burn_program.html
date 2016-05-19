@@ -317,6 +317,7 @@
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
       <th colspan="3"><div class="text-center">Burn Status</div></th>
+      <th colspan="2"><div class="text-center">Acknowledement</div></th>
       <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
       <th rowspan="2"><div class="text-center">External Assist</div></th>
     </tr>
@@ -324,7 +325,10 @@
       <th> Active </th>
       <th> Further ignitions req </th>
       <th> Ignition now completed </th>
+      <th> SRM</th>
+      <th> SDO </th>
     </tr>
+
   </thead>
   <tbody>
     {% autopaginate qs_fireload 25 %}
@@ -344,6 +348,10 @@
       <td>{% if qs.active %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% elif qs.active == None %}<font color="red">Unset</font>{% endif %}</td>
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+
+      <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+
       <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% elif qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% endif %}</td>
       <td>{% if qs.had_external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       {% if qs.prescription %}
