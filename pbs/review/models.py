@@ -56,9 +56,9 @@ class ExternalAssist(models.Model):
 
 class Acknowledgement(models.Model):
     burn = models.ForeignKey('PrescribedBurn', related_name='acknowledgements')
-    user = models.ForeignKey(User, help_text="User")
-    acknow_type = models.CharField(max_length=64)
-    acknow_date = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, help_text="User", null=True, blank=True)
+    acknow_type = models.CharField(max_length=64, null=True, blank=True)
+    acknow_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     fmt = "%d/%m/%Y %H:%M:%S"
 
@@ -73,8 +73,8 @@ class Acknowledgement(models.Model):
         return "{} - {} - {}".format(
             self.burn, self.acknow_type, self.record)
 
-    class Meta:
-        unique_together = ('burn', 'acknow_type',)
+#    class Meta:
+#        unique_together = ('burn', 'acknow_type',)
 
 @python_2_unicode_compatible
 class PrescribedBurn(Audit):
@@ -195,20 +195,29 @@ class PrescribedBurn(Audit):
             return False
 
     @property
-    def sdo_a_record(self):
-        return self.acknowledgements.filter(acknow_type='SDO_A')
-
-    @property
-    def sdo_b_record(self):
-        return self.acknowledgements.filter(acknow_type='SDO_B')
+    def user_a_record(self):
+        ack = self.acknowledgements.filter(acknow_type='USER_A')
+        return ack[0].record if ack else None
 
     @property
     def srm_a_record(self):
         return self.acknowledgements.filter(acknow_type='SRM_A')
 
     @property
+    def sdo_a_record(self):
+        return self.acknowledgements.filter(acknow_type='SDO_A')
+
+    @property
+    def user_b_record(self):
+        return self.acknowledgements.filter(acknow_type='USER_B')
+
+    @property
     def srm_b_record(self):
         return self.acknowledgements.filter(acknow_type='SRM_B')
+
+    @property
+    def sdo_b_record(self):
+        return self.acknowledgements.filter(acknow_type='SDO_B')
 
 
     @property
