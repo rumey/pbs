@@ -378,6 +378,50 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #return HttpResponse(json.dumps({'errors': form.errors}))
         return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
 
+
+#    def set_acknowledgement(self, report, objects):
+#        if report=='epfp_planned':
+#            ack_status = obj.approval_268a_status
+#            acknow_type='USER_268a'
+#            form = '268a'
+#        elif report=='epfp_fireload':
+#            ack_status = obj.approval_268b_status
+#            acknow_type='USER_268b'
+#            form = '268b'
+#        else:
+#            return None
+#
+#        not_acknowledged = []
+#        already_acknowledged = []
+#        for obj in objects:
+#            if ack_status == obj.APPROVAL_DRAFT:
+#                role = 'USER'
+#            if ack_status == obj.APPROVAL_SUBMITTED:
+#                role = 'SRM'
+#            if ack_status == obj.APPROVAL_ENDORSED:
+#                role = 'SDO'
+#
+#            if ack_status == obj.APPROVAL_DRAFT:
+#                if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
+#                    Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
+#                    obj.approval_268a_status = ack_status + 1 #obj.APPROVAL_SUBMITTED
+#                    obj.approval_268a_status_modified = now
+#                    count += 1
+#                    message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+#                    msg_type = "success"
+#                else:
+#                    not_acknowledged.append(obj.fire_idd)
+#
+#                if not_acknowledged:
+#                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+#                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+#
+#            elif ack_status > obj.APPROVAL_DRAFT:
+#                not_acknowledged.append(obj.fire_idd)
+#                message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+#                msg_type = "danger"
+#
+
     #def action_view(self, request, object_id, form_url='', extra_context=None):
     #def action_view(self, request, *args, **kwargs):
     def action_view(self, request, extra_context=None):
@@ -412,26 +456,56 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         tomorrow = today + timedelta(days=1)
         yesterday = today - timedelta(days=1)
         if action == "Submit":
-            not_draft = []
-            for obj in objects:
-                if obj.approval_status == obj.APPROVAL_DRAFT:
-                    obj.submitted_by = request.user
-                    obj.submitted_date = now
-                    obj.approval_status = obj.APPROVAL_SUBMITTED
-                    obj.approval_status_modified = now
-                    obj.save()
-                    #self.message_user(request, "Successfully submitted.")
-                    count += 1
-                    message = "Successfully submitted {} burn{}".format(count, "s" if count>1 else "")
-                    msg_type = "success"
-                else:
-                    not_draft.append(obj.prescription.burn_id)
+            count = 0
+            if report=='epfp_planned':
+                not_acknowledged = []
+                already_acknowledged = []
+                for obj in objects:
+                    if obj.approval_268a_status == obj.APPROVAL_DRAFT:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
+                            obj.approval_268a_status = obj.APPROVAL_SUBMITTED
+                            obj.approval_268a_status_modified = now
+                            count += 1
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
 
-                if not_draft:
-                    #self.message_user(request, "Could not submit {}\n. Only DRAFT burns can be SUBMITTED".format(', '.join(not_draft)))
-                    message = "Could not submit {}\n. Only DRAFT burns can be SUBMITTED".format(', '.join(not_draft))
-                    msg_type = "danger"
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+                        if not_acknowledged:
+                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+                    elif obj.approval_268a_status > obj.APPROVAL_DRAFT:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        msg_type = "danger"
+
+            elif report=='epfp_fireload':
+                not_acknowledged = []
+                already_acknowledged = []
+                for obj in objects:
+                    if obj.approval_268b_status == obj.APPROVAL_DRAFT:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
+                            obj.approval_268b_status = obj.APPROVAL_SUBMITTED
+                            obj.approval_268b_status_modified = now
+                            count += 1
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
+
+                        if not_acknowledged:
+                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+                    elif obj.approval_268b_status > obj.APPROVAL_DRAFT:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        msg_type = "danger"
+
+
 
         elif action == "Endorse":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
@@ -449,46 +523,54 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             # Only Submitted plans can be endorsed
             #submitted_objects = PrescribedBurn.objects.filter(date=date, )
 
-            not_submitted = []
             count = 0
-            if report=='epfp_fireload':
+            if report=='epfp_planned':
+                not_acknowledged = []
+                already_acknowledged = []
                 for obj in objects:
-                    try:
-                        ack, created = Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
-                        if created:
+                    if obj.approval_268a_status == obj.APPROVAL_SUBMITTED:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_A').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_A', acknow_date=now)
+                            obj.approval_268a_status = obj.APPROVAL_ENDORSED
+                            obj.approval_268a_status_modified = now
                             count += 1
-                            message = "State Regional Manager: Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
-                    except IntegrityError:
-                        # acknowlegdement already exists
-                        not_endorsed.append(obj.fire_idd)
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
 
-                    if not_endorsed:
-                        message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_endorsed))
-                        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+                        if not_acknowledged:
+                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-
-            else:
-                for obj in objects:
-                    if obj.approval_status == obj.APPROVAL_SUBMITTED:
-                        obj.endorsed_by = request.user
-                        obj.endorsed_date = now
-                        obj.approval_status = obj.APPROVAL_ENDORSED
-                        obj.approval_status_modified = now
-                        obj.save()
-                        count += 1
-                        message = "Successfully endorsed {} burn{}".format(count, "s" if count>1 else "")
-                        msg_type = "success"
-                    else:
-                        not_submitted.append(obj.prescription.burn_id)
-
-                    if not_submitted:
-                        message = "Could not endorse {}\n. Only SUBMITTED burns can be endorsed".format(', '.join(not_submitted))
+                    elif obj.approval_268a_status > obj.APPROVAL_ENDORSED:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
-                        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
 
-                        #self.message_user(request, "Could not endorse {}\n. Only SUBMITTED burns can be endorsed".format(', '.join(not_submitted)))
-                        #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+            elif report=='epfp_fireload':
+                not_acknowledged = []
+                already_acknowledged = []
+                for obj in objects:
+                    if obj.approval_268b_status == obj.APPROVAL_SUBMITTED:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
+                            obj.approval_268b_status = obj.APPROVAL_ENDORSED
+                            obj.approval_268b_status_modified = now
+                            count += 1
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
+
+                        if not_acknowledged:
+                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+                    elif obj.approval_268b_status > obj.APPROVAL_ENDORSED:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        msg_type = "danger"
 
         elif action == "Approve":
 
@@ -511,43 +593,54 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             #import ipdb; ipdb.set_trace()
-            not_endorsed = []
             count = 0
-            if report=='epfp_fireload':
+            if report=='epfp_planned':
+                not_acknowledged = []
+                already_acknowledged = []
                 for obj in objects:
-#                    if Acknowledgement.objects.filter(burn=obj, user=request.user, acknow_type='SDO_B')
-                    try:
-                        ack, created = Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_B', acknow_date=now)
-                        if created:
+                    if obj.approval_268a_status == obj.APPROVAL_ENDORSED:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_A').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_A', acknow_date=now)
+                            obj.approval_268a_status = obj.APPROVAL_APPROVED
+                            obj.approval_268a_status_modified = now
                             count += 1
-                            message = "State Duty Officer: Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
-                    except IntegrityError:
-                        # acknowlegdement already exists
-                        not_endorsed.append(obj.fire_idd)
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
 
-                    if not_endorsed:
-                        message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_endorsed))
-                        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+                        if not_acknowledged:
+                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-            else:
+                    elif obj.approval_268a_status > obj.APPROVAL_APPROVED:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        msg_type = "danger"
+
+            elif report=='epfp_fireload':
+                not_acknowledged = []
+                already_acknowledged = []
                 for obj in objects:
-                    if obj.approval_status == obj.APPROVAL_ENDORSED:
-                        obj.approved_by = request.user
-                        obj.approved_date = now
-                        obj.approval_status = obj.APPROVAL_APPROVED
-                        obj.approval_status_modified = now
-                        obj.save()
-                        count += 1
-                        message = "Successfully approved {} burn{}".format(count, "s" if count>1 else "")
-                        msg_type = "success"
-                        #self.message_user(request, "Successfully submitted for approved")
-                    else:
-                        not_endorsed.append(obj.prescription.burn_id)
+                    if obj.approval_268b_status == obj.APPROVAL_ENDORSED:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_B').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_B', acknow_date=now)
+                            obj.approval_268b_status = obj.APPROVAL_APPROVED
+                            obj.approval_268b_status_modified = now
+                            count += 1
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
 
-                    if not_endorsed:
-                        message = "Could not approve {}\n. Only ENDORSED burns can be approved".format(', '.join(not_endorsed))
-                        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+                        if not_acknowledged:
+                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+                    elif obj.approval_268b_status > obj.APPROVAL_APPROVED:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        msg_type = "danger"
 
         elif action == "Delete Approve":
             if self.sdo_group not in request.user.groups.all():
@@ -557,16 +650,25 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             count = 0
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_APPROVED:
-                    obj.approved_by = None
-                    obj.approved_date = None
-                    obj.approval_status = obj.APPROVAL_ENDORSED
-                    obj.approval_status_modified = now
-                    obj.save()
-                    count += 1
-                    message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
-                    msg_type = "success"
+                    acknow_type = 'SDO_A' if report=='epfp_planned' else 'SDO_B'
+                    ack = Acknowledgement.objects.filter(burn=obj, acknow_type=acknow_type)
+                    if ack:
+                        ack.user = None
+                        ack.acknow_type = None
+                        ack.acknow_date = None
+                        ack.save()
+                        if report=='epfp_planned':
+                            obj.approval_268a_status = obj.APPROVAL_ENDORSED
+                            obj.approval_268a_status_modified = now
+                        else:
+                            obj.approval_268b_status = obj.APPROVAL_ENDORSED
+                            obj.approval_268b_status_modified = now
+                        obj.save()
+                        count += 1
+                        message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
+                        msg_type = "success"
             if count == 0:
-                message = "No records 'Approve' status removed"
+                message = "No 'Approved' records were removed"
                 msg_type = "info"
 
         elif action == "Delete Endorse":
@@ -577,30 +679,48 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             count = 0
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_ENDORSED:
-                    obj.endorsed_by = None
-                    obj.endorsed_date = None
-                    obj.approval_status = obj.APPROVAL_SUBMITTED
-                    obj.approval_status_modified = now
-                    obj.save()
-                    count += 1
-                    message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
-                    msg_type = "success"
+                    acknow_type = 'SRM_A' if report='epfp_planned' else 'SRM_B'
+                    ack = Acknowledgement.objects.filter(burn=obj, acknow_type=acknow_type)
+                    if ack:
+                        ack.user = None
+                        ack.acknow_type = None
+                        ack.acknow_date = None
+                        ack.save()
+                        if report=='epfp_planned':
+                            obj.approval_268a_status = obj.APPROVAL_SUBMITTED
+                            obj.approval_268a_status_modified = now
+                        else:
+                            obj.approval_268b_status = obj.APPROVAL_SUBMITTED
+                            obj.approval_268b_status_modified = now
+                        obj.save()
+                        count += 1
+                        message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
+                        msg_type = "success"
             if count == 0:
-                message = "No records 'Endorse' status removed"
+                message = "No 'Endorsed' records were removed"
                 msg_type = "info"
 
         elif action == "Delete Submit":
             count = 0
             for obj in objects:
                 if obj.approval_status == obj.APPROVAL_SUBMITTED:
-                    obj.submitted_by = None
-                    obj.submitted_date = None
-                    obj.approval_status = obj.APPROVAL_DRAFT
-                    obj.approval_status_modified = now
-                    obj.save()
-                    count += 1
-                    message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
-                    msg_type = "success"
+                    acknow_type = 'USER_A' if report='epfp_planned' else 'USER_B'
+                    ack = Acknowledgement.objects.filter(burn=obj, acknow_type=acknow_type)
+                    if ack:
+                        ack.user = None
+                        ack.acknow_type = None
+                        ack.acknow_date = None
+                        ack.save()
+                        if report=='epfp_planned':
+                            obj.approval_268a_status = obj.APPROVAL_DRAFT
+                            obj.approval_268a_status_modified = now
+                        else:
+                            obj.approval_268b_status = obj.APPROVAL_DRAFT
+                            obj.approval_268b_status_modified = now
+                        obj.save()
+                        count += 1
+                        message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
+                        msg_type = "success"
             if count == 0:
                 message = "No records 'Submitted' status removed"
                 msg_type = "info"
