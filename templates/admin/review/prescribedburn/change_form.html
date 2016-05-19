@@ -4,6 +4,7 @@
 {% block extrahead %}{{ block.super }}
 <button type="button">Click</button>
 
+{% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
 
 <script>
 $(function() {
@@ -50,6 +51,12 @@ $(function() {
     //$("#id_prescription").click(function () {
     //    $(".datetimeshortcuts").find('a').remove()
     //});
+
+    //    if ('edit_form'.indexOf( $(location).attr('href') ) > 0 ) {
+    //        console.log(string.indexOf(substring) > -1);
+    //    }
+
+
 });
 
 </script>

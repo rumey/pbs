@@ -242,26 +242,24 @@ class PrescribedBurn(Audit):
     rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
 
     def clean_fire_id(self):
-        if not self.fire_id or str(self.fire_id)[0] in ('-', '+') or not str(self.fire_id).isdigit():
-            raise ValidationError("You must enter numeric digit with 3 characters (001 - 999).")
+        if self.fire_id:
+            if not self.fire_id or str(self.fire_id)[0] in ('-', '+') or not str(self.fire_id).isdigit() or not len(self.fire_id)==3:
+                raise ValidationError("You must enter numeric digit with 3 characters (001 - 999).")
 
-        if int(self.fire_id)<1 or int(self.fire_id)>999:
-            raise ValidationError("Value must be in range (001 - 999).")
-#        import ipdb; ipdb.set_trace()
+            if int(self.fire_id)<1 or int(self.fire_id)>999:
+                raise ValidationError("Value must be in range (001 - 999).")
 
-        fire_id = "%s_%s" % (self.district.code, self.fire_id)
-        if PrescribedBurn.objects.filter(fire_id=fire_id, date=self.date).count() > 0:
-            raise ValidationError("{} already exists for date {}".format(fire_id, self.date))
+            fire_id = "%s_%s" % (self.district.code, self.fire_id)
+            pb = PrescribedBurn.objects.filter(fire_id=fire_id, date=self.date)
+            if pb and pb[0].id != self.id:
+                raise ValidationError("{} already exists for date {}".format(fire_id, self.date))
 
-        self.fire_id = fire_id
+            self.fire_id = fire_id
 
-
-
-        try:
-                num=int(self.fir_id)
-                print "S contains only digits"
-        except:
-                print "S doesn't contain digits ONLY"
+    def clean_prescription(self):
+        if self.prescription:
+            self.region = self.prescription.region
+            self.district = self.prescription.district
 
     def clean_date(self):
         today = date.today()

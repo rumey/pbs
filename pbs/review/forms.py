@@ -93,16 +93,25 @@ class FireForm(forms.ModelForm):
         date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
         self.fields['date'].widget.attrs.update({'value': date_str})
 
+        status = self.fields['status']
+        status.choices = status.choices[1:]
+
     class Meta:
         model = PrescribedBurn
         #exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
 
 class FireEditForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(FireEditForm, self).__init__(*args, **kwargs)
+        #self.fields['fire_id'].widget.attrs['readonly'] = True
+        #self.fields['fire_id'].widget.attrs['disabled'] = True
+        self.initial['fire_id'] = self.initial['fire_id'][-3:]
+
     class Meta:
         model = PrescribedBurn
 #        exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
-        fields = ('region', 'district', 'fire_name', 'fire_id', 'date', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
+        fields = ('region', 'district', 'fire_name', 'fire_id', 'date', 'status', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
 
 class PrescribedBurnFilterForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
