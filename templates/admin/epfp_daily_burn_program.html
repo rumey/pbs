@@ -206,7 +206,7 @@
 </a>
 {% endcomment %}
 
-<table id="planned-table" class="table table-hover table-compressed">
+<table id="planned-table" class="main-table table table-hover table-compressed">
   <thead>
     <tr>
       <th rowspan="2"><input type="checkbox" name ="check_all" onClick=toggle(this) /></th>
@@ -306,10 +306,24 @@
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Fire</a>
     {% endcomment %}
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_fire"><i class="icon-plus icon-white"></i> Add Fire</a>
+
+    <select id="actions">
+    <option value="0" selected="selected">----</option>
+    <option value="1">Submit</option>
+    <option value="2">Endorse</option>
+    <option value="3">Approve</option>
+    <option value="4">Delete Submit</option>
+    <option value="5">Delete Endorse</option>
+    <option value="6">Delete Approve</option>
+    <option value="7">Delete Record</option>
+    <option value="8">Copy Record to Tomorrow</option>
+    </select>
+    <button id="update-button" type="button" disabled>Update</button>
 </div>
 
 
-<table id="fireload-table" class="table table-hover table-compressed">
+
+<table id="fireload-table" class="main-table table table-hover table-compressed">
   <thead>
     <tr>
       <th rowspan="2"><input type="checkbox" name ="check_all" onClick=toggle(this) /></th>
@@ -349,8 +363,8 @@
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
 
-      <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.srm_b_record %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.sdo_b_record %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
 
       <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% elif qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% endif %}</td>
       <td>{% if qs.had_external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
@@ -432,7 +446,7 @@
 {% paginate %}
 
 {% if report == "epfp_summary" %}
-<table id="sorted-table" class="table table-hover table-compressed">
+<table id="sorted-table" class="main-table table table-hover table-compressed">
   <thead>
     <tr>
       <th rowspan="1"><div class="text-center">Burn ID</div></th>
@@ -639,13 +653,15 @@ $('#update-button').click(function(){
             "action": $("#actions :selected").text(),
             "data": checked_list.toString(),
             "date": "{{date}}",
+            "report": "{{report}}",
             "csrfmiddlewaretoken": "{{ csrf_token }}",
         },
         success: function(response){
             var response = JSON.parse(response);
             //window.location.href = response.redirect; // to redirect
             //location.reload();
-            $("#planned-table").load(window.location + " #planned-table");
+            //$("#planned-table").load(window.location + " #planned-table");
+            $(".main-table").load(window.location + " .main-table");
             //$("#id_approval_status").val(2); 
             //$("#id_approval_status option[value='1']").attr("selected", true);
             console.log("response.redirect " + response['redirect']);

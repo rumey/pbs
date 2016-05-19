@@ -54,115 +54,27 @@ class ExternalAssist(models.Model):
         return self.name
 
 
-@python_2_unicode_compatible
-class Fire2(Audit):
-    FIRE_ACTIVE = 1
-    FIRE_INACTIVE = 2
+class Acknowledgement(models.Model):
+    burn = models.ForeignKey('PrescribedBurn', related_name='acknowledgements')
+    user = models.ForeignKey(User, help_text="User")
+    acknow_type = models.CharField(max_length=64)
+    acknow_date = models.DateTimeField(auto_now_add=True)
 
-    APPROVAL_DRAFT = 1
-    APPROVAL_SUBMITTED = 2
-    APPROVAL_ENDORSED = 3
-    APPROVAL_APPROVED = 4
-    APPROVAL_CHOICES = (
-        (APPROVAL_DRAFT, 'Draft'),
-        (APPROVAL_SUBMITTED, 'Submitted'),
-        (APPROVAL_ENDORSED, 'Endorsed'),
-        (APPROVAL_APPROVED, 'Approved'),
-    )
-
-    fire_id = models.CharField(verbose_name="Fire ID?", max_length=10, null=True, blank=True)
-    name = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
-    region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
-    district = ChainedForeignKey(
-        District, chained_field="region", chained_model_field="region",
-        show_all=False, auto_choose=True, blank=True, null=True)
-
-    #user = models.ForeignKey(User, help_text="User")
-    date = models.DateField(auto_now_add=False)
-    active = models.NullBooleanField(verbose_name="Fire Active?", null=True, blank=True)
-    #external_assist = models.BooleanField(verbose_name="External Assistance?", blank=True)
-    external_assist = models.ManyToManyField(ExternalAssist, blank=True)
-    area = models.DecimalField(
-        verbose_name="Fire Area (ha)", max_digits=12, decimal_places=1,
-        validators=[MinValueValidator(0)], null=True, blank=True)
-    tenures = models.ManyToManyField(Tenure, blank=True)
-    location= models.TextField(verbose_name="Location", null=True, blank=True)
-
-    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", blank=True, null=True, related_name='fire_submitted_by')
-    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", blank=True, null=True, related_name='fire_endorsed_by')
-    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", blank=True, null=True, related_name='fire_approved_by')
-
-    approval_status = models.PositiveSmallIntegerField(
-        verbose_name="Approval Status", choices=APPROVAL_CHOICES,
-        default=APPROVAL_DRAFT)
-    approval_status_modified = models.DateTimeField(
-        verbose_name="Approval Status Modified", editable=False, null=True)
-    rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", default=False)
-
+    fmt = "%d/%m/%Y %H:%M:%S"
 
     @property
-    def tenures_str(self):
-        return ', '.join([t.name for t in self.tenures.all()])
-
-    @property
-    def had_external_assist(self):
-        if self.external_assist.all().count() > 0:
-            return True
-        return False
-
-    @property
-    def external_assist_str(self):
-        return ', '.join([i.name for i in self.external_assist.all()])
-
-    @property
-    def status(self):
-        if self.active:
-            return self.FIRE_ACTIVE
-        return self.FIRE_INACTIVE
-
-#    def save(self, **kwargs):
-#        super(Fire, self).save(**kwargs)
-#        tenures = ', '.join([t.name for t in self.prescription.tenures.all()])
-#        if not self.location:
-#            self.location = self.prescription.location
-#        if not self.tenures and tenures:
-#            self.tenures = tenures
-#        super(PrescribedBurn, self).save()
-
-    @property
-    def can_endorse(self):
-        """
-        Return true if this fire can be submitted for endorsement.
-        """
-        return (self.status == self.APPROVAL_SUBMITTED)
-
-    @property
-    def can_approve(self):
-        """
-        Return true if this fire can be submitted for Approval.
-        """
-        return (self.status == self.APPROVAL_ENDORSED)
-
-    def __str__(self):
-        return self.fire_id
-
-    class Meta:
-        unique_together = ('fire_id', 'date',)
-        verbose_name = 'Fire'
-        verbose_name_plural = 'Fires'
-        permissions = (
-            ("can_endorse", "Can endorse fire actions"),
-            ("can_approve", "Can approve fire actions"),
+    def record(self):
+        username = '{} {}'.format(self.user.first_name[0], self.user.last_name)
+        return "{} {}".format(
+            username, self.acknow_date.astimezone(tz.tzlocal()).strftime(self.fmt)
         )
 
-#class Fire(models.Model):
-#    fire_id = models.CharField(verbose_name="Fire ID?", max_length=10, null=True, blank=True)
-#    name = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
-#    region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
-#    district = ChainedForeignKey(
-#        District, chained_field="region", chained_model_field="region",
-#        show_all=False, auto_choose=True, blank=True, null=True)
+    def __str__(self):
+        return "{} - {} - {}".format(
+            self.burn, self.acknow_type, self.record)
 
+    class Meta:
+        unique_together = ('burn', 'acknow_type',)
 
 @python_2_unicode_compatible
 class PrescribedBurn(Audit):
@@ -276,6 +188,30 @@ class PrescribedBurn(Audit):
         pass
 
     @property
+    def is_acknowledged(self):
+        if all(x in [i.acknow_type for i in self.acknowledgements.all()] for x in ['SDO_A','SDO_B']):
+            return True
+        else:
+            return False
+
+    @property
+    def sdo_a_record(self):
+        return self.acknowledgements.filter(acknow_type='SDO_A')
+
+    @property
+    def sdo_b_record(self):
+        return self.acknowledgements.filter(acknow_type='SDO_B')
+
+    @property
+    def srm_a_record(self):
+        return self.acknowledgements.filter(acknow_type='SRM_A')
+
+    @property
+    def srm_b_record(self):
+        return self.acknowledgements.filter(acknow_type='SRM_B')
+
+
+    @property
     def fire_type(self):
         return "Burn" if self.prescription else "Fire"
 
@@ -305,7 +241,10 @@ class PrescribedBurn(Audit):
 
     @property
     def fire_idd(self):
-        return self.prescription.burn_id
+        if self.prescription:
+            return self.prescription.burn_id
+        else:
+            return self.fire_id
 
     @property
     def active(self):
@@ -387,84 +326,3 @@ class PrescribedBurn(Audit):
         )
 
 
-
-#class Fire2(Audit):
-#
-#    fire_id = models.CharField(verbose_name="Fire ID?", max_length=7)
-#    name = models.TextField(verbose_name="Fire Description/Details?", null=True, blank=True)
-#    region = models.PositiveSmallIntegerField(verbose_name="Fire Region", choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
-#    district = ChainedForeignKey(
-#        District, chained_field="region", chained_model_field="region",
-#        show_all=False, auto_choose=True, blank=True, null=True)
-#
-#    tenures = models.ManyToManyField(Tenure, blank=True)
-#    location = models.CharField(
-#        help_text="Example: Nollajup Nature Reserve - 8.5 KM S of Boyup Brook",
-#        max_length="320", blank=True, null=True)
-#    ongoing = models.NullBooleanField(verbose_name="Fire Status (Ongoing/Closed)", default=True)
-#
-##    class Meta:
-##        unique_together = ('fire_id', 'created',)
-#
-#
-#class FireLoad(Audit):
-#    FIRE_PLANNED = 0
-#    FIRE_ACTIVE = 1
-#    FIRE_INACTIVE = 2
-#    FIRE_COMPLETED = 3
-#    FIRE_CHOICES = (
-#        (FIRE_PLANNED, 'Planned'),
-#        (FIRE_ACTIVE, 'Active'),
-#        (FIRE_INACTIVE, 'Inactive'),
-#        (FIRE_COMPLETED, 'Completed')
-#    )
-#
-#    APPROVAL_DRAFT = 1
-#    APPROVAL_SUBMITTED = 2
-#    APPROVAL_ENDORSED = 3
-#    APPROVAL_APPROVED = 4
-#    APPROVAL_CHOICES = (
-#        (APPROVAL_DRAFT, 'Draft'),
-#        (APPROVAL_SUBMITTED, 'Submitted'),
-#        (APPROVAL_ENDORSED, 'Endorsed'),
-#        (APPROVAL_APPROVED, 'Approved'),
-#    )
-#
-#    prescription = models.ForeignKey(Prescription, related_name='fireload', null=True, blank=True)
-#    fire = models.ForeignKey(Fire2, related_name='fire', null=True, blank=True)
-#    date = models.DateField(auto_now_add=False)
-#
-#    status = models.PositiveSmallIntegerField(verbose_name="Fire Status", choices=FIRE_CHOICES, null=True, blank=True)
-##    active = models.NullBooleanField(verbose_name="Burn Active?", null=True, blank=True)
-#
-#    further_ignitions = models.BooleanField(verbose_name="Further ignitions required?")
-#    external_assist = models.ManyToManyField(ExternalAssist, blank=True)
-#    area = models.DecimalField(
-#        verbose_name="Area Achieved Yesterday (ha)", max_digits=12, decimal_places=1,
-#        validators=[MinValueValidator(0.1)], null=True, blank=True)
-#
-#    est_start = models.TimeField('Estimated Start Time')
-#    conditions = models.TextField(verbose_name='Special Conditions', null=True, blank=True)
-#
-#    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", blank=True, null=True, related_name='burn_submitted_by')
-#    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", blank=True, null=True, related_name='burn_endorsed_by')
-#    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", blank=True, null=True, related_name='burn_approved_by')
-#
-#    approval_status = models.PositiveSmallIntegerField(
-#        verbose_name="Approval Status", choices=APPROVAL_CHOICES,
-#        default=APPROVAL_DRAFT)
-#    approval_status_modified = models.DateTimeField(
-#        verbose_name="Approval Status Modified", editable=False, null=True)
-#
-#    def __str__(self):
-#        return self.prescription.burn_id
-#
-#    class Meta:
-#        unique_together = ('prescription', 'date',)
-#        verbose_name = 'Prescribed Burn'
-#        verbose_name_plural = 'Prescribed Burns'
-#        permissions = (
-#            ("can_endorse", "Can endorse burns"),
-#            ("can_approve", "Can approve burns"),
-#        )
-#
