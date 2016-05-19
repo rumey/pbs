@@ -4,7 +4,7 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group, User
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PrescribedBurn
+from pbs.review.models import BurnState, PrescribedBurn, Acknowledgement
 from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnEditForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm
 from pbs.prescription.models import Prescription, Approval, Region
 from datetime import datetime, date, timedelta
@@ -31,6 +31,7 @@ from django.template import RequestContext
 from django.db.models import Q
 import subprocess
 import sys, traceback
+from django.db import IntegrityError
 
 import logging
 logger = logging.getLogger('pbs')
@@ -380,6 +381,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     #def action_view(self, request, object_id, form_url='', extra_context=None):
     #def action_view(self, request, *args, **kwargs):
     def action_view(self, request, extra_context=None):
+        if request.REQUEST.has_key('report'):
+            report = request.REQUEST.get('report', None)
+
         if request.POST.has_key('date'):
             dt = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
         else:
@@ -447,26 +451,44 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
             not_submitted = []
             count = 0
-            for obj in objects:
-                if obj.approval_status == obj.APPROVAL_SUBMITTED:
-                    obj.endorsed_by = request.user
-                    obj.endorsed_date = now
-                    obj.approval_status = obj.APPROVAL_ENDORSED
-                    obj.approval_status_modified = now
-                    obj.save()
-                    count += 1
-                    message = "Successfully endorsed {} burn{}".format(count, "s" if count>1 else "")
-                    msg_type = "success"
-                else:
-                    not_submitted.append(obj.prescription.burn_id)
+            if report=='epfp_fireload':
+                for obj in objects:
+                    try:
+                        ack, created = Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
+                        if created:
+                            count += 1
+                            message = "State Regional Manager: Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                    except IntegrityError:
+                        # acknowlegdement already exists
+                        not_endorsed.append(obj.fire_idd)
 
-                if not_submitted:
-                    message = "Could not endorse {}\n. Only SUBMITTED burns can be endorsed".format(', '.join(not_submitted))
-                    msg_type = "danger"
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+                    if not_endorsed:
+                        message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_endorsed))
+                        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-                    #self.message_user(request, "Could not endorse {}\n. Only SUBMITTED burns can be endorsed".format(', '.join(not_submitted)))
-                    #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
+
+            else:
+                for obj in objects:
+                    if obj.approval_status == obj.APPROVAL_SUBMITTED:
+                        obj.endorsed_by = request.user
+                        obj.endorsed_date = now
+                        obj.approval_status = obj.APPROVAL_ENDORSED
+                        obj.approval_status_modified = now
+                        obj.save()
+                        count += 1
+                        message = "Successfully endorsed {} burn{}".format(count, "s" if count>1 else "")
+                        msg_type = "success"
+                    else:
+                        not_submitted.append(obj.prescription.burn_id)
+
+                    if not_submitted:
+                        message = "Could not endorse {}\n. Only SUBMITTED burns can be endorsed".format(', '.join(not_submitted))
+                        msg_type = "danger"
+                        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
+                        #self.message_user(request, "Could not endorse {}\n. Only SUBMITTED burns can be endorsed".format(', '.join(not_submitted)))
+                        #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
 
         elif action == "Approve":
 
@@ -479,34 +501,53 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             # copy yesterdays ongoing active records to today
-            self.copy_ongoing_records(dt)
-            unset_objects = self.check_rolled_records(dt)
+            if report=='epfp_planned':
+                self.copy_ongoing_records(dt)
+                unset_objects = self.check_rolled_records(dt)
 
-            if len(unset_objects) > 0:
-                message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
-                    ', '.join([obj.prescription.burn_id for obj in unset_objects]))
-                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+                if len(unset_objects) > 0:
+                    message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
+                        ', '.join([obj.prescription.burn_id for obj in unset_objects]))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             #import ipdb; ipdb.set_trace()
             not_endorsed = []
             count = 0
-            for obj in objects:
-                if obj.approval_status == obj.APPROVAL_ENDORSED:
-                    obj.approved_by = request.user
-                    obj.approved_date = now
-                    obj.approval_status = obj.APPROVAL_APPROVED
-                    obj.approval_status_modified = now
-                    obj.save()
-                    count += 1
-                    message = "Successfully approved {} burn{}".format(count, "s" if count>1 else "")
-                    msg_type = "success"
-                    #self.message_user(request, "Successfully submitted for approved")
-                else:
-                    not_endorsed.append(obj.prescription.burn_id)
+            if report=='epfp_fireload':
+                for obj in objects:
+#                    if Acknowledgement.objects.filter(burn=obj, user=request.user, acknow_type='SDO_B')
+                    try:
+                        ack, created = Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_B', acknow_date=now)
+                        if created:
+                            count += 1
+                            message = "State Duty Officer: Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                    except IntegrityError:
+                        # acknowlegdement already exists
+                        not_endorsed.append(obj.fire_idd)
 
-                if not_endorsed:
-                    message = "Could not approve {}\n. Only ENDORSED burns can be approved".format(', '.join(not_endorsed))
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+                    if not_endorsed:
+                        message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_endorsed))
+                        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+            else:
+                for obj in objects:
+                    if obj.approval_status == obj.APPROVAL_ENDORSED:
+                        obj.approved_by = request.user
+                        obj.approved_date = now
+                        obj.approval_status = obj.APPROVAL_APPROVED
+                        obj.approval_status_modified = now
+                        obj.save()
+                        count += 1
+                        message = "Successfully approved {} burn{}".format(count, "s" if count>1 else "")
+                        msg_type = "success"
+                        #self.message_user(request, "Successfully submitted for approved")
+                    else:
+                        not_endorsed.append(obj.prescription.burn_id)
+
+                    if not_endorsed:
+                        message = "Could not approve {}\n. Only ENDORSED burns can be approved".format(', '.join(not_endorsed))
+                        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "Delete Approve":
             if self.sdo_group not in request.user.groups.all():
