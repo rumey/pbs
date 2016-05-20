@@ -69,6 +69,9 @@ class Acknowledgement(models.Model):
             username, self.acknow_date.astimezone(tz.tzlocal()).strftime(self.fmt)
         )
 
+    def remove(self):
+        self.delete()
+
     def __str__(self):
         return "{} - {} - {}".format(
             self.burn, self.acknow_type, self.record)
@@ -139,19 +142,36 @@ class PrescribedBurn(Audit):
     est_start = models.TimeField('Estimated Start Time', null=True, blank=True)
     conditions = models.TextField(verbose_name='Special Conditions', null=True, blank=True)
 
-    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", editable=False, blank=True, null=True, related_name='submitted_by')
-    submitted_date = models.DateTimeField(editable=False, null=True)
-    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", editable=False, blank=True, null=True, related_name='endorsed_by')
-    endorsed_date = models.DateTimeField(editable=False, null=True)
-    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", editable=False, blank=True, null=True, related_name='approved_by')
-    approved_date = models.DateTimeField(editable=False, null=True)
+#    submitted_by = models.ForeignKey(User, verbose_name="Submitting User", editable=False, blank=True, null=True, related_name='submitted_by')
+#    submitted_date = models.DateTimeField(editable=False, null=True)
+#    endorsed_by = models.ForeignKey(User, verbose_name="Endorsing Officer", editable=False, blank=True, null=True, related_name='endorsed_by')
+#    endorsed_date = models.DateTimeField(editable=False, null=True)
+#    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", editable=False, blank=True, null=True, related_name='approved_by')
+#    approved_date = models.DateTimeField(editable=False, null=True)
 
-    approval_status = models.PositiveSmallIntegerField(
+    approval_268a_status = models.PositiveSmallIntegerField(
         verbose_name="Approval Status", choices=APPROVAL_CHOICES,
         default=APPROVAL_DRAFT)
-    approval_status_modified = models.DateTimeField(
+    approval_268a_status_modified = models.DateTimeField(
         verbose_name="Approval Status Modified", editable=False, null=True)
+
+    approval_268b_status = models.PositiveSmallIntegerField(
+        verbose_name="Approval Status", choices=APPROVAL_CHOICES,
+        default=APPROVAL_DRAFT)
+    approval_268b_status_modified = models.DateTimeField(
+        verbose_name="Approval Status Modified", editable=False, null=True)
+
     rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
+
+    #def clean_form_name(self):
+    def clean(self):
+        #import ipdb; ipdb.set_trace()
+        if not self.form_name:
+            if self.prescription:
+                self.form_name = 1
+            else:
+                self.form_name = 2
+
 
     def clean_fire_id(self):
         if self.fire_id:
@@ -176,7 +196,8 @@ class PrescribedBurn(Audit):
     def clean_date(self):
         today = date.today()
         tomorrow = today + timedelta(days=1)
-        if not self.pk and (self.date < today or self.date > tomorrow):
+        #if not self.pk and (self.date < today or self.date > tomorrow):
+        if self.pk and (self.date < today or self.date > tomorrow):
             raise ValidationError("You must enter burn plans for today or tommorow's date only.")
 
     def clean_sdo_approve(self):
