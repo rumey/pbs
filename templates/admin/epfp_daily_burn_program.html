@@ -231,7 +231,7 @@
     {% if qs.prescription %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
-      <td><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>{% if qs.rolled %}<font color="red"> (r)</font>{% endif %}</td>
+      <td nowrap><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>{% if qs.rolled %}<font color="red"> (r)</font>{% endif %}</td>
       <td>{{ qs.prescription.name }}</td>
       <td>{{ qs.location }}</td>
       <td><div class="text-center">{{ qs.planned_area }}</div></td>
@@ -316,7 +316,7 @@
     <option value="5">Delete Endorse</option>
     <option value="6">Delete Approve</option>
     <option value="7">Delete Record</option>
-    <option value="8">Copy Record to Tomorrow</option>
+    <option value="8">Set Active</option>
     </select>
     <button id="update-button" type="button" disabled>Update</button>
 </div>
@@ -331,7 +331,7 @@
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
       <th colspan="3"><div class="text-center">Burn Status</div></th>
-      <th colspan="2"><div class="text-center">Acknowledement</div></th>
+      <th colspan="3"><div class="text-center">Acknowledement</div></th>
       <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
       <th rowspan="2"><div class="text-center">External Assist</div></th>
     </tr>
@@ -339,6 +339,7 @@
       <th> Active </th>
       <th> Further ignitions req </th>
       <th> Ignition now completed </th>
+      <th> SUBMIT</th>
       <th> SRM</th>
       <th> SDO </th>
     </tr>
@@ -349,12 +350,13 @@
     {% for qs in qs_fireload %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.fire_id}}">
       <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
-      <td>
+      <td nowrap>
         {% if qs.prescription %}
            <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id  }}</a>
         {% else %}
            {{ qs.fire_id  }}
         {% endif %}
+        {% if qs.rolled %}<font color="red"> (r)</font>{% endif %}
       </td>
       <td>{{ qs.name }}</td>
       <td>{{ qs.fire_type }}</td>
@@ -363,6 +365,7 @@
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
 
+      <td>{% if qs.user_b_record %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.srm_b_record %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.sdo_b_record %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
 
@@ -565,6 +568,14 @@ $(function(){
 //    }
 //  });
 
+    $("td").dblclick(function () {
+        var OriginalContent = $(this).text();
+        var inputNewText = prompt("Enter new content for:", OriginalContent);
+        if (inputNewText!=null)
+            {
+            $(this).text(inputNewText)
+            }
+    });
 });
 
 dialog_msg = function() {

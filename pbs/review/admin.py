@@ -147,7 +147,6 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
         context.update(extra_context or {})
         return TemplateResponse(request, self.epfp_review_template, context)
 
-from pbs.prescription.actions import delete_selected, archive_documents
 class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     #fields = ("prescription", "date", "status", "further_ignitions", "external_assist", "planned_area", "area", "tenures", "location", "est_start", "conditions")
 
@@ -224,14 +223,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                                 context, current_app=self.admin_site.name)
 
 
-    def save_model(self, request, obj, form, change=True):
-        """ Form does not assign user, do it here """
-        #obj.user = request.user
-        if obj.prescription:
-            obj.form_name = 1
-        else:
-            obj.form_name = 2
-        obj.save()
+#    def save_model(self, request, obj, form, change=True):
+#        if obj.prescription:
+#            obj.form_name = 1
+#        else:
+#            obj.form_name = 2
+#        obj.save()
 
     def response_post_save_change(self, request, obj):
         """
@@ -336,7 +333,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 self.message_user(request, "Only a SDO role can edit this burn (after cut-off hour - {}:00)".format(settings.DAY_ROLLOVER_HOUR))
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-        if obj.approval_status == PrescribedBurn.APPROVAL_APPROVED:
+        if obj.approval_268a_status == PrescribedBurn.APPROVAL_APPROVED or obj.approval_268b_status == PrescribedBurn.APPROVAL_APPROVED:
             if self.sdo_group not in request.user.groups.all():
                 self.message_user(request, "Only a SDO role can edit an APPROVED burn")
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -466,46 +463,52 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
                             obj.approval_268a_status = obj.APPROVAL_SUBMITTED
                             obj.approval_268a_status_modified = now
+                            obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                         else:
                             not_acknowledged.append(obj.fire_idd)
-
-                        if not_acknowledged:
-                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
-                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
                     elif obj.approval_268a_status > obj.APPROVAL_DRAFT:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
 
+                if not_acknowledged:
+                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
             elif report=='epfp_fireload':
                 not_acknowledged = []
                 already_acknowledged = []
+                unset_acknowledged = []
                 for obj in objects:
-                    if obj.approval_268b_status == obj.APPROVAL_DRAFT:
-                        if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
-                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
-                            obj.approval_268b_status = obj.APPROVAL_SUBMITTED
-                            obj.approval_268b_status_modified = now
-                            count += 1
-                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                            msg_type = "success"
-                        else:
-                            not_acknowledged.append(obj.fire_idd)
+                    if obj.area and obj.status:
+                        if obj.approval_268b_status == obj.APPROVAL_DRAFT:
+                            if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
+                                Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
+                                obj.approval_268b_status = obj.APPROVAL_SUBMITTED
+                                obj.approval_268b_status_modified = now
+                                obj.save()
+                                count += 1
+                                message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                                msg_type = "success"
+                            else:
+                                not_acknowledged.append(obj.fire_idd)
 
-                        if not_acknowledged:
-                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
-                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-                    elif obj.approval_268b_status > obj.APPROVAL_DRAFT:
-                        already_acknowledged.append(obj.fire_idd)
-                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        elif obj.approval_268b_status > obj.APPROVAL_DRAFT:
+                            already_acknowledged.append(obj.fire_idd)
+                            message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                            msg_type = "danger"
+                    else:
+                        unset_acknowledged.append(obj.fire_idd)
+                        message = "Cannot acknowledge {}. First set Area/Status field(s)".format(', '.join(unset_acknowledged))
                         msg_type = "danger"
 
-
+                if not_acknowledged:
+                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "Endorse":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
@@ -533,20 +536,21 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_A', acknow_date=now)
                             obj.approval_268a_status = obj.APPROVAL_ENDORSED
                             obj.approval_268a_status_modified = now
+                            obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
-                        if not_acknowledged:
-                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
-                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-                    elif obj.approval_268a_status > obj.APPROVAL_ENDORSED:
+                    elif obj.approval_268a_status > obj.APPROVAL_SUBMITTED:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
+
+                if not_acknowledged:
+                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             elif report=='epfp_fireload':
                 not_acknowledged = []
@@ -557,20 +561,21 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
                             obj.approval_268b_status = obj.APPROVAL_ENDORSED
                             obj.approval_268b_status_modified = now
+                            obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
-                        if not_acknowledged:
-                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
-                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-                    elif obj.approval_268b_status > obj.APPROVAL_ENDORSED:
+                    elif obj.approval_268b_status > obj.APPROVAL_SUBMITTED:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
+
+                if not_acknowledged:
+                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "Approve":
 
@@ -603,20 +608,21 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_A', acknow_date=now)
                             obj.approval_268a_status = obj.APPROVAL_APPROVED
                             obj.approval_268a_status_modified = now
+                            obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
-                        if not_acknowledged:
-                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
-                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-                    elif obj.approval_268a_status > obj.APPROVAL_APPROVED:
+                    elif obj.approval_268a_status > obj.APPROVAL_ENDORSED:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
+
+                if not_acknowledged:
+                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             elif report=='epfp_fireload':
                 not_acknowledged = []
@@ -627,20 +633,21 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_B', acknow_date=now)
                             obj.approval_268b_status = obj.APPROVAL_APPROVED
                             obj.approval_268b_status_modified = now
+                            obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
-                        if not_acknowledged:
-                            message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
-                            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-                    elif obj.approval_268b_status > obj.APPROVAL_APPROVED:
+                    elif obj.approval_268b_status > obj.APPROVAL_ENDORSED:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
+
+                if not_acknowledged:
+                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "Delete Approve":
             if self.sdo_group not in request.user.groups.all():
@@ -649,24 +656,29 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
             count = 0
             for obj in objects:
-                if obj.approval_status == obj.APPROVAL_APPROVED:
-                    acknow_type = 'SDO_A' if report=='epfp_planned' else 'SDO_B'
-                    ack = Acknowledgement.objects.filter(burn=obj, acknow_type=acknow_type)
-                    if ack:
-                        ack.user = None
-                        ack.acknow_type = None
-                        ack.acknow_date = None
-                        ack.save()
-                        if report=='epfp_planned':
+                if report=='epfp_planned':
+                    if obj.approval_268a_status == obj.APPROVAL_APPROVED:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_A')
+                        if ack:
+                            ack[0].delete()
                             obj.approval_268a_status = obj.APPROVAL_ENDORSED
                             obj.approval_268a_status_modified = now
-                        else:
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                else:
+                    if obj.approval_268b_status == obj.APPROVAL_APPROVED:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_B')
+                        if ack:
+                            ack[0].delete()
                             obj.approval_268b_status = obj.APPROVAL_ENDORSED
                             obj.approval_268b_status_modified = now
-                        obj.save()
-                        count += 1
-                        message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
-                        msg_type = "success"
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+
             if count == 0:
                 message = "No 'Approved' records were removed"
                 msg_type = "info"
@@ -678,24 +690,29 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
             count = 0
             for obj in objects:
-                if obj.approval_status == obj.APPROVAL_ENDORSED:
-                    acknow_type = 'SRM_A' if report='epfp_planned' else 'SRM_B'
-                    ack = Acknowledgement.objects.filter(burn=obj, acknow_type=acknow_type)
-                    if ack:
-                        ack.user = None
-                        ack.acknow_type = None
-                        ack.acknow_date = None
-                        ack.save()
-                        if report=='epfp_planned':
+                if report=='epfp_planned':
+                    if obj.approval_268a_status == obj.APPROVAL_ENDORSED:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_A')
+                        if ack:
+                            ack[0].delete()
                             obj.approval_268a_status = obj.APPROVAL_SUBMITTED
                             obj.approval_268a_status_modified = now
-                        else:
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                else:
+                    if obj.approval_268b_status == obj.APPROVAL_ENDORSED:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B')
+                        if ack:
+                            ack[0].delete()
                             obj.approval_268b_status = obj.APPROVAL_SUBMITTED
                             obj.approval_268b_status_modified = now
-                        obj.save()
-                        count += 1
-                        message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
-                        msg_type = "success"
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+
             if count == 0:
                 message = "No 'Endorsed' records were removed"
                 msg_type = "info"
@@ -703,29 +720,40 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         elif action == "Delete Submit":
             count = 0
             for obj in objects:
-                if obj.approval_status == obj.APPROVAL_SUBMITTED:
-                    acknow_type = 'USER_A' if report='epfp_planned' else 'USER_B'
-                    ack = Acknowledgement.objects.filter(burn=obj, acknow_type=acknow_type)
-                    if ack:
-                        ack.user = None
-                        ack.acknow_type = None
-                        ack.acknow_date = None
-                        ack.save()
-                        if report=='epfp_planned':
+                if report=='epfp_planned':
+                    if obj.approval_268a_status == obj.APPROVAL_SUBMITTED:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A')
+                        if ack:
+                            ack[0].delete()
                             obj.approval_268a_status = obj.APPROVAL_DRAFT
                             obj.approval_268a_status_modified = now
-                        else:
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                else:
+                    if obj.approval_268b_status == obj.APPROVAL_SUBMITTED:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B')
+                        if ack:
+                            ack[0].delete()
                             obj.approval_268b_status = obj.APPROVAL_DRAFT
                             obj.approval_268b_status_modified = now
-                        obj.save()
-                        count += 1
-                        message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
-                        msg_type = "success"
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+
             if count == 0:
                 message = "No records 'Submitted' status removed"
                 msg_type = "info"
 
         elif action == "Delete Record":
+            for obj in objects:
+                if obj.approval_268a_status == PrescribedBurn.APPROVAL_APPROVED or obj.approval_268b_status == PrescribedBurn.APPROVAL_APPROVED:
+                    if self.sdo_group not in request.user.groups.all():
+                        self.message_user(request, "Only a SDO role can delete an APPROVED burn")
+                        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
             count = objects.count()
             objects.delete()
             if objects.count() == 0:
@@ -747,6 +775,20 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 count = self.copy_planned_records(dt, objects)
                 message = "{} record{} copied".format(count, "s" if count > 1 else "")
                 msg_type = "info"
+
+        elif action == "Set Active":
+            count = 0
+            for obj in objects:
+                obj.status = PrescribedBurn.BURN_ACTIVE
+                obj.save()
+                count += 1
+                message = "Successfully set {} record{} ACTIVE".format(count, "s" if count>1 else "")
+                msg_type = "success"
+
+            if count == 0:
+                message = "No records were modified"
+                msg_type = "info"
+
 
         return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
 
@@ -807,9 +849,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             form = FireLoadFilterForm(request.GET)
             #form = FireLoadForm(request.GET)
         elif report=='epfp_summary':
-            # form C - only burns (Active and Planned)
+            # Form 268c contains:
+            #   1. SDO Approved Plans (Form A)
+            #   2. SDO Approved and Active (Form B)
+            #   3. Only Burns (No Fires)
             title = "Summary of Current and Planned Fires"
-            qs_burn = qs_burn.filter(Q(status=PrescribedBurn.BURN_ACTIVE) | Q(approval_status=PrescribedBurn.APPROVAL_APPROVED), Q(date=dt)).exclude(prescription__isnull=True).exclude(status=2)
+            qs_burn = qs_burn.filter((Q(status=PrescribedBurn.BURN_ACTIVE) & Q(approval_268b_status=PrescribedBurn.APPROVAL_APPROVED)) |
+                                      Q(approval_268a_status=PrescribedBurn.APPROVAL_APPROVED),
+                                      date=dt).exclude(prescription__isnull=True).exclude(status=PrescribedBurn.BURN_INACTIVE)
             form = PrescribedBurnFilterForm(request.GET)
 
         fire_type = 0
@@ -839,10 +886,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             approval_status = map(int, request.REQUEST.getlist('approval_status'))
             if approval_status:
                 if report=='epfp_planned':
-                    qs_burn = qs_burn.filter(approval_status__in=approval_status)
+                    qs_burn = qs_burn.filter(approval_268a_status__in=approval_status)
                 else:
-                    qs_burn = qs_burn.filter(approval_status__in=approval_status)
-                    #qs_fire = qs_fire.filter(approval_status=approval_status)
+                    qs_burn = qs_burn.filter(approval_268b_status__in=approval_status)
 
 #        def qs_fireload(qs_burn, qs_fire, fire_type):
 #            if fire_type == 1:
@@ -867,65 +913,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'active_burns_non_statewide': qs_active.filter(region__in=[6, 7, 8]).exclude(prescription__isnull=True).count(),
             'active_fires_statewide': qs_active.exclude(fire_id__isnull=True).count(),
             'active_fires_non_statewide': qs_active.filter(region__in=[6, 7, 8]).exclude(fire_id__isnull=True).count(),
-#            'active_fires_statewide': Fire.objects.filter(active=True, date=dt).count(),
-#            'active_fires_non_statewide': Fire.objects.filter(active=True, date=dt, region__in=[6, 7, 8]).count(),
-
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
-
-    def _copy_ongoing_records(self, dt):
-        """
-        Copy yesterday's 'active' records to today
-
-        268b - Automatically copy all records from yesterday that were Active when 268a Region Endorsement occurs,
-        except for Active and Area Burnt Yesterday
-        """
-
-        today = date.today()
-        tomorrow = today + timedelta(days=1)
-        if not (dt == today or dt == tomorrow):
-            # Can only copy records for today, or tomorrow
-            return
-
-        # copy permitted only after given time, and only for today to tomorrow
-#        if dt != today:
-#            message = 'WARNING: Cannot copy for date {}. Can only copy planned burn records from yesterday {}, to today {}'.format(dt, yesterday, today)
-#            logger.warn(message)
-#            return
-
-        #today = date.today()
-        yesterday = dt - timedelta(days=1)
-        yest_objects = [i.prescription.burn_id for i in PrescribedBurn.objects.filter(
-            date=yesterday, status=PrescribedBurn.BURN_ACTIVE, approval_status__in=[PrescribedBurn.APPROVAL_ENDORSED, PrescribedBurn.APPROVAL_APPROVED])]
-        copied_objects = PrescribedBurn.objects.filter(date=dt, prescription__burn_id__in=yest_objects).exclude(form_name=PrescribedBurn.FORM_268A)
-        missing = list(set(yest_objects).difference(copied_objects))
-
-        #import ipdb; ipdb.set_trace()
-        now = timezone.now()
-        admin = User.objects.get(username='admin')
-        count = 0
-        for i in PrescribedBurn.objects.filter(prescription__burn_id__in=missing, date=yesterday):
-            try:
-                i.pk = None
-                i.date = dt
-                i.area = None
-                i.status = None
-                i.approval_status = PrescribedBurn.APPROVAL_SUBMITTED
-                i.approval_status_modified = now
-                i.endorsed_by = None
-                i.endorsed_date = None
-                i.approved_by = None
-                i.approved_date = None
-                i.submitted_by = admin
-                i.submitted_date = now
-                i.rolled = True
-                i.save()
-                count += 1
-            except:
-                # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
-                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, dt))
-                pass
 
 
     #def copy_ongoing_records(self, request, extra_context=None):
@@ -933,7 +923,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         """
         Copy today's 'active' records to tomorrow
 
-        268b - Automatically copy all records from yesterday that were Active when 268a Region Endorsement occurs,
+        268b - (Automatically) copy all records from yesterday that were Active when 268a Region Endorsement occurs,
         except for Active and Area Burnt Yesterday
         """
 
@@ -951,35 +941,37 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         #today = date.today()
         tomorrow = dt + timedelta(days=1) # relative to dt
-        objects = [i.prescription.burn_id for i in PrescribedBurn.objects.filter(
-            date=dt, status=PrescribedBurn.BURN_ACTIVE, approval_status__in=[PrescribedBurn.APPROVAL_ENDORSED, PrescribedBurn.APPROVAL_APPROVED])]
-        copied_objects = PrescribedBurn.objects.filter(date=tomorrow, prescription__burn_id__in=objects).exclude(form_name=PrescribedBurn.FORM_268B)
-        missing = list(set(objects).difference(copied_objects))
+        #objects = [i.prescription.burn_id for i in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)
+#        ids = [i.id for i in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)
+#            # date=dt, status=PrescribedBurn.BURN_ACTIVE, approval_268a_status__in=[PrescribedBurn.APPROVAL_ENDORSED, PrescribedBurn.APPROVAL_APPROVED])]
+#        copied_objects = PrescribedBurn.objects.filter(date=tomorrow, prescription__burn_id__in=objects).exclude(form_name=PrescribedBurn.FORM_268B)
+#        missing = list(set(objects).difference(copied_objects))
 
+        objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)]
         now = timezone.now()
         admin = User.objects.get(username='admin')
         count = 0
-        for i in PrescribedBurn.objects.filter(prescription__burn_id__in=missing, date=dt):
+        #for i in PrescribedBurn.objects.filter(prescription__burn_id__in=missing, date=dt):
+        for obj in objects:
+            if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                continue
             try:
-                i.pk = None
-                i.date = tomorrow
-                i.area = None
-                i.status = None
-                i.approval_status = PrescribedBurn.APPROVAL_SUBMITTED
-                i.approval_status_modified = now
-                i.endorsed_by = None
-                i.endorsed_date = None
-                i.approved_by = None
-                i.approved_date = None
-                i.submitted_by = admin
-                i.submitted_date = now
-                i.rolled = True
-                i.save()
+                obj.pk = None
+                obj.date = tomorrow
+                obj.area = None
+                obj.status = None
+                obj.approval_268a_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268a_status_modified = now
+                obj.approval_268b_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268b_status_modified = now
+                obj.acknowledgements.all().delete()
+                obj.rolled = True
+                obj.save()
                 count += 1
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
-                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, tomorrow))
-                pass
+                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
 
     def copy_planned_records(self, dt, objects):
         """
@@ -1002,14 +994,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 i.date = tomorrow
                 i.area = None
                 i.status = 1
-                i.approval_status = PrescribedBurn.APPROVAL_SUBMITTED
-                i.approval_status_modified = now
-                i.endorsed_by = None
-                i.endorsed_date = None
-                i.approved_by = None
-                i.approved_date = None
-                i.submitted_by = admin
-                i.submitted_date = now
+                i.approval_268a_status = PrescribedBurn.APPROVAL_DRAFT
+                i.approval_268a_status_modified = now
+                i.approval_268b_status = PrescribedBurn.APPROVAL_DRAFT
+                i.approval_268b_status_modified = now
                 i.rolled = True
                 i.save()
                 count += 1
@@ -1029,7 +1017,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(form_name=PrescribedBurn.FORM_268A).exclude(status=PrescribedBurn.BURN_COMPLETED)
         unset_objects = list(set(rolled_objects.filter(area__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
-        import ipdb; ipdb.set_trace()
 
         return unset_objects
 
@@ -1066,8 +1053,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             location = pb.location
             est_start = pb.est_start
             conditions = pb.conditions
-            approval_status = pb.get_approval_status_display()
-            approval_status_modified = pb.approval_status_modified.strftime('%Y-%m-%d %H:%M') if pb.approval_status_modified else ""
+            approval_268a_status = pb.get_approval_268a_status_display()
+            approval_268a_status_modified = pb.approval_268a_status_modified.strftime('%Y-%m-%d %H:%M') if pb.approval_268a_status_modified else ""
+            approval_268b_status = pb.get_approval_268b_status_display()
+            approval_268b_status_modified = pb.approval_268b_status_modified.strftime('%Y-%m-%d %H:%M') if pb.approval_268b_status_modified else ""
             submitted = pb.submitted_by.get_full_name() + " " + pb.submitted_date_str if pb.submitted_by else ""
             endorsed = pb.endorsed_by.get_full_name() + " " + pb.endorsed_date_str if pb.endorsed_by else ""
             approved = pb.approved_by.get_full_name() + " " + pb.approved_date_str if pb.approved_by else ""
@@ -1075,8 +1064,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
             query_list.append([fire_id, name, region, district, fire_type,
                                dt, burn_status, further_ignitions, external_assist,
-                               planned_area, area, tenures, location, est_start,
-                               conditions, approval_status, approval_status_modified,
+                               planned_area, area, tenures, location, est_start, conditions,
+                               approval_268a_status, approval_268a_status_modified,
+                               approval_268b_status, approval_268b_status_modified,
                                submitted, endorsed, approved, rolled])
 
         filename = 'export_daily_burn_program_{0}.csv'.format(report_date.strftime('%d%b%Y'))
@@ -1086,8 +1076,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type",
             "Date", "Burn Status", "Further Ignitions", "External Assist",
-            "Planned Area", "Actual Area", "Tenures", "Location", "Est Start",
-            "Conditions", "Approval Status" , "Approval Status Modified",
+            "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
+            "Approval Status (268a)" , "Approval Status Modified (268a)",
+            "Approval Status (268b)" , "Approval Status Modified (268b)",
             "Submitted", "Endorsed", "Approved", "Rolled"])
 
         for row in query_list:

@@ -39,6 +39,9 @@ class PrescribedBurnForm(forms.ModelForm):
         self.fields['est_start'].widget.attrs.update({'value': now.strftime('%H:%M')})
         self.initial['status'] = 1
 
+        status = self.fields['status']
+        status.choices = status.choices[1:]
+
     def reviewed_prescriptions(self):
         """
         Filters prescriptions that have been reviewed by both FMSB and DRFMS
@@ -52,7 +55,7 @@ class PrescribedBurnForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        exclude = ('fire_id', 'fire_name', 'region', 'district', 'status', 'area', 'approval_status', 'further_ignitions', 'form_name',)
+        exclude = ('fire_id', 'fire_name', 'region', 'district', 'area', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
 
 
 class PrescribedBurnEditForm(forms.ModelForm):
@@ -64,6 +67,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
         #self.fields['prescription'].queryset = prescriptions.filter(region=1)
         self.fields['prescription'].queryset = prescriptions.all()
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
+        self.fields['status'].label = 'Burn Status'
 
         now = datetime.now()
         today = now.date()
@@ -71,9 +75,13 @@ class PrescribedBurnEditForm(forms.ModelForm):
         time_now = now.time()
         date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
 
+        status = self.fields['status']
+        status.choices = status.choices[1:]
+
+
     class Meta:
         model = PrescribedBurn
-        exclude = ('fire_id', 'fire_name', 'region', 'district', 'status', 'area', 'approval_status', 'further_ignitions', 'form_name',)
+        exclude = ('fire_id', 'fire_name', 'region', 'district', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
 
 class FireForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
