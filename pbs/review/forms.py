@@ -22,8 +22,8 @@ class PrescribedBurnForm(forms.ModelForm):
 
         prescriptions = self.fields['prescription'].queryset
         #self.fields['prescription'].queryset = prescriptions.filter(region=1)
-        self.fields['prescription'].queryset = prescriptions.all()
-        #self.fields['prescription'].queryset = self.reviewed_prescriptions()
+        #self.fields['prescription'].queryset = prescriptions.all()
+        self.fields['prescription'].queryset = prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS'])
         self.fields['planned_area'].required=True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
@@ -42,17 +42,6 @@ class PrescribedBurnForm(forms.ModelForm):
 #        status = self.fields['status']
 #        status.choices = status.choices[1:]
 
-    def reviewed_prescriptions(self):
-        """
-        Filters prescriptions that have been reviewed by both FMSB and DRFMS
-        """
-        reviewed = []
-        prescriptions = self.fields['prescription'].queryset
-        for p in prescriptions: #Prescription.objects.all():
-            if all(x in [i.review_type for i in p.burnstate.all()] for x in ['FMSB','DRFMS']):
-                reviewed.append(p.id)
-        return prescriptions.filter(id__in=reviewed)
-
     class Meta:
         model = PrescribedBurn
         exclude = ('fire_id', 'fire_name', 'region', 'district', 'status', 'area', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
@@ -70,8 +59,8 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
         prescriptions = self.fields['prescription'].queryset
         #self.fields['prescription'].queryset = prescriptions.filter(region=1)
-        self.fields['prescription'].queryset = prescriptions.all()
-        #self.fields['prescription'].queryset = self.reviewed_prescriptions()
+        #self.fields['prescription'].queryset = prescriptions.all()
+        self.fields['prescription'].queryset = prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS'])
         #self.fields['planned_area'].required=True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
@@ -94,12 +83,8 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         """
         Filters prescriptions that have been reviewed by both FMSB and DRFMS
         """
-        reviewed = []
         prescriptions = self.fields['prescription'].queryset
-        for p in prescriptions: #Prescription.objects.all():
-            if all(x in [i.review_type for i in p.burnstate.all()] for x in ['FMSB','DRFMS']):
-                reviewed.append(p.id)
-        return prescriptions.filter(id__in=reviewed)
+        return prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS'])
 
     class Meta:
         model = PrescribedBurn
