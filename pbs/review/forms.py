@@ -126,10 +126,10 @@ class PrescribedBurnEditForm(forms.ModelForm):
         status = self.fields['status']
         status.choices = status.choices[1:]
 
-
     class Meta:
         model = PrescribedBurn
         exclude = ('fire_id', 'fire_name', 'region', 'district', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
+
 
 class FireForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -157,6 +157,7 @@ class FireForm(forms.ModelForm):
         #exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
         fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
 
+
 class FireEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FireEditForm, self).__init__(*args, **kwargs)
@@ -169,6 +170,7 @@ class FireEditForm(forms.ModelForm):
 #        exclude = ('prescription', 'status', 'further_ignitions', 'planned_area', 'est_start', 'approval_status', 'form_name',)
         fields = ('region', 'district', 'fire_name', 'fire_id', 'date', 'status', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
 
+
 class PrescribedBurnFilterForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
     district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
@@ -179,6 +181,7 @@ class FireLoadFilterForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
     district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
     fire_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Fires')])
+    approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
 
 #class FireForm(forms.ModelForm):
 #    class Meta:

@@ -90,10 +90,11 @@ class PrescribedBurn(Audit):
         (BURN_COMPLETED, 'Completed')
     )
 
-    APPROVAL_DRAFT = 1
-    APPROVAL_SUBMITTED = 2
-    APPROVAL_ENDORSED = 3
-    APPROVAL_APPROVED = 4
+    APPROVAL_DRAFT = 'DRAFT'
+    APPROVAL_SUBMITTED = 'USER'
+    APPROVAL_ENDORSED = 'SRM'
+    APPROVAL_APPROVED = 'SDO'
+
     APPROVAL_CHOICES = (
         (APPROVAL_DRAFT, 'Draft'),
         (APPROVAL_SUBMITTED, 'Submitted'),
@@ -149,17 +150,17 @@ class PrescribedBurn(Audit):
 #    approved_by = models.ForeignKey(User, verbose_name="Approving Officer", editable=False, blank=True, null=True, related_name='approved_by')
 #    approved_date = models.DateTimeField(editable=False, null=True)
 
-    approval_268a_status = models.PositiveSmallIntegerField(
-        verbose_name="Approval Status", choices=APPROVAL_CHOICES,
-        default=APPROVAL_DRAFT)
-    approval_268a_status_modified = models.DateTimeField(
-        verbose_name="Approval Status Modified", editable=False, null=True)
-
-    approval_268b_status = models.PositiveSmallIntegerField(
-        verbose_name="Approval Status", choices=APPROVAL_CHOICES,
-        default=APPROVAL_DRAFT)
-    approval_268b_status_modified = models.DateTimeField(
-        verbose_name="Approval Status Modified", editable=False, null=True)
+#    approval_268a_status = models.PositiveSmallIntegerField(
+#        verbose_name="Approval Status", choices=APPROVAL_CHOICES,
+#        default=APPROVAL_DRAFT)
+#    approval_268a_status_modified = models.DateTimeField(
+#        verbose_name="Approval Status Modified", editable=False, null=True)
+#
+#    approval_268b_status = models.PositiveSmallIntegerField(
+#        verbose_name="Approval Status", choices=APPROVAL_CHOICES,
+#        default=APPROVAL_DRAFT)
+#    approval_268b_status_modified = models.DateTimeField(
+#        verbose_name="Approval Status Modified", editable=False, null=True)
 
     rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
 
@@ -244,34 +245,43 @@ class PrescribedBurn(Audit):
         ack = self.acknowledgements.filter(acknow_type='SDO_B')
         return ack[0].record if ack else None
 
+    @property
+    def formA_isDraft(self):
+        acks = all(x in [i.acknow_type for i in self.acknowledgements.all()] for x in ['USER_A', 'SRM_A', 'SDO_A'])
+        return True if acks else False
+
+    @property
+    def formB_isDraft(self):
+        acks = all(x in [i.acknow_type for i in self.acknowledgements.all()] for x in ['USER_B', 'SRM_B', 'SDO_B'])
+        return True if acks else False
+
+    @property
+    def formA_user_acknowledged(self):
+        return True if self.user_a_record else False
+
+    @property
+    def formA_srm_acknowledged(self):
+        return True if self.srm_a_record else False
+
+    @property
+    def formA_sdo_acknowledged(self):
+        return True if self.sdo_a_record else False
+
+    @property
+    def formB_user_acknowledged(self):
+        return True if self.user_b_record else False
+
+    @property
+    def formB_srm_acknowledged(self):
+        return True if self.srm_b_record else False
+
+    @property
+    def formB_sdo_acknowledged(self):
+        return True if self.sdo_b_record else False
 
     @property
     def fire_type(self):
         return "Burn" if self.prescription else "Fire"
-
-    @property
-    def submitted(self):
-        return True if self.submitted_by else False
-
-    @property
-    def endorsed(self):
-        return True if self.endorsed_by else False
-
-    @property
-    def approved(self):
-        return True if self.approved_by else False
-
-    @property
-    def submitted_date_str(self):
-        return self.submitted_date.strftime('%Y-%m-%d %H:%M')
-
-    @property
-    def endorsed_date_str(self):
-        return self.endorsed_date.strftime('%Y-%m-%d %H:%M')
-
-    @property
-    def approved_date_str(self):
-        return self.approved_date.strftime('%Y-%m-%d %H:%M')
 
     @property
     def fire_idd(self):

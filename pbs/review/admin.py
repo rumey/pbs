@@ -355,7 +355,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 self.message_user(request, "Only a SDO role can edit this burn (after cut-off hour - {}:00)".format(settings.DAY_ROLLOVER_HOUR))
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-        if obj.approval_268a_status == PrescribedBurn.APPROVAL_APPROVED or obj.approval_268b_status == PrescribedBurn.APPROVAL_APPROVED:
+        if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
             if self.sdo_group not in request.user.groups.all():
                 self.message_user(request, "Only a SDO role can edit an APPROVED burn")
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -399,52 +399,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #return HttpResponse(json.dumps({'errors': form.errors}))
         return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
 
-
-#    def set_acknowledgement(self, report, objects):
-#        if report=='epfp_planned':
-#            ack_status = obj.approval_268a_status
-#            acknow_type='USER_268a'
-#            form = '268a'
-#        elif report=='epfp_fireload':
-#            ack_status = obj.approval_268b_status
-#            acknow_type='USER_268b'
-#            form = '268b'
-#        else:
-#            return None
-#
-#        not_acknowledged = []
-#        already_acknowledged = []
-#        for obj in objects:
-#            if ack_status == obj.APPROVAL_DRAFT:
-#                role = 'USER'
-#            if ack_status == obj.APPROVAL_SUBMITTED:
-#                role = 'SRM'
-#            if ack_status == obj.APPROVAL_ENDORSED:
-#                role = 'SDO'
-#
-#            if ack_status == obj.APPROVAL_DRAFT:
-#                if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
-#                    Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
-#                    obj.approval_268a_status = ack_status + 1 #obj.APPROVAL_SUBMITTED
-#                    obj.approval_268a_status_modified = now
-#                    count += 1
-#                    message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-#                    msg_type = "success"
-#                else:
-#                    not_acknowledged.append(obj.fire_idd)
-#
-#                if not_acknowledged:
-#                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
-#                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-#
-#            elif ack_status > obj.APPROVAL_DRAFT:
-#                not_acknowledged.append(obj.fire_idd)
-#                message = "record already acknowledged {}".format(', '.join(already_acknowledged))
-#                msg_type = "danger"
-#
-
-    #def action_view(self, request, object_id, form_url='', extra_context=None):
-    #def action_view(self, request, *args, **kwargs):
     def action_view(self, request, extra_context=None):
         if request.REQUEST.has_key('report'):
             report = request.REQUEST.get('report', None)
@@ -482,11 +436,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
-                    if obj.approval_268a_status == obj.APPROVAL_DRAFT:
+                    if obj.formA_isDraft:
                         if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
-                            obj.approval_268a_status = obj.APPROVAL_SUBMITTED
-                            obj.approval_268a_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
@@ -494,7 +446,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
-                    elif obj.approval_268a_status > obj.APPROVAL_DRAFT:
+                    elif obj.formA_user_acknowledged():
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
@@ -509,11 +461,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 unset_acknowledged = []
                 for obj in objects:
                     if obj.area and obj.status:
-                        if obj.approval_268b_status == obj.APPROVAL_DRAFT:
+                        if obj.formB_isDraft:
                             if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
                                 Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
-                                obj.approval_268b_status = obj.APPROVAL_SUBMITTED
-                                obj.approval_268b_status_modified = now
                                 obj.save()
                                 count += 1
                                 message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
@@ -521,7 +471,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             else:
                                 not_acknowledged.append(obj.fire_idd)
 
-                        elif obj.approval_268b_status > obj.APPROVAL_DRAFT:
+                        elif obj.formB_user_acknowledged():
                             already_acknowledged.append(obj.fire_idd)
                             message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                             msg_type = "danger"
@@ -555,11 +505,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
-                    if obj.approval_268a_status == obj.APPROVAL_SUBMITTED:
+                    if formA_user_acknowledged:
                         if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_A').count() == 0:
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_A', acknow_date=now)
-                            obj.approval_268a_status = obj.APPROVAL_ENDORSED
-                            obj.approval_268a_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
@@ -567,7 +515,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
-                    elif obj.approval_268a_status > obj.APPROVAL_SUBMITTED:
+                    elif formA_srm_acknowledged:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
@@ -580,11 +528,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
-                    if obj.approval_268b_status == obj.APPROVAL_SUBMITTED:
+                    if formB_user_acknowledged:
                         if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B').count() == 0:
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
-                            obj.approval_268b_status = obj.APPROVAL_ENDORSED
-                            obj.approval_268b_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
@@ -592,7 +538,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
-                    elif obj.approval_268b_status > obj.APPROVAL_SUBMITTED:
+                    elif formB_srm_acknowledged:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
@@ -627,11 +573,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
-                    if obj.approval_268a_status == obj.APPROVAL_ENDORSED:
+                    if formA_srm_acknowledged:
                         if Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_A').count() == 0:
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_A', acknow_date=now)
-                            obj.approval_268a_status = obj.APPROVAL_APPROVED
-                            obj.approval_268a_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
@@ -639,7 +583,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
-                    elif obj.approval_268a_status > obj.APPROVAL_ENDORSED:
+                    elif formA_sdo_acknowledged:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
@@ -652,11 +596,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
-                    if obj.approval_268b_status == obj.APPROVAL_ENDORSED:
+                    if formB_srm_acknowledged:
                         if Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_B').count() == 0:
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_B', acknow_date=now)
-                            obj.approval_268b_status = obj.APPROVAL_APPROVED
-                            obj.approval_268b_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
@@ -664,7 +606,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
-                    elif obj.approval_268b_status > obj.APPROVAL_ENDORSED:
+                    elif formB_sdo_acknowledged:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
@@ -681,23 +623,19 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             count = 0
             for obj in objects:
                 if report=='epfp_planned':
-                    if obj.approval_268a_status == obj.APPROVAL_APPROVED:
+                    if formA_sdo_acknowledged:
                         ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_A')
                         if ack:
                             ack[0].delete()
-                            obj.approval_268a_status = obj.APPROVAL_ENDORSED
-                            obj.approval_268a_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                 else:
-                    if obj.approval_268b_status == obj.APPROVAL_APPROVED:
+                    if formB_sdo_acknowledged:
                         ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_B')
                         if ack:
                             ack[0].delete()
-                            obj.approval_268b_status = obj.APPROVAL_ENDORSED
-                            obj.approval_268b_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
@@ -715,23 +653,19 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             count = 0
             for obj in objects:
                 if report=='epfp_planned':
-                    if obj.approval_268a_status == obj.APPROVAL_ENDORSED:
+                    if formA_srm_acknowledged:
                         ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_A')
                         if ack:
                             ack[0].delete()
-                            obj.approval_268a_status = obj.APPROVAL_SUBMITTED
-                            obj.approval_268a_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                 else:
-                    if obj.approval_268b_status == obj.APPROVAL_ENDORSED:
+                    if formB_srm_acknowledged:
                         ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B')
                         if ack:
                             ack[0].delete()
-                            obj.approval_268b_status = obj.APPROVAL_SUBMITTED
-                            obj.approval_268b_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
@@ -745,23 +679,20 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             count = 0
             for obj in objects:
                 if report=='epfp_planned':
-                    if obj.approval_268a_status == obj.APPROVAL_SUBMITTED:
+                    if formA_user_acknowledged:
                         ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A')
                         if ack:
                             ack[0].delete()
-                            obj.approval_268a_status = obj.APPROVAL_DRAFT
-                            obj.approval_268a_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                 else:
-                    if obj.approval_268b_status == obj.APPROVAL_SUBMITTED:
+                    if formB_user_acknowledged:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A')
                         ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B')
                         if ack:
                             ack[0].delete()
-                            obj.approval_268b_status = obj.APPROVAL_DRAFT
-                            obj.approval_268b_status_modified = now
                             obj.save()
                             count += 1
                             message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
@@ -773,7 +704,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         elif action == "Delete Record":
             for obj in objects:
-                if obj.approval_268a_status == PrescribedBurn.APPROVAL_APPROVED or obj.approval_268b_status == PrescribedBurn.APPROVAL_APPROVED:
+                if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
                     if self.sdo_group not in request.user.groups.all():
                         self.message_user(request, "Only a SDO role can delete an APPROVED burn")
                         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -908,12 +839,22 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         #import ipdb; ipdb.set_trace()
         if request.REQUEST.has_key('approval_status'):
-            approval_status = map(int, request.REQUEST.getlist('approval_status'))
-            if approval_status:
+            approval_status = map(str, request.REQUEST.getlist('approval_status'))
+            if approval_status and len(approval_status)!=4:
                 if report=='epfp_planned':
-                    qs_burn = qs_burn.filter(approval_268a_status__in=approval_status)
-                else:
-                    qs_burn = qs_burn.filter(approval_268b_status__in=approval_status)
+                    if len(approval_status)==1 and approval_status[0]=='DRAFT':
+                        approval_choices = [i[0]+'_A' for i in PrescribedBurn.APPROVAL_CHOICES if i[0]!='DRAFT']
+                        qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268A).exclude(acknowledgements__acknow_type__in=approval_choices).distinct()
+                    else:
+                        approval_choices = [i+'_A' for i in approval_status]
+                        qs_burn = qs_burn.filter(acknowledgements__acknow_type__in=approval_choices, form_name=PrescribedBurn.FORM_268A).distinct()
+                elif report=='epfp_fireload':
+                    if len(approval_status)==1 and approval_status[0]=='DRAFT':
+                        approval_choices = [i[0]+'_B' for i in PrescribedBurn.APPROVAL_CHOICES if i[0]!='DRAFT']
+                        qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268B).exclude(acknowledgements__acknow_type__in=approval_choices).distinct()
+                    else:
+                        approval_choices = [i+'_B' for i in approval_status]
+                        qs_burn = qs_burn.filter(acknowledgements__acknow_type__in=approval_choices, form_name=PrescribedBurn.FORM_268B).distinct()
 
 #        def qs_fireload(qs_burn, qs_fire, fire_type):
 #            if fire_type == 1:
