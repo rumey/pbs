@@ -165,9 +165,8 @@ class PrescribedBurn(Audit):
 
     #def clean_form_name(self):
     def clean(self):
-        #import ipdb; ipdb.set_trace()
         if not self.form_name:
-            if self.prescription:
+            if self.prescription and not self.active:
                 self.form_name = 1
             else:
                 self.form_name = 2
@@ -222,23 +221,28 @@ class PrescribedBurn(Audit):
 
     @property
     def srm_a_record(self):
-        return self.acknowledgements.filter(acknow_type='SRM_A')
+        ack = self.acknowledgements.filter(acknow_type='SRM_A')
+        return ack[0].record if ack else None
 
     @property
     def sdo_a_record(self):
-        return self.acknowledgements.filter(acknow_type='SDO_A')
+        ack = self.acknowledgements.filter(acknow_type='SDO_A')
+        return ack[0].record if ack else None
 
     @property
     def user_b_record(self):
-        return self.acknowledgements.filter(acknow_type='USER_B')
+        ack = self.acknowledgements.filter(acknow_type='USER_B')
+        return ack[0].record if ack else None
 
     @property
     def srm_b_record(self):
-        return self.acknowledgements.filter(acknow_type='SRM_B')
+        ack = self.acknowledgements.filter(acknow_type='SRM_B')
+        return ack[0].record if ack else None
 
     @property
     def sdo_b_record(self):
-        return self.acknowledgements.filter(acknow_type='SDO_B')
+        ack = self.acknowledgements.filter(acknow_type='SDO_B')
+        return ack[0].record if ack else None
 
 
     @property

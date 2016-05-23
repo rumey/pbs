@@ -237,8 +237,8 @@
       <td><div class="text-center">{{ qs.planned_area }}</div></td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
       <td>{% if qs.user_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.user_a_record }}"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.srm_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.endorsed_by.get_full_name }} - {{ qs.endorsed_date_str }}"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.sdo_a_record %}<div class="text-center data-toggle="tooltip" title="{{ qs.approved_by.get_full_name }} - {{ qs.approved_date_str }}""><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.srm_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_a_record  }}"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.sdo_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_a_record  }}"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.has_conditions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       {% comment %}
       <td><a id="submit-plannedburn" href="{% url 'admin:approve_view' qs.id %}" class="btn btn-mini alert-error"><i class="icon-ok"></i></a></td>
@@ -305,6 +305,7 @@
     {% comment %}
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Fire</a>
     {% endcomment %}
+    <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_active_burn"><i class="icon-plus icon-white"></i> Add Burn</a>
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_fire"><i class="icon-plus icon-white"></i> Add Fire</a>
 
     <select id="actions">
@@ -339,7 +340,7 @@
       <th> Active </th>
       <th> Further ignitions req </th>
       <th> Ignition now completed </th>
-      <th> SUBMIT</th>
+      <th> Submit</th>
       <th> SRM</th>
       <th> SDO </th>
     </tr>
