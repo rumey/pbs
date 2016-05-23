@@ -5,7 +5,9 @@ from django.contrib.auth.models import Group, User
 from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn, Acknowledgement
-from pbs.review.forms import BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnEditForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm
+from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
+        FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm
+    )
 from pbs.prescription.models import Prescription, Approval, Region
 from datetime import datetime, date, timedelta
 from django.utils import timezone
@@ -178,6 +180,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 return FireEditForm
             if request.REQUEST.get('form')=='add_burn':
                 return PrescribedBurnForm
+            if request.REQUEST.get('form')=='add_active_burn':
+                return PrescribedBurnActiveForm
             if request.REQUEST.get('form')=='edit_burn':
                 return PrescribedBurnEditForm
 #            from django.forms import inlineformset_factory
@@ -232,13 +236,31 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
     def response_post_save_change(self, request, obj):
         """
-        Override the redirect url after successful save of an existing
-        ContingencyAction.
+        Override the redirect url after successful save of an existing PrescribedBurn
         """
-        #url = reverse('admin:fireload_view')
-        url = reverse('admin:daily_burn_program')
+        #import ipdb; ipdb.set_trace()
+        if 'edit_fire' in request.META.get('HTTP_REFERER'):
+            url = reverse('admin:daily_burn_program') + '?report=epfp_fireload&date={}'.format(request.REQUEST['date'])
+        elif 'edit_burn' in request.META.get('HTTP_REFERER'):
+            url = reverse('admin:daily_burn_program') + '?report=epfp_planned&date={}'.format(request.REQUEST['date'])
+        else:
+            url = reverse('admin:daily_burn_program')
+
         return HttpResponseRedirect(url)
 
+    def response_post_save_add(self, request, obj):
+        """
+        Override the redirect url after successful save of a new PrescribedBurn
+        """
+        if request.REQUEST.has_key('form'):
+            if 'add_fire' in request.REQUEST['form'] or 'add_active_burn' in request.REQUEST['form']:
+                url = reverse('admin:daily_burn_program') + '?report=epfp_fireload&date={}'.format(request.REQUEST['date'])
+            if 'add_burn' in request.REQUEST['form']:
+                url = reverse('admin:daily_burn_program') + '?report=epfp_planned&date={}'.format(request.REQUEST['date'])
+        else:
+            url = reverse('admin:daily_burn_program')
+
+        return HttpResponseRedirect(url)
 
     def get_urls(self):
         """
@@ -345,6 +367,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return super(PrescribedBurnAdmin, self).change_view(
             request, object_id, extra_context=context)
 
+#        url = reverse('admin:epfp_review_summary')
+#        return HttpResponseRedirect(url)
 
 
     def prescription_view(self, request, extra_context=None):
@@ -851,12 +875,13 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         elif report=='epfp_summary':
             # Form 268c contains:
             #   1. SDO Approved Plans (Form A)
-            #   2. SDO Approved and Active (Form B)
+            #   2. SDO Approved Fireload (Form B)
             #   3. Only Burns (No Fires)
             title = "Summary of Current and Planned Fires"
-            qs_burn = qs_burn.filter((Q(status=PrescribedBurn.BURN_ACTIVE) & Q(approval_268b_status=PrescribedBurn.APPROVAL_APPROVED)) |
-                                      Q(approval_268a_status=PrescribedBurn.APPROVAL_APPROVED),
-                                      date=dt).exclude(prescription__isnull=True).exclude(status=PrescribedBurn.BURN_INACTIVE)
+            qs_burn = qs_burn.filter(acknowledgements__acknow_type__in=['SDO_A', 'SDO_B'], date=dt).exclude(prescription__isnull=True)
+#            qs_burn = qs_burn.filter((Q(status=PrescribedBurn.BURN_ACTIVE) & Q(approval_268b_status=PrescribedBurn.APPROVAL_APPROVED)) |
+#                                      Q(approval_268a_status=PrescribedBurn.APPROVAL_APPROVED),
+#                                      date=dt).exclude(prescription__isnull=True).exclude(status=PrescribedBurn.BURN_INACTIVE)
             form = PrescribedBurnFilterForm(request.GET)
 
         fire_type = 0

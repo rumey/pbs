@@ -39,6 +39,54 @@ class PrescribedBurnForm(forms.ModelForm):
         self.fields['est_start'].widget.attrs.update({'value': now.strftime('%H:%M')})
         self.initial['status'] = 1
 
+#        status = self.fields['status']
+#        status.choices = status.choices[1:]
+
+    def reviewed_prescriptions(self):
+        """
+        Filters prescriptions that have been reviewed by both FMSB and DRFMS
+        """
+        reviewed = []
+        prescriptions = self.fields['prescription'].queryset
+        for p in prescriptions: #Prescription.objects.all():
+            if all(x in [i.review_type for i in p.burnstate.all()] for x in ['FMSB','DRFMS']):
+                reviewed.append(p.id)
+        return prescriptions.filter(id__in=reviewed)
+
+    class Meta:
+        model = PrescribedBurn
+        exclude = ('fire_id', 'fire_name', 'region', 'district', 'status', 'area', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
+
+
+class PrescribedBurnActiveForm(forms.ModelForm):
+    #region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
+    #district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        super(PrescribedBurnActiveForm, self).__init__(*args, **kwargs)
+        if kwargs.has_key('initial') and kwargs['initial'].has_key('user'):
+            self._user = kwargs['initial']['user']
+            self.fields['user'] = kwargs['initial']['user']
+
+        prescriptions = self.fields['prescription'].queryset
+        #self.fields['prescription'].queryset = prescriptions.filter(region=1)
+        self.fields['prescription'].queryset = prescriptions.all()
+        #self.fields['prescription'].queryset = self.reviewed_prescriptions()
+        #self.fields['planned_area'].required=True
+        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
+
+        now = datetime.now()
+        today = now.date()
+        tomorrow = today + timedelta(days=1)
+        time_now = now.time()
+        date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
+        #self.fields['date'].widget = forms.HiddenInput()
+        #self.fields['date'].widget.attrs['readonly'] = True
+        #self.fields['date'].widget.attrs['disabled'] = True
+        self.fields['date'].widget.attrs.update({'value': date_str})
+        #self.fields['est_start'].widget.attrs.update({'value': now.strftime('%H:%M')})
+        self.initial['status'] = 1
+
         status = self.fields['status']
         status.choices = status.choices[1:]
 
@@ -55,7 +103,7 @@ class PrescribedBurnForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        exclude = ('fire_id', 'fire_name', 'region', 'district', 'area', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
+        exclude = ('fire_id', 'fire_name', 'region', 'district', 'planned_area', 'est_start', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
 
 
 class PrescribedBurnEditForm(forms.ModelForm):
