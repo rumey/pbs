@@ -6,7 +6,7 @@ from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn, Acknowledgement
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
-        FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm
+        FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm
     )
 from pbs.prescription.models import Prescription, Approval, Region
 from datetime import datetime, date, timedelta
@@ -193,6 +193,28 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #        else:
 #            return PrescribedBurnForm
 
+    def csv_view(self, request):
+        if request.method == "POST":
+            import ipdb; ipdb.set_trace()
+            form = CsvForm(request.POST)
+            if form.is_valid():
+                toDate = form.data['toDate']
+                fromDate = form.data['fromDate']
+                self.export_to_csv(request)
+        else:
+            #form = PrescribedBurnForm()
+            form = CsvForm()
+
+        context = {
+            'form': form,
+        }
+
+        csv_template = 'admin/review/prescribedburn/csv_form.html'
+        #import ipdb; ipdb.set_trace()
+        return TemplateResponse(request, csv_template,
+                                context, current_app=self.admin_site.name)
+
+
     def addfire_view(self, request):
         """
         A custom view to display section A1 of an ePFP.
@@ -312,6 +334,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 wrap(self.pdflatex),
                 name='create_dailyburns_pdf'),
 
+            url(r'^csv',
+                wrap(self.csv_view),
+                name='csv_view'),
+
         )
         return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
 
@@ -334,7 +360,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #            'current': prescription
 #        }
 #        context.update(extra_context or {})
-        #import ipdb; ipdb.set_trace()
         obj = self.get_object(request, unquote(object_id))
         now = datetime.now()
         today = now.date()
@@ -988,23 +1013,27 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         Verify Copied records have 'Active/Inactive' and 'Area' fields set,
         return list of objects that are unset
         """
-
         rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(form_name=PrescribedBurn.FORM_268A).exclude(status=PrescribedBurn.BURN_COMPLETED)
         unset_objects = list(set(rolled_objects.filter(area__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
-
         return unset_objects
 
     def export_to_csv(self, request, extra_context=None):
-
-        if request.GET.has_key('date'):
+        if request.GET.has_key('toDate') and request.GET.has_key('fromDate'):
+            fromDate = datetime.strptime(request.GET.get('fromDate'), '%Y-%m-%d').date()
+            toDate = datetime.strptime(request.GET.get('toDate'), '%Y-%m-%d').date()
+            burns = PrescribedBurn.objects.filter(date__range=[fromDate, toDate])
+            filename = 'export_daily_burn_program_{0}-{1}.csv'.format(fromDate.strftime('%d%b%Y'), toDate.strftime('%d%b%Y'))
+        elif request.GET.has_key('date'):
             report_date = datetime.strptime(request.GET.get('date'), '%Y-%m-%d').date()
+            burns = PrescribedBurn.objects.filter(date=report_date)
+            filename = 'export_daily_burn_program_{0}.csv'.format(report_date.strftime('%d%b%Y'))
         else:
             raise Http404('Could not get Date')
 
         query_list = []
         id_list = []
 
-        for pb in PrescribedBurn.objects.filter(date=report_date):
+        for pb in burns:
             if pb.prescription:
                 fire_id = pb.prescription.burn_id
                 name = pb.prescription.name
@@ -1043,9 +1072,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                                user_acknow_formB, srm_acknow_formB, sdo_acknow_formB,
                                rolled])
 
-        filename = 'export_daily_burn_program_{0}.csv'.format(report_date.strftime('%d%b%Y'))
         response = HttpResponse(content_type="text/csv")
+        #response = HttpResponseRedirect(content_type="text/csv", redirect_to=reverse('admin:daily_burn_program'))
         response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
+
         writer = unicodecsv.writer(response, quoting=unicodecsv.QUOTE_ALL)
 
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type",
