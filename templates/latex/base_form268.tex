@@ -78,6 +78,7 @@
   {% block footer %}
   {% if headers == True %}
   \fancyfoot[L]{ \leftmark\newline\textbf Custodian: Principal Fire Operations Officer}
+  \fancyfoot[R]{Page \thepage\ of \pageref{LastPage}}
   {% endif %}
   {% endblock %}
 }

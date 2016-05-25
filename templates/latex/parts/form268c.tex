@@ -1,15 +1,86 @@
-\part{268c - Approved Burns}
-  \fancyhead[R] {
-    {\bfseries FIRE268c} \\
-    {\bfseries Fire Management Services Branch} \\
+\fancyhead[R] {
+    {\bfseries FIRE268c} \break
+    {\bfseries Fire Management Services Branch} \break
     \textsc{\Small
-    Technology Park, Western Precinct \\
-    17 Dick Perry Ave \\
-    Kensington WA 6151 \\
-    Phone: (08) 9219 9108 Fax: (08) 9367 9913 \\
+    Technology Park, Western Precinct \break
+    17 Dick Perry Ave \break
+    Kensington WA 6151 \break
+    Phone: (08) 9219 9108 Fax: (08) 9367 9913 \break
     }
   }
 
 \fancyfoot[L]{ \leftmark\newline\textbf Custodian: Principal Fire Operations Officer}
-\subsubsection{Approved Burns}
+\noindent Sent by: {{ user }}\hfill Date: {{date}} \\
+\noindent To: Office of Bushfire Risk Management (OBRM) [obrm@dfes.wa.gov.au] \\
+\noindent From: State Duty Officer (SDO), Department of Parks and Wildlife & \hfill Region: {{region}}
+\subsection{\hfil SUMMARY \hfil}
+
+\vspace{5mm}
+\begin{table}[h]
+\begin{tabular}{cc}
+    \begin{minipage}{.4\linewidth}
+        \begin{tabular} { | l | c | c | }
+        \hline
+        & Active Burns & Active Fires \\
+        \hline
+        \textbf{ACTIVE BURNS AND FIRES STATEWIDE} & {{ active_records.active_burns_statewide }} & {{ active_records.active_fires_statewide  }} \\
+        \hline
+        \textbf{ACTIVE BURNS AND FIRES - SOUTH-WEST BUSHFIRE RISK ZONE} & {{ active_records.active_burns_non_statewide }} & {{ active_records.active_fires_non_statewide  }} \\
+        \hline
+        \end{tabular}
+    \end{minipage}
+
+\end{tabular}
+\end{table}
+
+\vspace{5mm}
+The Following burns, which have been approved for ignition today, have been planned in accordance with OBRM requirements, and will be implemented in accordance with the burn plan and any additional conditions specified by me in the ignition approval.
+
+\footnotesize
+\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X | }
+\hline
+& & & & \multicolumn{2}{ X |}{\textbf{Area (ha)}} & \\
+\cline{5-6}
+\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \textbf{Planned} & \textbf{Achieved} & \bfseries\makecell[c]{Est Start \\ WST}\\
+\hline
+\endhead
+{% for pb in qs_planned_burns %}
+    \textbf{ {{ pb|texify|safe }}} & 
+    {{ pb.name|texify|safe }} & 
+    {{ pb.prescription.location_text|texify|safe }} & 
+    {{ pb.prescription.purposes_list|texify|safe }} & 
+    {{ pb.planned_area|texify|safe }} & 
+    &
+    {{ pb.est_start }} & 
+\hline
+{% empty %}
+\multicolumn{6}{|X|}{No Burns Planned for Today} \\
+\hline
+{% endfor %}
+
+{% for pb in qs_fireload %}
+    \textbf{ {{ pb|texify|safe }}} & 
+    {{ pb.name|texify|safe }} & 
+    {{ pb.prescription.location_text|texify|safe }} & 
+    {{ pb.prescription.purposes_list|texify|safe }} & 
+    &
+    {{ pb.area|texify|safe }} & 
+    {{ pb.est_start }} & 
+\hline
+{% empty %}
+\multicolumn{6}{|X|}{No Fireload for Today} \\
+\hline
+{% endfor %}
+\end{longtabu}
+
+\subsubsection{Acknowledged (for State Duty Officer)}
+\begin{tabu} to \linewidth { | X[0.4] | X | }
+\hline
+\textbf{for Planned} & \textbf{ {{ acknow_records.sdo_A }} } \\
+\hline
+\textbf{for Fire Load} & \textbf{ {{ acknow_records.sdo_B }} } \\
+\hline
+\end{tabu}\\%%[\baselineskip]
+
 \clearpage
+
