@@ -29,12 +29,12 @@
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-05-23",
-    "modified": "2016-05-23",
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
     "prescription": 613,
     "region": 7,
     "district": 14,
-    "date": "2016-05-23",
+    "date": "2016-05-24",
     "status": null,
     "form_name": 1,
     "further_ignitions": "False",
@@ -51,12 +51,12 @@
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-05-23",
-    "modified": "2016-05-23",
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
     "prescription": 614,
     "region": 7,
     "district": 14,
-    "date": "2016-05-23",
+    "date": "2016-05-24",
     "status": null,
     "form_name": 1,
     "further_ignitions": "False",
@@ -73,12 +73,12 @@
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-05-23",
-    "modified": "2016-05-23",
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
     "prescription": 615,
     "region": 7,
     "district": 14,
-    "date": "2016-05-23",
+    "date": "2016-05-24",
     "status": null,
     "form_name": 1,
     "further_ignitions": "False",
@@ -95,12 +95,12 @@
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-05-23",
-    "modified": "2016-05-23",
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
     "prescription": 616,
     "region": 7,
     "district": 14,
-    "date": "2016-05-23",
+    "date": "2016-05-24",
     "status": null,
     "form_name": 1,
     "further_ignitions": "False",
@@ -111,18 +111,41 @@
   }
 },
 {
-  "COMMENT": "FORM B, DUPLICATE BURN_ID, ACTIVE, APPROVED",
+  "COMMENT": "DUPLICATE, PLANNED, ENDORSED",
   "pk": 5,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["wilsonc"],
+    "modifier": ["wilsonc"],
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
+    "prescription": 617,
+    "region": 7,
+    "district": 14,
+    "date": "2016-05-24",
+    "status": null,
+    "form_name": 1,
+    "further_ignitions": "False",
+    "planned_area": 10,
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": "Some ..."
+  }
+},
+
+{
+  "COMMENT": "FORM B, DUPLICATE BURN_ID, ACTIVE, APPROVED",
+  "pk": 6,
   "model": "review.prescribedburn",
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-05-23",
-    "modified": "2016-05-23",
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
     "prescription": 616,
     "region": 7,
     "district": 14,
-    "date": "2016-05-23",
+    "date": "2016-05-24",
     "status": 1,
     "form_name": 2,
     "further_ignitions": "False",
@@ -135,17 +158,17 @@
 },
 {
   "COMMENT": "FORM BACTIVE, APPROVED",
-  "pk": 6,
+  "pk": 7,
   "model": "review.prescribedburn",
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-05-23",
-    "modified": "2016-05-23",
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
     "prescription": 617,
     "region": 7,
     "district": 14,
-    "date": "2016-05-23",
+    "date": "2016-05-24",
     "status": 1,
     "form_name": 2,
     "further_ignitions": "False",
@@ -158,17 +181,17 @@
 },
 {
   "COMMENT": "FORM B, ACTIVE, APPROVED",
-  "pk": 7,
+  "pk": 8,
   "model": "review.prescribedburn",
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-05-23",
-    "modified": "2016-05-23",
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
     "prescription": 618,
     "region": 6,
     "district": 11,
-    "date": "2016-05-23",
+    "date": "2016-05-24",
     "status": 1,
     "form_name": 2,
     "further_ignitions": "False",
@@ -181,17 +204,17 @@
 },
 {
   "COMMENT": "FORM B, ACTIVE, APPROVED",
-  "pk": 8,
+  "pk": 9,
   "model": "review.prescribedburn",
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-05-23",
-    "modified": "2016-05-23",
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
     "prescription": 619,
     "region": 8,
     "district": 16,
-    "date": "2016-05-23",
+    "date": "2016-05-24",
     "status": 1,
     "form_name": 2,
     "further_ignitions": "False",
@@ -204,17 +227,17 @@
 },
 {
   "COMMENT": "FORM B, INACTIVE, APPROVED",
-  "pk": 9,
+  "pk": 10,
   "model": "review.prescribedburn",
   "fields": {
     "creator": ["jawaidm"],
     "modifier": ["jawaidm"],
-    "created": "2016-05-23",
-    "modified": "2016-05-23",
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
     "prescription": 620,
     "region": 8,
     "district": 15,
-    "date": "2016-05-23",
+    "date": "2016-05-24",
     "status": 2,
     "form_name": 2,
     "further_ignitions": "False",
@@ -233,7 +256,7 @@
     "burn": 1,
     "user": ["jawaidm"],
     "acknow_type": "USER_A",
-    "acknow_date": "2016-05-23 18:18:18"
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
 {
@@ -243,7 +266,7 @@
     "burn": 2,
     "user": ["jawaidm"],
     "acknow_type": "USER_A",
-    "acknow_date": "2016-05-23 18:18:18"
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
 {
@@ -253,7 +276,7 @@
     "burn": 2,
     "user": ["jawaidm"],
     "acknow_type": "SRM_A",
-    "acknow_date": "2016-05-23 18:18:18"
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
 {
@@ -263,7 +286,7 @@
     "burn": 3,
     "user": ["jawaidm"],
     "acknow_type": "USER_A",
-    "acknow_date": "2016-05-23 18:18:18"
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
 {
@@ -273,7 +296,7 @@
     "burn": 3,
     "user": ["jawaidm"],
     "acknow_type": "SRM_A",
-    "acknow_date": "2016-05-23 18:18:18"
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
 {
@@ -283,68 +306,99 @@
     "burn": 3,
     "user": ["jawaidm"],
     "acknow_type": "SDO_A",
-    "acknow_date": "2016-05-23 18:18:18"
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
-
 {
   "pk": 7,
   "model": "review.acknowledgement",
   "fields": {
-    "burn": 5,
-    "user": ["jawaidm"],
-    "acknow_type": "USER_B",
-    "acknow_date": "2016-05-23 18:18:18"
+    "burn": 4,
+    "user": ["wilsonc"],
+    "acknow_type": "USER_A",
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
 {
   "pk": 8,
   "model": "review.acknowledgement",
   "fields": {
-    "burn": 6,
-    "user": ["jawaidm"],
-    "acknow_type": "USER_B",
-    "acknow_date": "2016-05-23 18:18:18"
+    "burn": 4,
+    "user": ["wilsonc"],
+    "acknow_type": "SRM_A",
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
 {
   "pk": 9,
   "model": "review.acknowledgement",
   "fields": {
-    "burn": 6,
-    "user": ["jawaidm"],
-    "acknow_type": "SRM_B",
-    "acknow_date": "2016-05-23 18:18:18"
+    "burn": 4,
+    "user": ["wilsonc"],
+    "acknow_type": "SDO_A",
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
+
+
 {
   "pk": 10,
   "model": "review.acknowledgement",
   "fields": {
-    "burn": 7,
+    "burn": 5,
     "user": ["jawaidm"],
     "acknow_type": "USER_B",
-    "acknow_date": "2016-05-23 18:18:18"
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
 {
   "pk": 11,
   "model": "review.acknowledgement",
   "fields": {
-    "burn": 7,
+    "burn": 6,
     "user": ["jawaidm"],
-    "acknow_type": "SRM_B",
-    "acknow_date": "2016-05-23 18:18:18"
+    "acknow_type": "USER_B",
+    "acknow_date": "2016-05-24 18:18:18"
   }
 },
 {
   "pk": 12,
   "model": "review.acknowledgement",
   "fields": {
+    "burn": 6,
+    "user": ["jawaidm"],
+    "acknow_type": "SRM_B",
+    "acknow_date": "2016-05-24 18:18:18"
+  }
+},
+{
+  "pk": 13,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 7,
+    "user": ["jawaidm"],
+    "acknow_type": "USER_B",
+    "acknow_date": "2016-05-24 18:18:18"
+  }
+},
+{
+  "pk": 14,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 7,
+    "user": ["jawaidm"],
+    "acknow_type": "SRM_B",
+    "acknow_date": "2016-05-24 18:18:18"
+  }
+},
+{
+  "pk": 15,
+  "model": "review.acknowledgement",
+  "fields": {
     "burn": 7,
     "user": ["jawaidm"],
     "acknow_type": "SDO_B",
-    "acknow_date": "2016-05-23 18:18:18"
+    "acknow_date": "2016-05-24 18:18:18"
   }
 }
 

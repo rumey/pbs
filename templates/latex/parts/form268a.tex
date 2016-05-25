@@ -1,12 +1,11 @@
-\part{268a - Planned Burns}
   \fancyhead[R] {
-    {\bfseries FIRE268a} \\
-    {\bfseries Fire Management Services Branch} \\
+    {\bfseries FIRE268a} \break
+    {\bfseries Fire Management Services Branch} \break
     \textsc{\Small
-    Technology Park, Western Precinct \\
-    17 Dick Perry Ave \\
-    Kensington WA 6151 \\
-    Phone: (08) 9219 9108 Fax: (08) 9367 9913 \\
+    Technology Park, Western Precinct \break
+    17 Dick Perry Ave \break
+    Kensington WA 6151 \break
+    Phone: (08) 9219 9108 Fax: (08) 9367 9913 \break
     }
   }
 
@@ -20,7 +19,7 @@
         \raggedright
         \begin{tabular} { | l | r | }
         \hline
-        \textbf{No. of Active Burns} & \textbf{10} \\
+        \textbf{No. of Active Burns} & {{ active_records.active_burns_statewide }} \\
         \hline
         \end{tabular}
     \end{minipage} &
@@ -29,7 +28,7 @@
         \raggedleft
         \begin{tabular} { | l | r | }
         \hline
-        \textbf{No. of Active Fires} & \textbf{20} \\
+        \textbf{No. of Active Fires} & {{ active_records.active_fires_statewide }} \\
         \hline
         \end{tabular}
 
@@ -43,13 +42,14 @@ The Following Burns are proposed for ignition today subject to the approval of t
 \begin{longtabu} to \linewidth { | X[0.7] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X | }
 %%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
 \hline
-\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \textbf{Burn Purpose} & \textbf{Area} & \bfseries\makecell[c]{Est Start \\ WST} & \textbf{Invite to Assist}\\
+\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \textbf{Area} & \bfseries\makecell[c]{Est Start \\ WST} & \textbf{Invite to Assist}\\
 \hline
-{% for pb in prescribed_burns %}
-\textbf{ {{ pb|texify|safe }}} & {{ pb.name|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.planned_area }} & {{ pb.est_start }} & {{ pb.external_assist_str }}\\
+\endhead
+{% for pb in qs_planned_burns %}
+\textbf{ {{ pb|texify|safe }}} & {{ pb.name|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.purposes_str|texify|safe }} & {{ pb.planned_area }} & {{ pb.est_start }} & {{ pb.external_assist_str }}\\
 \hline
 {% empty %}
-\multicolumn{6}{|X|}{No Prescribed Burnes Planned for Today} \\
+\multicolumn{6}{|X|}{No Burns Planned for Today} \\
 \hline
 {% endfor %}
 \end{longtabu}
@@ -58,18 +58,18 @@ The Following Burns are proposed for ignition today subject to the approval of t
 \subsubsection{Endorsement}
 \begin{tabu} to \linewidth { | X[0.4] | X | }
 \hline
-\textbf{for Regional Manager} & \textbf{ {{ endorsed_by }} } \\
+\textbf{for Regional Manager} & \textbf{ {{ acknow_records.srm_A }} } \\
 \hline
 \end{tabu}\\%%[\baselineskip]
 
-\begin{table}[h]
 \subsubsection{Part B: SPECIAL CONDITIONS}
 \footnotsize
 \begin{longtabu} to \linewidth { | X[0.4] | X | }
 \hline
+\endhead
 \textbf{Burn ID} & \textbf{Special Condition of Approval as specified by the SDO (in addition to the compliance of the approved burn plan)} \\
 \hline
-{% for pb in prescribed_burns %}
+{% for pb in qs_planned_burns %}
   {% if pb.conditions %}
     \textbf{ {{ pb|texify|safe }}} & {{ pb.conditions|texify|safe }} \\
      \hline
@@ -83,13 +83,12 @@ The Following Burns are proposed for ignition today subject to the approval of t
 & \\
 \hline
 \end{longtabu}
-\end{table}
 
 \subsubsection{Approval}
 The planned burns listed in Part A are approved subject to the conditions stipulated in Part B (where applicable).
 \begin{tabu} to \linewidth { | X[0.4] | X | }
 \hline
-\textbf{for State Duty Officer} & \textbf{ {{ approved_by }} } \\
+\textbf{for State Duty Officer} & \textbf{ {{ acknow_records.sdo_A }} } \\
 \hline
 \end{tabu}\\%%[\baselineskip]
 

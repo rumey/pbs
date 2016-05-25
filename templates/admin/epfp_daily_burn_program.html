@@ -60,13 +60,13 @@
         <tbody>
         <tr>
             <th>Active Burns and Fires - Statewide</th>
-            <td>{{active_burns_statewide}}</td>
-            <td>{{active_fires_statewide}}</td>
+            <td>{{active_records.active_burns_statewide}}</td>
+            <td>{{active_records.active_fires_statewide}}</td>
         </tr>
         <tr>
             <th>Active Burns and Fires - Southwest Bushfire Risk Zone</th>
-            <td>{{active_burns_non_statewide}}</td>
-            <td>{{active_fires_non_statewide}}</td>
+            <td>{{active_records.active_burns_non_statewide}}</td>
+            <td>{{active_records.active_fires_non_statewide}}</td>
         </tr>
         </tbody>
 
@@ -166,7 +166,10 @@
   </a>
 
   <ul class="dropdown-menu" aria-labelledby="dropdown-btn">
+      {% comment %}
     <li><a value="all_form268" href="{% url 'admin:create_dailyburns_pdf' %}?date={{date}}&template=daily_burn_program">All Forms</a></li>
+      {% endcomment %}
+    <li><a value="all_form268" href="javascript: pdf_url('daily_burn_program');">All Forms</a></li>
     <li><a value="form268a" href="javascript: pdf_url('form268a');">Form 268a</a></li>
     <li><a value="form268b" href="javascript: pdf_url('form268b');">Form 268b</a></li>
     <li><a value="form268c" href="javascript: pdf_url('form268c');">Form 268c</a></li>
@@ -375,7 +378,7 @@
       <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% elif qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% endif %}</td>
       <td>{% if qs.had_external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       {% if qs.prescription %}
-        <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
+        <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_active_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       {% else %}
         <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_fire" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       {% endif %}

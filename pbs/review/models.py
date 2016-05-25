@@ -94,7 +94,6 @@ class PrescribedBurn(Audit):
     APPROVAL_SUBMITTED = 'USER'
     APPROVAL_ENDORSED = 'SRM'
     APPROVAL_APPROVED = 'SDO'
-
     APPROVAL_CHOICES = (
         (APPROVAL_DRAFT, 'Draft'),
         (APPROVAL_SUBMITTED, 'Submitted'),
@@ -247,13 +246,11 @@ class PrescribedBurn(Audit):
 
     @property
     def formA_isDraft(self):
-        acks = all(x in [i.acknow_type for i in self.acknowledgements.all()] for x in ['USER_A', 'SRM_A', 'SDO_A'])
-        return True if acks else False
+        return not any(x in [i.acknow_type for i in self.acknowledgements.all()] for x in ['USER_A', 'SRM_A', 'SDO_A'])
 
     @property
     def formB_isDraft(self):
-        acks = all(x in [i.acknow_type for i in self.acknowledgements.all()] for x in ['USER_B', 'SRM_B', 'SDO_B'])
-        return True if acks else False
+        return not any(x in [i.acknow_type for i in self.acknowledgements.all()] for x in ['USER_B', 'SRM_B', 'SDO_B'])
 
     @property
     def formA_user_acknowledged(self):
