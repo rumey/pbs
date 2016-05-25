@@ -1027,21 +1027,21 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             location = pb.location
             est_start = pb.est_start
             conditions = pb.conditions
-            approval_268a_status = pb.get_approval_268a_status_display()
-            approval_268a_status_modified = pb.approval_268a_status_modified.strftime('%Y-%m-%d %H:%M') if pb.approval_268a_status_modified else ""
-            approval_268b_status = pb.get_approval_268b_status_display()
-            approval_268b_status_modified = pb.approval_268b_status_modified.strftime('%Y-%m-%d %H:%M') if pb.approval_268b_status_modified else ""
-            submitted = pb.submitted_by.get_full_name() + " " + pb.submitted_date_str if pb.submitted_by else ""
-            endorsed = pb.endorsed_by.get_full_name() + " " + pb.endorsed_date_str if pb.endorsed_by else ""
-            approved = pb.approved_by.get_full_name() + " " + pb.approved_date_str if pb.approved_by else ""
+
+            user_acknow_formA = pb.user_a_record
+            srm_acknow_formA = pb.srm_a_record
+            sdo_acknow_formA = pb.sdo_a_record
+            user_acknow_formB = pb.user_b_record
+            srm_acknow_formB = pb.srm_b_record
+            sdo_acknow_formB = pb.sdo_b_record
             rolled = "Yes" if pb.rolled else ""
 
             query_list.append([fire_id, name, region, district, fire_type,
                                dt, burn_status, further_ignitions, external_assist,
                                planned_area, area, tenures, location, est_start, conditions,
-                               approval_268a_status, approval_268a_status_modified,
-                               approval_268b_status, approval_268b_status_modified,
-                               submitted, endorsed, approved, rolled])
+                               user_acknow_formA, srm_acknow_formA, sdo_acknow_formA,
+                               user_acknow_formB, srm_acknow_formB, sdo_acknow_formB,
+                               rolled])
 
         filename = 'export_daily_burn_program_{0}.csv'.format(report_date.strftime('%d%b%Y'))
         response = HttpResponse(content_type="text/csv")
@@ -1051,9 +1051,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type",
             "Date", "Burn Status", "Further Ignitions", "External Assist",
             "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
-            "Approval Status (268a)" , "Approval Status Modified (268a)",
-            "Approval Status (268b)" , "Approval Status Modified (268b)",
-            "Submitted", "Endorsed", "Approved", "Rolled"])
+            "User Acknow FormA", "SRM Acknow FormA", "SDO Acknow FormA",
+            "User Acknow FormB", "SRM Acknow FormB", "SDO Acknow FormB",
+            "Rolled"])
 
         for row in query_list:
             writer.writerow([unicode(s).encode("utf-8") for s in row])
