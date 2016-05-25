@@ -149,3 +149,21 @@ class FireFormSet(forms.ModelForm):
         model = PrescribedBurn
         exclude = ('prescription', )
 
+class CsvForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(CsvForm, self).__init__(*args, **kwargs)
+        self.fields['fromDate'].label = 'ha)'
+
+        now = datetime.now()
+        toDate = now.date().strftime('%Y-%m-%d')
+        fromDate = (now - timedelta(days=14)).strftime('%Y-%m-%d')
+        self.fields['fromDate'].widget.attrs.update({'value': fromDate})
+        self.fields['toDate'].widget.attrs.update({'value': toDate})
+
+    fromDate = forms.DateField(required=False)
+    toDate = forms.DateField(required=True)
+
+#    class Meta:
+#        model = PrescribedBurn
+
+
