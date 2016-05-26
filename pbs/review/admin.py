@@ -822,7 +822,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             #   2. SDO Approved Fireload (Form B)
             #   3. Only Burns (No Fires)
             title = "Summary of Current and Planned Fires"
-            qs_burn = qs_burn.filter(acknowledgements__acknow_type__in=['SDO_A', 'SDO_B'], date=dt).exclude(prescription__isnull=True)
+            qs_burn = qs_burn.filter(acknowledgements__acknow_type='SDO_A', date=dt).exclude(prescription__isnull=True)
 #            qs_burn = qs_burn.filter((Q(status=PrescribedBurn.BURN_ACTIVE) & Q(approval_268b_status=PrescribedBurn.APPROVAL_APPROVED)) |
 #                                      Q(approval_268a_status=PrescribedBurn.APPROVAL_APPROVED),
 #                                      date=dt).exclude(prescription__isnull=True).exclude(status=PrescribedBurn.BURN_INACTIVE)
@@ -896,7 +896,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     #def copy_ongoing_records(self, request, extra_context=None):
 
     def active_records(self, dt):
-        qs_active = PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, date=dt)
+        qs_active = PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, form_name=PrescribedBurn.FORM_268B, date=dt)
 
         records = {
             "active_burns_statewide": qs_active.exclude(prescription__isnull=True).count(),
@@ -1086,6 +1086,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         if request.GET.has_key('region'):
             region = request.GET.get('region', None)
             prescribed_burns = prescribed_burns.filter(prescription__region=region)
+            region_name = Region.objects.get(id=int(region)).name
+        else:
+            region_name = "Statewide"
+
 
         planned_burns = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268A, acknowledgements__acknow_type__in=['SDO_A']).exclude(prescription__isnull=True)
         fireload = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268B, status=PrescribedBurn.BURN_ACTIVE, acknowledgements__acknow_type__in=['SDO_B'])
@@ -1130,7 +1134,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         context = {
             'user': request.user.get_full_name(),
             'date': datetime.now().strftime('%d %b %Y'),
-            'region': Region.objects.get(id=int(region)).name,
+            'region': region_name,
             'time': datetime.now().strftime('%H:%M'),
             'state_regional_manager': datetime.now().strftime('%H:%M'),
             'qs_planned_burns': planned_burns.order_by('prescription__burn_id'),
