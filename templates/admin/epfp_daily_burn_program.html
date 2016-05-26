@@ -225,9 +225,9 @@
       <th rowspan="2"><div class="text-center">Special<br>Conditions</div></th>
     </tr>
     <tr>
-      <th>Submitted</th>
-      <th>Endorsed</th>
-      <th>Approved</th>
+      <th><div class="text-center" data-toggle="tooltip" title="District Nomination">Submit</th>
+      <th><div class="text-center" data-toggle="tooltip" title="Regional Endorsement">RDO</th>
+      <th><div class="text-center" data-toggle="tooltip" title="State Approval">SDO</th>
     </tr>
 
   </thead>
@@ -347,7 +347,7 @@
       <th> Further ignitions req </th>
       <th> Ignition now completed </th>
       <th> Submit</th>
-      <th> SRM</th>
+      <th> RDO</th>
       <th> SDO </th>
     </tr>
 
@@ -372,9 +372,9 @@
       <td>{% if qs.further_ignitions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.completed %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
 
-      <td>{% if qs.user_b_record %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.srm_b_record %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      <td>{% if qs.sdo_b_record %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.user_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.user_b_record  }}"><div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.srm_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_b_record  }}"><div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
+      <td>{% if qs.sdo_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_b_record  }}"><div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
 
       <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% elif qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% endif %}</td>
       <td>{% if qs.had_external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
@@ -591,7 +591,8 @@ $(function(){
         if (region) {
             location.href = "{% url 'admin:create_dailyburns_pdf' %}?date={{date}}&template=" + form_name + "&region=" + region; //$("#id_region").val();
         } else {
-            dialog_msg();
+            location.href = "{% url 'admin:create_dailyburns_pdf' %}?date={{date}}&template=" + form_name; //$("#id_region").val();
+            //dialog_msg();
         }
     };
 
@@ -604,14 +605,15 @@ $(function(){
 //    }
 //  });
 
-    $("td").dblclick(function () {
-        var OriginalContent = $(this).text();
-        var inputNewText = prompt("Enter new content for:", OriginalContent);
-        if (inputNewText!=null)
-            {
-            $(this).text(inputNewText)
-            }
-    });
+//    $("td").dblclick(function () {
+//        var OriginalContent = $(this).text();
+//        var inputNewText = prompt("Enter new content for:", OriginalContent);
+//        if (inputNewText!=null)
+//            {
+//            $(this).text(inputNewText)
+//            }
+//    });
+
 });
 
 dialog_msg = function() {

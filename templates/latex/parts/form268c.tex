@@ -37,11 +37,9 @@
 The Following burns, which have been approved for ignition today, have been planned in accordance with OBRM requirements, and will be implemented in accordance with the burn plan and any additional conditions specified by me in the ignition approval.
 
 \footnotesize
-\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X | }
+\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
 \hline
-& & & & \multicolumn{2}{ X |}{\textbf{Area (ha)}} & \\
-\cline{5-6}
-\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \textbf{Planned} & \textbf{Achieved} & \bfseries\makecell[c]{Est Start \\ WST}\\
+\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \bfseries\makecell[c]{Area \\ (ha)} & \bfseries\makecell[c]{Est Start \\ WST}\\
 \hline
 \endhead
 {% for pb in qs_planned_burns %}
@@ -50,35 +48,18 @@ The Following burns, which have been approved for ignition today, have been plan
     {{ pb.prescription.location_text|texify|safe }} & 
     {{ pb.prescription.purposes_list|texify|safe }} & 
     {{ pb.planned_area|texify|safe }} & 
-    &
     {{ pb.est_start }} & 
 \hline
 {% empty %}
 \multicolumn{6}{|X|}{No Burns Planned for Today} \\
 \hline
 {% endfor %}
-
-{% for pb in qs_fireload %}
-    \textbf{ {{ pb|texify|safe }}} & 
-    {{ pb.name|texify|safe }} & 
-    {{ pb.prescription.location_text|texify|safe }} & 
-    {{ pb.prescription.purposes_list|texify|safe }} & 
-    &
-    {{ pb.area|texify|safe }} & 
-    {{ pb.est_start }} & 
-\hline
-{% empty %}
-\multicolumn{6}{|X|}{No Fireload for Today} \\
-\hline
-{% endfor %}
 \end{longtabu}
 
-\subsubsection{Acknowledged (for State Duty Officer)}
+\subsubsection{Acknowledged}
 \begin{tabu} to \linewidth { | X[0.4] | X | }
 \hline
-\textbf{for Planned} & \textbf{ {{ acknow_records.sdo_A }} } \\
-\hline
-\textbf{for Fire Load} & \textbf{ {{ acknow_records.sdo_B }} } \\
+\textbf{for State Duty Officer} & \textbf{ {{ acknow_records.sdo_A }} } \\
 \hline
 \end{tabu}\\%%[\baselineskip]
 

@@ -46,7 +46,7 @@ The Following Burns are proposed for ignition today subject to the approval of t
 \hline
 \endhead
 {% for pb in qs_planned_burns %}
-\textbf{ {{ pb|texify|safe }}} & {{ pb.name|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.purposes_str|texify|safe }} & {{ pb.planned_area }} & {{ pb.est_start }} & {{ pb.external_assist_str }}\\
+\textbf{ {{ pb|texify|safe }}} & {{ pb.name|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.prescription.purposes_list|texify|safe }} & {{ pb.planned_area }} & {{ pb.est_start }} & {{ pb.external_assist_str }}\\
 \hline
 {% empty %}
 \multicolumn{6}{|X|}{No Burns Planned for Today} \\
@@ -66,9 +66,9 @@ The Following Burns are proposed for ignition today subject to the approval of t
 \footnotsize
 \begin{longtabu} to \linewidth { | X[0.4] | X | }
 \hline
-\endhead
 \textbf{Burn ID} & \textbf{Special Condition of Approval as specified by the SDO (in addition to the compliance of the approved burn plan)} \\
 \hline
+\endhead
 {% for pb in qs_planned_burns %}
   {% if pb.conditions %}
     \textbf{ {{ pb|texify|safe }}} & {{ pb.conditions|texify|safe }} \\
