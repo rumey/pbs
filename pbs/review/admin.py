@@ -164,12 +164,15 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     def sdo_group(self):
         return Group.objects.get(name='State Duty Officer')
 
-    def get_context_data(self, **kwargs):
-        context = super(PrescribedBurnAdmin, self).get_context_data(**kwargs)
-        #obj = self.get_object()
-        context['title'] = ' 1234'
+    def add_view(self, request, form_url='', extra_context=None):
+        # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
+        if request.GET.get('form') == 'add_fire':
+            context = {'form_title': 'Add Fire'}
+        else:
+            context = {'form_title': 'Add Prescribed Burn'}
 
-        return context
+        context.update(extra_context or {})
+        return super(PrescribedBurnAdmin, self).add_view(request, form_url, context)
 
     def get_form(self, request, obj=None, **kwargs):
         #import ipdb; ipdb.set_trace()
@@ -194,13 +197,15 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #            return PrescribedBurnForm
 
     def csv_view(self, request):
+        # TODO - only require the last 4 lines to render the FMSB Report form
         if request.method == "POST":
             import ipdb; ipdb.set_trace()
             form = CsvForm(request.POST)
             if form.is_valid():
-                toDate = form.data['toDate']
-                fromDate = form.data['fromDate']
-                self.export_to_csv(request)
+                pass
+#                toDate = form.data['toDate']
+#                fromDate = form.data['fromDate']
+#                self.export_to_csv(request)
         else:
             #form = PrescribedBurnForm()
             form = CsvForm()
@@ -342,24 +347,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
 
     def change_view(self, request, object_id, extra_context=None):
-
-#        if prescription is None:
-#            raise Http404(_('prescription object with primary key %(key)r '
-#                            'does not exist.') % {'key': prescription_id})
-#
-#        if request.method == 'POST' and "_saveasnew" in request.POST:
-#            opts = self.model._meta
-#            return self.add_view(request, prescription_id=prescription.id,
-#                                 form_url=reverse(
-#                                     'admin:%s_%s_add' %
-#                                     (opts.app_label, opts.module_name),
-#                                     args=[prescription.id],
-#                                     current_app=self.admin_site.name))
-#
-#        context = {
-#            'current': prescription
-#        }
-#        context.update(extra_context or {})
         obj = self.get_object(request, unquote(object_id))
         now = datetime.now()
         today = now.date()
@@ -385,16 +372,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 self.message_user(request, "Only a SDO role can edit an APPROVED burn")
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-
-        context = {}
-        context.update(extra_context or {})
+        # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
+        if request.GET.get('form') == 'edit_fire':
+            context = {'form_title': 'Change Fire'}
+        else:
+            context = {'form_title': 'Change Prescribed Burn'}
 
         return super(PrescribedBurnAdmin, self).change_view(
             request, object_id, extra_context=context)
-
-#        url = reverse('admin:epfp_review_summary')
-#        return HttpResponseRedirect(url)
-
 
     def prescription_view(self, request, extra_context=None):
         """
