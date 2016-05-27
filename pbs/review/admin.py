@@ -990,7 +990,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         Verify Copied records have 'Active/Inactive' and 'Area' fields set,
         return list of objects that are unset
         """
-        rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(form_name=PrescribedBurn.FORM_268A).exclude(status=PrescribedBurn.BURN_COMPLETED)
+        rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(form_name=PrescribedBurn.FORM_268A).exclude(completed=True)
         unset_objects = list(set(rolled_objects.filter(area__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
         return unset_objects
 

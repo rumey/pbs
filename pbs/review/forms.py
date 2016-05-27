@@ -31,7 +31,8 @@ class PrescribedBurnForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        exclude = ('fire_id', 'fire_name', 'region', 'district', 'status', 'area', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
+        #exclude = ('fire_id', 'fire_name', 'region', 'district', 'status', 'area', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
+        fields = ('prescription', 'date', 'external_assist', 'planned_area', 'tenures', 'location', 'est_start', 'conditions',)
 
 
 class PrescribedBurnEditForm(forms.ModelForm):
@@ -43,10 +44,10 @@ class PrescribedBurnEditForm(forms.ModelForm):
         #self.fields['prescription'].widget.attrs['readonly'] = 'readonly'
 
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
-        self.fields['status'].label = 'Burn Status'
+        #self.fields['status'].label = 'Burn Status'
 
-        status = self.fields['status']
-        status.choices = status.choices[1:]
+#        status = self.fields['status']
+#        status.choices = status.choices[1:]
 
     def clean_prescription(self):
         instance = getattr(self, 'instance', None)
@@ -57,7 +58,8 @@ class PrescribedBurnEditForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        exclude = ('fire_id', 'fire_name', 'region', 'district', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
+        #exclude = ('fire_id', 'fire_name', 'region', 'district', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
+        fields = ('prescription', 'date', 'external_assist', 'planned_area', 'tenures', 'location', 'est_start', 'conditions',)
 
 
 class PrescribedBurnActiveForm(forms.ModelForm):
