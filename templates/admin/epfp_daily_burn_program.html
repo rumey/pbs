@@ -252,7 +252,6 @@
       <td><a id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       <td><a id="delete-plannedburn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
-    {% if qs.has_conditions %}
     <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
 
       <td colspan="10">
@@ -297,7 +296,6 @@
         </td>
 
     </tr>
-    {% endif %}
     {% endif %}
     {% endfor %}
   </tbody>
@@ -385,7 +383,6 @@
       {% endif %}
       <td><a id="delete-burn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
-    {% if qs.had_external_assist %}
     <tr class="myCollapse row-details expand-child" id="{{qs.fire_id}}">
        {% comment %}
       <td colspan="11">External Assist: {{ qs.external_assist_str }}</td>
@@ -446,7 +443,6 @@
         </td>
 
     </tr>
-    {% endif %}
 
     {% endfor %}
   </tbody>
