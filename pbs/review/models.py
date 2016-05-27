@@ -83,11 +83,9 @@ class Acknowledgement(models.Model):
 class PrescribedBurn(Audit):
     BURN_ACTIVE = 1
     BURN_INACTIVE = 2
-    BURN_COMPLETED = 3
     BURN_CHOICES = (
         (BURN_ACTIVE, 'Active'),
         (BURN_INACTIVE, 'Inactive'),
-        (BURN_COMPLETED, 'Completed')
     )
 
     APPROVAL_DRAFT = 'DRAFT'
@@ -127,6 +125,7 @@ class PrescribedBurn(Audit):
     status = models.PositiveSmallIntegerField(verbose_name="Fire Status", choices=BURN_CHOICES, null=True, blank=True)
 
     further_ignitions = models.NullBooleanField(verbose_name="Further ignitions required?")
+    completed = models.NullBooleanField(verbose_name="Ignition now complete?")
     external_assist = models.ManyToManyField(ExternalAssist, blank=True)
     planned_area = models.DecimalField(
         verbose_name="Planned Burn Area (ha)", max_digits=12, decimal_places=1,
@@ -269,12 +268,6 @@ class PrescribedBurn(Audit):
         elif self.status==self.BURN_INACTIVE:
             return False
         return None
-
-    @property
-    def completed(self):
-        if self.status==self.BURN_COMPLETED:
-            return True
-        return False
 
     @property
     def has_conditions(self):
