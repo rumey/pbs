@@ -6,7 +6,7 @@ from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn, Acknowledgement
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
-        FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm
+        PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm
     )
 from pbs.prescription.models import Prescription, Approval, Region
 from datetime import datetime, date, timedelta
@@ -193,8 +193,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 return FireEditForm
             if request.REQUEST.get('form')=='add_burn':
                 return PrescribedBurnForm
-            if request.REQUEST.get('form')=='add_active_burn' or request.REQUEST.get('form')=='edit_active_burn':
+            if request.REQUEST.get('form')=='add_active_burn':
                 return PrescribedBurnActiveForm
+            if request.REQUEST.get('form')=='edit_active_burn':
+                return PrescribedBurnEditActiveForm
             if request.REQUEST.get('form')=='edit_burn':
                 return PrescribedBurnEditForm
 #            from django.forms import inlineformset_factory
