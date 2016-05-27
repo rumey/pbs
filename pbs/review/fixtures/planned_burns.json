@@ -248,6 +248,54 @@
     "rolled": "True"
   }
 },
+{
+  "COMMENT": "FORM B, INACTIVE, APPROVED",
+  "pk": 11,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
+    "prescription": 620,
+    "region": 8,
+    "district": 15,
+    "date": "2016-05-24",
+    "status": 2,
+    "form_name": 2,
+    "further_ignitions": "False",
+    "planned_area": 10,
+    "area": 1.0,
+    "est_start": "18:59:59",
+    "conditions": "Some ...",
+    "rolled": "True"
+  }
+},
+{
+  "COMMENT": "FORM B, INACTIVE, APPROVED",
+  "pk": 12,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-25",
+    "modified": "2016-05-25",
+    "prescription": 620,
+    "region": 8,
+    "district": 15,
+    "date": "2016-05-25",
+    "status": 2,
+    "form_name": 2,
+    "further_ignitions": "False",
+    "planned_area": 10,
+    "area": 1.0,
+    "est_start": "18:59:59",
+    "conditions": "Some ...",
+    "rolled": "True"
+  }
+},
+
+
 
 {
   "pk": 1,

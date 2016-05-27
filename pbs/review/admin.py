@@ -164,6 +164,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     def sdo_group(self):
         return Group.objects.get(name='State Duty Officer')
 
+#    def get_readonly_fields(self, request, obj=None):
+#        import ipdb; ipdb.set_trace()
+#        if obj:
+#            return ['prescription']
+#        else:
+#            return []
+
+#    def get_prepopulated_fields(self, request, obj=None):
+#        import ipdb; ipdb.set_trace()
+
     def add_view(self, request, form_url='', extra_context=None):
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
         if request.GET.get('form') == 'add_fire':

@@ -196,7 +196,7 @@ class PrescribedBurn(Audit):
         today = date.today()
         tomorrow = today + timedelta(days=1)
         #if not self.pk and (self.date < today or self.date > tomorrow):
-        if self.pk and (self.date < today or self.date > tomorrow):
+        if not self.pk and (self.date < today or self.date > tomorrow):
             raise ValidationError("You must enter burn plans for today or tommorow's date only.")
 
     def clean_sdo_approve(self):
