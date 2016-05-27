@@ -803,31 +803,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         if request.GET.get('Export_CSV') == 'export_csv':
             return self.export_to_csv(request, dt)
-#        queryset= None
-        #import ipdb; ipdb.set_trace()
-        #qs_planned = PlannedBurn.objects.filter(date=dt)
         qs_burn = PrescribedBurn.objects.filter(date=dt)
-        #qs_fire = Fire.objects.filter(date=dt)
-        #qs_fireload = FireLoad.objects.filter(prescription__date=dt, fire__date=dt)
         if report=='epfp_planned':
             title = "Today's Planned Burn Program"
             # assumes all burns entered on date dt are planned (for date dt)
-            #qs_burn = qs_burn.exclude(rolled=True)
             qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268A)
             form = PrescribedBurnFilterForm(request.GET)
-            #form = PrescribedBurnForm(request.GET)
-#            pb = PrescribedBurn(user=request.user)
-            #form = PlannedBurnForm(initial={'user': request.user})
-            #form = PlannedBurnForm(request.POST or None, request=request)
-#            if form.is_valid():
-#                pb.save()
         elif report=='epfp_fireload':
             title = "Summary of Current Fire Load"
-            #qs_burn = qs_burn.filter(status__in=[PrescribedBurn.BURN_ACTIVE, PrescribedBurn.BURN_INACTIVE, None], form_name=PrescribedBurn.FORM_268B)
-            qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268B).exclude(status=PrescribedBurn.BURN_COMPLETED)
-            #s_fire = Fire.objects.filter(date=yesterday)
+            qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268B)
             form = FireLoadFilterForm(request.GET)
-            #form = FireLoadForm(request.GET)
         elif report=='epfp_summary':
             # Form 268c contains:
             #   1. SDO Approved Plans (Form A)
@@ -835,9 +820,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             #   3. Only Burns (No Fires)
             title = "Summary of Current and Planned Fires"
             qs_burn = qs_burn.filter(acknowledgements__acknow_type='SDO_A', date=dt).exclude(prescription__isnull=True)
-#            qs_burn = qs_burn.filter((Q(status=PrescribedBurn.BURN_ACTIVE) & Q(approval_268b_status=PrescribedBurn.APPROVAL_APPROVED)) |
-#                                      Q(approval_268a_status=PrescribedBurn.APPROVAL_APPROVED),
-#                                      date=dt).exclude(prescription__isnull=True).exclude(status=PrescribedBurn.BURN_INACTIVE)
             form = PrescribedBurnFilterForm(request.GET)
 
         fire_type = 0
@@ -848,8 +830,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             elif fire_type == 2:
                 qs_burn = qs_burn.filter(prescription__isnull=True)
 
-
-        #import ipdb; ipdb.set_trace()
         if request.REQUEST.has_key('region'):
             region = request.REQUEST.get('region', None)
             if region:
