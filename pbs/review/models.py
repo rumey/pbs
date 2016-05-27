@@ -310,6 +310,17 @@ class PrescribedBurn(Audit):
         return (self.status == self.APPROVAL_ENDORSED)
 
 #    def save(self, **kwargs):
+#        #import ipdb; ipdb.set_trace()
+#        if self.prescription:
+#            objects = PrescribedBurn.objects.filter(prescription=self.prescription, date=self.date, form_name=self.form_name)
+#        else:
+#            objects = PrescribedBurn.objects.filter(fire_id=self.fire_id, date=self.date, form_name=self.form_name)
+#
+#        if objects:
+#            raise ValidationError("Duplicate ID already exist".format(objects[0]))
+#        super(PrescribedBurn, self).save(**kwargs)
+
+#    def save(self, **kwargs):
 #        super(PrescribedBurn, self).save(**kwargs)
 #        tenures = self.tenures_str
 #        if not self.location:

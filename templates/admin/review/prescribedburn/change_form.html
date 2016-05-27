@@ -9,6 +9,8 @@
 <script>
 $(function() {
 
+    $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
+
     $("#id_prescription").change(function () {
         console.log('True  ' + $("#id_prescription").val() )
         //$("#id_tenures").text( $('option:selected', $("#id_prescription")).text() );

@@ -3,6 +3,7 @@ from pbs.prescription.models import Region, District
 from pbs.review.models import PrescribedBurn
 from datetime import datetime, timedelta
 from django.conf import settings
+from django.forms import ValidationError
 
 
 class BurnStateSummaryForm(forms.Form):
@@ -28,6 +29,17 @@ class PrescribedBurnForm(forms.ModelForm):
         self.fields['date'].widget.attrs.update({'value': date_str})
         self.fields['est_start'].widget.attrs.update({'value': now.strftime('%H:%M')})
         self.initial['status'] = 1
+
+    def clean(self):
+        if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
+            # check for integrity constraint - duplicate keys
+            prescription = self.cleaned_data['prescription']
+            dt = self.cleaned_data['date']
+            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A)
+            if objects:
+                raise ValidationError("Burn ID  {}  already exists on this date".format(objects[0].prescription.burn_id))
+            else:
+                return self.cleaned_data
 
     class Meta:
         model = PrescribedBurn
@@ -92,6 +104,17 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         self.fields['status'].required = True
         self.fields['area'].required = True
         self.fields['location'].required = True
+
+    def clean(self):
+        if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
+            # check for integrity constraint - duplicate keys
+            prescription = self.cleaned_data['prescription']
+            dt = self.cleaned_data['date']
+            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A)
+            if objects:
+                raise ValidationError("Burn ID  {}  already exists on this date".format(objects[0].prescription.burn_id))
+            else:
+                return self.cleaned_data
 
     class Meta:
         model = PrescribedBurn
