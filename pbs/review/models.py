@@ -291,7 +291,10 @@ class PrescribedBurn(Audit):
 
     @property
     def name(self):
-        return self.prescription.name
+        if self.prescription:
+            return self.prescription.name
+        else:
+            return self.fire_name
 
     @property
     def get_region(self):

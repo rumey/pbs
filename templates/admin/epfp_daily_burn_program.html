@@ -178,8 +178,6 @@
   </ul>
 </div>
 
-
-
 </ul>
 
 {% if report == "epfp_planned" %}
@@ -223,6 +221,7 @@
       <th rowspan="2"><div class="text-center">Est Start<br>WST</div></th>
       <th colspan="3"><div class="text-center">Approval Status</div></th>
       <th rowspan="2"><div class="text-center">Special<br>Conditions</div></th>
+      <th></th>
     </tr>
     <tr>
       <th><div class="text-center" data-toggle="tooltip" title="District Nomination">Submit</th>
@@ -246,9 +245,6 @@
       <td>{% if qs.srm_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_a_record  }}"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.sdo_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_a_record  }}"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.has_conditions %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
-      {% comment %}
-      <td><a id="submit-plannedburn" href="{% url 'admin:approve_view' qs.id %}" class="btn btn-mini alert-error"><i class="icon-ok"></i></a></td>
-      {% endcomment %}
       <td><a id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       <td><a id="delete-plannedburn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
@@ -452,7 +448,7 @@
 {% paginate %}
 
 {% if report == "epfp_summary" %}
-<table id="sorted-table" class="main-table table table-hover table-compressed">
+<table id="summary-table" class="main-table table table-hover table-compressed">
   <thead>
     <tr>
       <th rowspan="1"><div class="text-center">Burn ID</div></th>
@@ -548,10 +544,10 @@ $(function(){
      $("#fireload-table td a").on('click', function (e) { e.stopPropagation(); });
      $("#fireload-table td input").on('click', function (e) { e.stopPropagation(); });
 
-     $("#sorted-table td a").on('click', function (e) { e.stopPropagation(); });
-     $("#sorted-table td input").on('click', function (e) { e.stopPropagation(); });
+     $("#summary-table td a").on('click', function (e) { e.stopPropagation(); });
+     $("#summary-table td input").on('click', function (e) { e.stopPropagation(); });
 
-    $("#sorted-table").tablesorter();
+    $(".main-table").tablesorter();
     $("#burns-table tr:contains('Total')").css("font-weight","bold");
 
     $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
