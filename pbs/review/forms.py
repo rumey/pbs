@@ -16,7 +16,7 @@ class PrescribedBurnForm(forms.ModelForm):
         super(PrescribedBurnForm, self).__init__(*args, **kwargs)
 
         prescriptions = self.fields['prescription'].queryset
-        self.fields['prescription'].queryset = prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS']).distinct()
+        self.fields['prescription'].queryset = prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS']).distinct().order_by('burn_id')
         self.fields['planned_area'].required=True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
@@ -39,13 +39,21 @@ class PrescribedBurnEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnEditForm, self).__init__(*args, **kwargs)
 
-        prescriptions = self.fields['prescription'].queryset
-        self.fields['prescription'].queryset = prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS']).distinct()
+        self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
+        #self.fields['prescription'].widget.attrs['readonly'] = 'readonly'
+
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
         self.fields['status'].label = 'Burn Status'
 
         status = self.fields['status']
         status.choices = status.choices[1:]
+
+    def clean_prescription(self):
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.prescription
+        else:
+            return self.cleaned_data['prescription']
 
     class Meta:
         model = PrescribedBurn
@@ -57,7 +65,7 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         super(PrescribedBurnActiveForm, self).__init__(*args, **kwargs)
 
         prescriptions = self.fields['prescription'].queryset
-        self.fields['prescription'].queryset = prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS']).distinct()
+        self.fields['prescription'].queryset = prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS']).distinct().order_by('burn_id')
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
         self.fields['status'].label = 'Burn Status'
 
@@ -122,6 +130,13 @@ class FireEditForm(forms.ModelForm):
         self.fields['status'].required = True
         self.fields['location'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
+
+#    def clean_prescription(self):
+#        instance = getattr(self, 'instance', None)
+#        if instance and instance.pk:
+#            return instance.prescription
+#        else:
+#            return self.cleaned_data['prescription']
 
     class Meta:
         model = PrescribedBurn
