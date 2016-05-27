@@ -171,19 +171,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #        else:
 #            return []
 
-#    def get_prepopulated_fields(self, request, obj=None):
-#        import ipdb; ipdb.set_trace()
-
-    def add_view(self, request, form_url='', extra_context=None):
-        # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
-        if request.GET.get('form') == 'add_fire':
-            context = {'form_title': 'Add Fire'}
-        else:
-            context = {'form_title': 'Add Prescribed Burn'}
-
-        context.update(extra_context or {})
-        return super(PrescribedBurnAdmin, self).add_view(request, form_url, context)
-
     def get_form(self, request, obj=None, **kwargs):
         #import ipdb; ipdb.set_trace()
         if request.GET.has_key('form'):
@@ -357,6 +344,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         )
         return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
+
+    def add_view(self, request, form_url='', extra_context=None):
+        # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
+        if request.GET.get('form') == 'add_fire':
+            context = {'form_title': 'Add Fire'}
+        else:
+            context = {'form_title': 'Add Prescribed Burn'}
+
+        context.update(extra_context or {})
+        return super(PrescribedBurnAdmin, self).add_view(request, form_url, context)
 
     def change_view(self, request, object_id, extra_context=None):
         obj = self.get_object(request, unquote(object_id))
