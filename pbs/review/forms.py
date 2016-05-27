@@ -87,7 +87,43 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        exclude = ('fire_id', 'fire_name', 'region', 'district', 'planned_area', 'est_start', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
+        fields = ('prescription', 'date', 'status', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
+
+
+class PrescribedBurnEditActiveForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(PrescribedBurnEditActiveForm, self).__init__(*args, **kwargs)
+
+        self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
+        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
+        self.fields['status'].label = 'Burn Status'
+
+        now = datetime.now()
+        today = now.date()
+        tomorrow = today + timedelta(days=1)
+        time_now = now.time()
+        date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
+        self.fields['date'].widget.attrs.update({'value': date_str})
+        self.initial['status'] = 1
+
+        status = self.fields['status']
+        status.choices = status.choices[1:]
+
+        self.fields['status'].required = True
+        self.fields['area'].required = True
+        self.fields['location'].required = True
+
+    def clean_prescription(self):
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.prescription
+        else:
+            return self.cleaned_data['prescription']
+
+    class Meta:
+        model = PrescribedBurn
+        fields = ('prescription', 'date', 'status', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
+
 
 
 
@@ -123,24 +159,39 @@ class FireEditForm(forms.ModelForm):
         super(FireEditForm, self).__init__(*args, **kwargs)
         self.initial['fire_id'] = self.initial['fire_id'][-3:]
 
-        self.fields['region'].required = True
-        self.fields['district'].required = True
-        self.fields['fire_id'].required = True
         self.fields['fire_name'].required = True
         self.fields['status'].required = True
         self.fields['location'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
 
-#    def clean_prescription(self):
-#        instance = getattr(self, 'instance', None)
-#        if instance and instance.pk:
-#            return instance.prescription
-#        else:
-#            return self.cleaned_data['prescription']
+        self.fields['region'].widget.attrs['disabled'] = 'disabled'
+        self.fields['district'].widget.attrs['disabled'] = 'disabled'
+        self.fields['fire_id'].widget.attrs['disabled'] = 'disabled'
+
+    def clean_region(self):
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.region
+        else:
+            return self.cleaned_data['region']
+
+    def clean_district(self):
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.district
+        else:
+            return self.cleaned_data['district']
+
+    def clean_fire_id(self):
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.fire_id
+        else:
+            return self.cleaned_data['fire_id']
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_name', 'fire_id', 'date', 'status', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
 
 
 class PrescribedBurnFilterForm(forms.Form):
@@ -155,9 +206,6 @@ class FireLoadFilterForm(forms.Form):
     fire_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Fires')])
     approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
 
-#class FireForm(forms.ModelForm):
-#    class Meta:
-#        model = Fire
 
 class FireFormSet(forms.ModelForm):
     class Meta:
@@ -178,7 +226,5 @@ class CsvForm(forms.Form):
     fromDate = forms.DateField(required=False)
     toDate = forms.DateField(required=True)
 
-#    class Meta:
-#        model = PrescribedBurn
 
 

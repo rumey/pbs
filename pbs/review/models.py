@@ -173,7 +173,7 @@ class PrescribedBurn(Audit):
 
 
     def clean_fire_id(self):
-        if self.fire_id:
+        if not (len(self.fire_id)==7 and self.fire_id[3]=='_'): # ignore if this is an edit (field is readonly)
             if not self.fire_id or str(self.fire_id)[0] in ('-', '+') or not str(self.fire_id).isdigit() or not len(self.fire_id)==3:
                 raise ValidationError("You must enter numeric digit with 3 characters (001 - 999).")
 
