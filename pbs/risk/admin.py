@@ -302,6 +302,9 @@ class ContingencyActionAdmin(SavePrescriptionMixin, PrescriptionMixin, BaseAdmin
 
             try:
                 obj.contingency = Contingency.objects.get(pk=object_id)
+                #obj.contingency = Contingency.objects.get(pk=object_id)
+                obj.creator = request.user
+                obj.modifier = request.user
             except Contingency.DoesNotExist:
                 return
 
@@ -331,6 +334,9 @@ class ContingencyNotificationAdmin(SavePrescriptionMixin, PrescriptionMixin, Bas
 
             try:
                 obj.contingency = Contingency.objects.get(pk=object_id)
+                #obj.prescription = self.prescription
+                obj.creator = request.user
+                obj.modifier = request.user
             except Contingency.DoesNotExist:
                 return
 
