@@ -923,7 +923,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #        copied_objects = PrescribedBurn.objects.filter(date=tomorrow, prescription__burn_id__in=objects).exclude(form_name=PrescribedBurn.FORM_268B)
 #        missing = list(set(objects).difference(copied_objects))
 
-        objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)]
+        objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE).exclude(completed=True)]
         now = timezone.now()
         admin = User.objects.get(username='admin')
         count = 0
@@ -987,8 +987,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         Verify Copied records have 'Active/Inactive' and 'Area' fields set,
         return list of objects that are unset
         """
-        rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(form_name=PrescribedBurn.FORM_268A).exclude(completed=True)
+        rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(form_name=PrescribedBurn.FORM_268A) #.exclude(completed=True)
         unset_objects = list(set(rolled_objects.filter(area__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
+        #import ipdb; ipdb.set_trace()
         return unset_objects
 
     def export_to_csv(self, request, extra_context=None):
@@ -1185,6 +1186,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 #            filename = filename.replace(".pdf", ".log")
 #            error_response.write(open(filename).read())
 #            return error_response
+
+        logger.debug("Cleaning up ...")
+        cmd = ['latexmk', '-cd', '-c', directory + texname]
+        logger.debug("Running: {0}".format(" ".join(cmd)))
+        subprocess.call(cmd)
 
         logger.debug("Reading PDF output from {}".format(filename))
         response.write(open(directory + filename).read())
