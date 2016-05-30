@@ -349,7 +349,7 @@
   <tbody>
     {% autopaginate qs_fireload 25 %}
     {% for qs in qs_fireload %}
-    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.fire_id}}">
+    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
       <td nowrap>
         {% if qs.prescription %}
@@ -370,7 +370,7 @@
       <td>{% if qs.srm_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_b_record  }}"><div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       <td>{% if qs.sdo_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_b_record  }}"><div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
 
-      <td>{% if qs.area %}<div class="text-center">{{ qs.area }}</div>{% elif qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% endif %}</td>
+      <td>{% if qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% else %}<div class="text-center">{{ qs.area }}</div>{% endif %}</td>
       <td>{% if qs.had_external_assist %}<div class="text-center"><i class="icon-ok text-success"></i></div>{% endif %}</td>
       {% if qs.prescription %}
         <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_active_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
@@ -379,7 +379,7 @@
       {% endif %}
       <td><a id="delete-burn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
-    <tr class="myCollapse row-details expand-child" id="{{qs.fire_id}}">
+    <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
        {% comment %}
       <td colspan="11">External Assist: {{ qs.external_assist_str }}</td>
        {% endcomment %}
@@ -451,6 +451,7 @@
 <table id="summary-table" class="main-table table table-hover table-compressed">
   <thead>
     <tr>
+      <th></th>
       <th rowspan="1"><div class="text-center">Burn ID</div></th>
       <th rowspan="1"><div class="text-center">Name/Block</div></th>
       <th rowspan="1"><div class="text-center">Position</div></th>
@@ -463,6 +464,7 @@
     {% autopaginate qs_burn 25 %}
     {% for qs in qs_burn %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
+      <td></td>
       <td>
         {% if qs.prescription %}
            <a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>
@@ -547,7 +549,10 @@ $(function(){
      $("#summary-table td a").on('click', function (e) { e.stopPropagation(); });
      $("#summary-table td input").on('click', function (e) { e.stopPropagation(); });
 
-    $(".main-table").tablesorter();
+     $(".main-table").tablesorter({
+        headers: {0: {sorter: false}}
+     });
+
     $("#burns-table tr:contains('Total')").css("font-weight","bold");
 
     $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
