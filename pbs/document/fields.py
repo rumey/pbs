@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 from django.forms import ValidationError
@@ -6,7 +7,7 @@ from django.db.models import FileField
 from django.template.defaultfilters import filesizeformat
 
 from io import BytesIO
-from swingers.utils.decorators import workdir
+import tempfile
 from south.modelsinspector import add_introspection_rules
 
 
@@ -25,15 +26,15 @@ class ContentTypeRestrictedFileField(FileField):
         self.max_upload_size = max_upload_size
         super(ContentTypeRestrictedFileField, self).__init__(*args, **kwargs)
 
-    @workdir()
     def clean(self, *args, **kwargs):
         data = super(ContentTypeRestrictedFileField, self).clean(*args,
                                                                  **kwargs)
         upload = data.file
         content_type = upload.content_type
         fname = os.path.basename(data.path)
+        workdir = tempfile.mkdtemp()
         zip_types = ['application/zip', 'application/x-zip-compressed']
-        with open(fname, "w") as fin:
+        with open(os.path.join(workdir, fname), "w") as fin:
             fin.write(data.read())
         if ((content_type in self.content_types and
              content_type not in zip_types)):
@@ -45,19 +46,20 @@ class ContentTypeRestrictedFileField(FileField):
             if fname.rsplit(".")[1] != "pdf":
                 try:
                     pdfname = fname.rsplit(".")[0] + ".pdf"
-                    subprocess.check_output(["convert", fname, pdfname])
+                    subprocess.check_output(["convert", os.path.join(workdir, fname), os.path.join(workdir, pdfname)])
                     fname = pdfname
                 except subprocess.CalledProcessError:
                     raise ValidationError("File {0} appears to be corrupt, "
                                           "please check and try again." % (
                                               fname))
             try:
-                subprocess.check_output(["pdfinfo", "-box", fname])
+                subprocess.check_output(["pdfinfo", "-box", os.path.join(workdir, fname)])
             except subprocess.CalledProcessError:
                 raise ValidationError("File {0} appears to be corrupt, please "
                                       "check and try again.".format(fname))
-            data.file = BytesIO(open(fname, "r").read())
-            data.file.size = os.path.getsize(fname)
+            data.file = BytesIO(open(os.path.join(workdir, fname), "r").read())
+            data.file.size = os.path.getsize(os.path.join(workdir, fname))
+            shutil.rmtree(workdir)
         elif content_type not in zip_types:
             # Generate list of OK file extensions.
             ext = [i.split('/')[1] for i in self.content_types]
