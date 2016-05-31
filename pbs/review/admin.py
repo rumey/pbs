@@ -445,12 +445,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             elif report=='epfp_fireload':
-                unset_objects = self.check_rolled_records(dt) # check records are correctly set
-                if len(unset_objects) > 0:
-                    message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
-                        ', '.join([obj.fire_idd for obj in unset_objects]))
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
@@ -475,7 +469,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "Approve":
-
             if self.sdo_group not in request.user.groups.all():
                 message = "Only a SDO role can APPROVED burns"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
@@ -511,6 +504,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             elif report=='epfp_fireload':
+                unset_objects = self.check_rolled_records(dt) # check records are correctly set
+                if len(unset_objects) > 0:
+                    message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
+                        ', '.join([obj.fire_idd for obj in unset_objects]))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
                 not_acknowledged = []
                 already_acknowledged = []
