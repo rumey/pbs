@@ -445,6 +445,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             elif report=='epfp_fireload':
+                unset_objects = self.check_rolled_records(dt) # check records are correctly set
+                if len(unset_objects) > 0:
+                    message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
+                        ', '.join([obj.fire_idd for obj in unset_objects]))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
@@ -478,18 +484,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "Can only approve burns for today {}, or tomorrow {}.".format(today, tomorrow)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-            # copy yesterdays ongoing active records to today
-            if report=='epfp_planned':
-                self.copy_ongoing_records(dt)
-                unset_objects = self.check_rolled_records(dt)
-
-                if len(unset_objects) > 0:
-                    message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
-                        ', '.join([obj.fire_idd for obj in unset_objects]))
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
             count = 0
             if report=='epfp_planned':
+                self.copy_ongoing_records(dt) # copy yesterdays ongoing active records to today
+
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
@@ -513,6 +511,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             elif report=='epfp_fireload':
+
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
