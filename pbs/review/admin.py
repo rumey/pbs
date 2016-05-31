@@ -485,10 +485,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
                 if len(unset_objects) > 0:
                     message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
-                        ', '.join([obj.prescription.burn_id for obj in unset_objects]))
+                        ', '.join([obj.fire_idd for obj in unset_objects]))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-            #import ipdb; ipdb.set_trace()
             count = 0
             if report=='epfp_planned':
                 not_acknowledged = []
