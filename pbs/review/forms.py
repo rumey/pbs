@@ -110,7 +110,7 @@ class PrescribedBurnActiveForm(forms.ModelForm):
             # check for integrity constraint - duplicate keys
             prescription = self.cleaned_data['prescription']
             dt = self.cleaned_data['date']
-            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A)
+            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B)
             if objects:
                 raise ValidationError("Burn ID  {}  already exists on this date".format(objects[0].prescription.burn_id))
             else:

@@ -60,7 +60,7 @@ class Acknowledgement(models.Model):
     acknow_type = models.CharField(max_length=64, null=True, blank=True)
     acknow_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
-    fmt = "%d/%m/%Y %H:%M:%S"
+    fmt = "%d/%m/%Y %H:%M"
 
     @property
     def record(self):
