@@ -279,12 +279,12 @@
                 <td colspan="3">{{ qs.conditions }}</td>
               </tr>
               <tr>
-                <th>Submitted</th>
-                <td>{{ qs.submitted_by.get_full_name}}<br>{{ qs.submitted_date_str }}</td>
-                <th>Endorsed</th>
-                <td>{{ qs.endorsed_by.get_full_name }}<br>{{ qs.endorsed_date_str }}</td>
-                <th>Approved</th>
-                <td>{{ qs.approved_by.get_full_name }}<br>{{ qs.approved_date_str }}</td>
+                <th>Submit</th>
+                <td>{{ qs.user_a_record  }}</td>
+                <th>RDO</th>
+                <td>{{ qs.srm_a_record  }}</td>
+                <th>SDO</th>
+                <td>{{ qs.sdo_a_record  }}</td>
               </tr>
 
             </tbody>
@@ -297,7 +297,6 @@
   </tbody>
 </table>
 {% endif %}
-{% paginate %}
 
 {% if report == "epfp_fireload" %}
 <div>
@@ -434,6 +433,16 @@
                 </tr>
               {% endif %}
 
+              <tr>
+                <th>Submit</th>
+                <td>{{ qs.user_b_record  }}</td>
+                <th>RDO</th>
+                <td>{{ qs.srm_b_record  }}</td>
+                <th>SDO</th>
+                <td>{{ qs.sdo_b_record  }}</td>
+              </tr>
+
+
             </tbody>
           </table>
         </td>
@@ -445,7 +454,6 @@
 </table>
 
 {% endif %}
-{% paginate %}
 
 {% if report == "epfp_summary" %}
 <table id="summary-table" class="main-table table table-hover table-compressed">
@@ -498,35 +506,7 @@
   </p>
 </div>
 
-{% comment %}
-<button id="popup" onclick="div_show()">Popup</button>
-<div id="csv" style="display: none;">
-    <!-- Popup Div Starts Here -->
-    <div id="popupContact">
-        <!-- Contact Us Form -->
-        <form action="#" id="form" method="post" name="form">
-            <img id="close" src="images/3.png" onclick ="div_hide()">
-            <h2>Contact Us</h2>
-            <hr>
-            <input id="name" name="name" placeholder="Name" type="text">
-            <input id="email" name="email" placeholder="Email" type="text">
-            <textarea id="msg" name="message" placeholder="Message"></textarea>
-            <a href="javascript:%20check_empty()" id="submit">Send</a>
-        </form>
-    </div>
-    <!-- Popup Div Ends Here -->
-</div>
-{% endcomment %}
-
 <script>
-
-//function div_show() {
-//    document.getElementById('csv').style.display = "block";
-//}
-
-//function div_hide(){
-//    document.getElementById('csv').style.display = "none";
-//}
 
 $(function(){
      $("[data-toggle=myCollapse]").click(function( ev ) {
@@ -593,14 +573,6 @@ $(function(){
         }
     };
 
-//  $(document).on( 'shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
-//        console.log("***********************************************************");
-//    if (ui.index == 1) {
-//      $(".hide").switchClass('hide', 'show');
-//    } else {
-//      $(".show").switchClass("show", "hide");
-//    }
-//  });
 
 //    $("td").dblclick(function () {
 //        var OriginalContent = $(this).text();
@@ -633,8 +605,6 @@ function toggle(source) {
         //console.log('Checked ' + source.checked);
         console.log('Checked ' + i);
     }
-    //list(source)
-    //console.log(checked_list);
 };
 
 function list(source) {
@@ -688,7 +658,7 @@ $('#update-button').click(function(){
         }
     }
     //console.log("Actions " + $("#actions").val());
-    
+
     var urll;
     urll = "{% url 'admin:action_view' %}";
     $.ajax({
@@ -706,15 +676,10 @@ $('#update-button').click(function(){
             var response = JSON.parse(response);
             //window.location.href = response.redirect; // to redirect
             //location.reload();
-            //$("#planned-table").load(window.location + " #planned-table");
             $(".main-table").load(window.location + " .main-table");
-            //$("#id_approval_status").val(2); 
-            //$("#id_approval_status option[value='1']").attr("selected", true);
-            console.log("response.redirect " + response['redirect']);
-
             growl(response);
+
         }
-        //success: console.log('success - jm' + checked_list), //remove_rows(),
     })
 
     $('[data-toggle="tooltip"]').tooltip();   
