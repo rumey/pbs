@@ -1,5 +1,5 @@
 from django import forms
-from pbs.prescription.models import Region, District
+from pbs.prescription.models import Prescription, Region, District
 from pbs.review.models import PrescribedBurn
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -17,7 +17,8 @@ class PrescribedBurnForm(forms.ModelForm):
         super(PrescribedBurnForm, self).__init__(*args, **kwargs)
 
         prescriptions = self.fields['prescription'].queryset
-        self.fields['prescription'].queryset = prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS']).distinct().order_by('burn_id')
+        self.fields['prescription'].queryset = prescriptions.filter(
+            burnstate__review_type__in=['FMSB','DRFMS'], planning_status=Prescription.PLANNING_APPROVED).distinct().order_by('burn_id')
         self.fields['planned_area'].required=True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
@@ -78,7 +79,8 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         super(PrescribedBurnActiveForm, self).__init__(*args, **kwargs)
 
         prescriptions = self.fields['prescription'].queryset
-        self.fields['prescription'].queryset = prescriptions.filter(burnstate__review_type__in=['FMSB','DRFMS']).distinct().order_by('burn_id')
+        self.fields['prescription'].queryset = prescriptions.filter(
+            burnstate__review_type__in=['FMSB','DRFMS'], planning_status=Prescription.PLANNING_APPROVED).distinct().order_by('burn_id')
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
         self.fields['status'].label = 'Burn Status'
 
