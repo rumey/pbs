@@ -20,6 +20,7 @@ class PrescribedBurnForm(forms.ModelForm):
         self.fields['prescription'].queryset = prescriptions.filter(
             burnstate__review_type__in=['FMSB','DRFMS'], planning_status=Prescription.PLANNING_APPROVED).distinct().order_by('burn_id')
         self.fields['planned_area'].required=True
+        self.fields['location'].required = True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
         now = datetime.now()
@@ -55,6 +56,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
         self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
         #self.fields['prescription'].widget.attrs['readonly'] = 'readonly'
 
+        self.fields['location'].required = True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
         #self.fields['status'].label = 'Burn Status'
 
