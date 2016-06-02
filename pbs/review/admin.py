@@ -314,8 +314,13 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     #location = p.location
                     location = None
 
-                return HttpResponse(json.dumps({"location": location, "tenures": tenures, 'prescription_name': p.name}))
-                #return HttpResponse(json.dumps({"location": epfp.location}))
+                d = {
+                    "location": location,
+                    "tenures": tenures,
+                    "prescription_name": p.name,
+                    "prescription_area": str(p.area),
+                    }
+                return HttpResponse(json.dumps(d))
         return HttpResponse(json.dumps({"location": None, "tenures": None}))
 
     def action_view(self, request, extra_context=None):

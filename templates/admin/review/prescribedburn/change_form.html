@@ -11,7 +11,7 @@ $(function() {
 
     $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
     $("#id_planned_area").attr("min", 0.1)
-    $("#id_area").attr("min", 0.1)
+    $("#id_area").attr("min", 0.0)
 
     $("#id_prescription").change(function () {
         console.log('True  ' + $("#id_prescription").val() )
@@ -36,6 +36,7 @@ $(function() {
 
                 $( "#id_prescription_name").remove()
                 $( "<p id='id_prescription_name'>" + response['prescription_name'] + "</p>" ).insertAfter( "#id_prescription" );
+                $("#id_planned_area").attr("max", response['prescription_area'])
 
             }
             //success: console.log('success - jm' + checked_list), //remove_rows(),
