@@ -314,7 +314,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     #location = p.location
                     location = None
 
-                return HttpResponse(json.dumps({"location": location, "tenures": tenures}))
+                return HttpResponse(json.dumps({"location": location, "tenures": tenures, 'prescription_name': p.name}))
                 #return HttpResponse(json.dumps({"location": epfp.location}))
         return HttpResponse(json.dumps({"location": None, "tenures": None}))
 
