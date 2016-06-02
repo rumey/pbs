@@ -174,6 +174,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             if request.REQUEST.get('form')=='edit_burn':
                 return PrescribedBurnEditForm
 
+    def get_form_kwargs(self):
+            kwargs = super(PrescribedBurnAdmin, self).get_form_kwargs()
+            kwargs.update({'user': self.request.user})
+            import ipdb; ipdb.set_trace()
+            return kwargs
+
     def csv_view(self, request):
         """ view to render the FMSB Report form """
         context = {'form': CsvForm()}
@@ -764,14 +770,20 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
 
-    def active_records(self, dt):
+    def active_records(self, dt, region=None):
         qs_active = PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, form_name=PrescribedBurn.FORM_268B, date=dt)
 
+        active_burns_statewide = qs_active.exclude(prescription__isnull=True)
+        active_fires_statewide = qs_active.exclude(fire_id__isnull=True)
+
         records = {
-            "active_burns_statewide": qs_active.exclude(prescription__isnull=True).count(),
+            "active_burns_statewide": active_burns_statewide.count(),
             "active_burns_non_statewide": qs_active.filter(region__in=[6, 7, 8]).exclude(prescription__isnull=True).count(),
-            "active_fires_statewide": qs_active.exclude(fire_id__isnull=True).count(),
+            "active_fires_statewide": active_fires_statewide.count(),
             "active_fires_non_statewide": qs_active.filter(region__in=[6, 7, 8]).exclude(fire_id__isnull=True).count(),
+
+            "active_burns_region": active_burns_statewide.count() if not region else active_burns_statewide.filter(region=region).count(),
+            "active_fires_region": active_fires_statewide.count() if not region else active_fires_statewide.filter(region=region).count(),
         }
         return records
 
@@ -942,6 +954,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             prescribed_burns = prescribed_burns.filter(prescription__region=region)
             region_name = Region.objects.get(id=int(region)).name
         else:
+            region = None
             region_name = "Statewide"
 
 
@@ -989,7 +1002,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'qs_planned_burns': planned_burns.order_by('prescription__burn_id'),
             'qs_fireload': fireload.order_by('prescription__burn_id'),
             'acknow_records': acknow_records,
-            'active_records': self.active_records(report_date),
+            'active_records': self.active_records(report_date, region),
             'current': obj,
             'prescription': obj,
             'embed': embed,
