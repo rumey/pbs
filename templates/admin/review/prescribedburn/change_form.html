@@ -32,6 +32,8 @@ $(function() {
                 $("#id_location").val(response['location']);
                 $("#id_tenures").val(response['tenures']);
 
+                $( "#id_prescription_name").remove()
+                $( "<p id='id_prescription_name'>" + response['prescription_name'] + "</p>" ).insertAfter( "#id_prescription" );
 
             }
             //success: console.log('success - jm' + checked_list), //remove_rows(),
