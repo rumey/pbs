@@ -301,6 +301,17 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return super(PrescribedBurnAdmin, self).change_view(
             request, object_id, extra_context=context)
 
+    def delete_view(self, request, object_id, extra_context=None):
+        """
+        Redirect to main page on delete.
+        """
+        response = super(PrescribedBurnAdmin, self).delete_view(request, object_id, extra_context)
+
+        if isinstance(response, HttpResponseRedirect):
+            url = reverse('admin:daily_burn_program')
+            return HttpResponseRedirect(url)
+        return response
+
     def prescription_view(self, request, extra_context=None):
         """
         Used for pre-populating location and tenures fields in PrescribedBurnForm, via ajax call

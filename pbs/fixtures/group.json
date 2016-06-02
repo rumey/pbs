@@ -191,11 +191,7 @@
       ["add_prescribedburn", "review", "prescribedburn"],
       ["view_prescribedburn", "review", "prescribedburn"],
       ["change_prescribedburn", "review", "prescribedburn"],
-      ["delete_prescribedburn", "review", "prescribedburn"],
-      ["add_fire", "review", "fire"],
-      ["view_fire", "review", "fire"],
-      ["change_fire", "review", "fire"],
-      ["delete_fire", "review", "fire"]
+      ["delete_prescribedburn", "review", "prescribedburn"]
     ]
   }
 },
