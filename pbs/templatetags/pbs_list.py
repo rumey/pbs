@@ -91,7 +91,8 @@ class ResultList(list):
         self.form = form
         self.group = group
         self.previous = previous
-        self.group_id = "group-{0}".format(shorthash(group))
+        #self.group_id = "group-{0}".format(shorthash(group))
+        self.group_id = "group-{0}".format(group)
         super(ResultList, self).__init__(*items)
 
 
