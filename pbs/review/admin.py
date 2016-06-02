@@ -253,7 +253,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     def add_view(self, request, form_url='', extra_context=None):
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
         if request.GET.get('form') == 'add_fire':
-            context = {'form_title': 'Add Fire'}
+            context = {'form_title': 'Add Bushfire'}
         else:
             context = {'form_title': 'Add Prescribed Burn'}
 
@@ -288,7 +288,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
         if request.GET.get('form') == 'edit_fire':
-            context = {'form_title': 'Change Fire'}
+            context = {'form_title': 'Change Bushfire'}
         else:
             context = {'form_title': 'Change Prescribed Burn'}
 

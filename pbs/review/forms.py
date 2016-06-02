@@ -43,7 +43,6 @@ class PrescribedBurnForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        #exclude = ('fire_id', 'fire_name', 'region', 'district', 'status', 'area', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
         fields = ('prescription', 'date', 'external_assist', 'planned_area', 'tenures', 'location', 'est_start', 'conditions',)
 
 
@@ -252,7 +251,7 @@ class PrescribedBurnFilterForm(forms.Form):
 class FireLoadFilterForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
     district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
-    fire_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Fires')])
+    fire_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Bushfires')])
     approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
 
 

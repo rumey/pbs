@@ -13,14 +13,6 @@
     "name": "DFES"
   }
 },
-{
-  "pk": 3,
-  "model": "review.externalassist",
-  "fields": {
-    "name": "DPaW Ext"
-  }
-},
-
 
 {
   "COMMENT": "PLANNED, APPROVED",
