@@ -33,6 +33,13 @@
 .myCollapse.in {
       display: table-row;
 }
+
+#content {
+    float:left;
+    text-align:left;
+    width:90%;
+}
+
 </style>
 {% endblock %}
 
@@ -82,6 +89,7 @@
 <ul id="filters" class="nav">
     <li class="filter-pad">
         <form class="form-inline">
+            <div id="content">
             {% if report == "epfp_planned" %}
                 <label for="id_date" class="control-label">Date</label>
                 <input type="text" id="id_date" value="{{date}}" name="date"/>
@@ -95,37 +103,32 @@
                 <label for="id_approval_status" class="control-label">Approval</label>
                 {{ form.approval_status }}
 
-                {% comment %}
-                <div class="btn-group open">
-                    <button title="Approved" type="button" class="multiselect dropdown-toggle btn btn-default" data-toggle="dropdown"><span class="multiselect-selected-text">Approved</span> <b class="caret"></b></button>
-                    <ul class="multiselect-container dropdown-menu">
-                        <li><a tabindex="0"><label class="checkbox"><input value="1" type="checkbox"> Draft</label></a></li>
-                        <li><a tabindex="0"><label class="checkbox"><input value="2" type="checkbox"> Submitted</label></a></li>
-                        <li><a tabindex="0"><label class="checkbox"><input value="3" type="checkbox"> Endorsed</label></a></li>
-                        <li class="active"><a tabindex="0"><label class="checkbox"><input value="4" type="checkbox"> Approved</label></a></li>
-                    </ul>
-                </div>
-                {% endcomment %}
-
-
                 <input class="hidden" style="float: right;" name="report" value="epfp_planned">
+                <button type="submit" class="btn btn-primary">Update</button>
+
             {% elif report == "epfp_fireload" %}
                 <label for="id_date" class="control-label">Date</label>
                 <input type="text" id="id_date" value="{{date}}" name="date"/>
-
-                <label for="id_fire_type" class="control-label">Fire Type</label>
-                {{ form.fire_type }}
 
                 <label for="id_region" class="control-label">Region</label>
                 {{ form.region }}
 
                 <label for="id_district" class="control-label">District</label>
                 {{ form.district }}
+                <button type="submit" class="btn btn-primary">Update</button>
+
+                <br>
+                <br>
+                <label for="id_fire_type" class="control-label">Fire Type</label>
+                {{ form.fire_type }}
 
                 <label for="id_approval_status" class="control-label">Approval</label>
                 {{ form.approval_status }}
 
                 <input class="hidden" style="float: right;" name="report" value="epfp_fireload">
+                <br>
+                <br>
+
             {% elif report == "epfp_summary" %}
                 <label for="id_date" class="control-label">Date</label>
                 <input type="text" id="id_date" value="{{date}}" name="date"/>
@@ -137,8 +140,10 @@
                 {{ form.district }}
 
                 <input class="hidden" style="float: right;" name="report" value="epfp_summary">
+                <button type="submit" class="btn btn-primary">Update</button>
+
             {% endif %}
-            <button type="submit" class="btn btn-primary">Update</button>
+            </div>
         </form>
     </li>
 
