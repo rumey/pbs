@@ -258,10 +258,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
     def add_view(self, request, form_url='', extra_context=None):
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
+        context = {'is_sdo': self.sdo_group in request.user.groups.all()}
         if request.GET.get('form') == 'add_fire':
-            context = {'form_title': 'Add Bushfire'}
+            context.update({'form_title': 'Add Bushfire'})
         else:
-            context = {'form_title': 'Add Prescribed Burn'}
+            context.update({'form_title': 'Add Prescribed Burn'})
 
         context.update(extra_context or {})
         return super(PrescribedBurnAdmin, self).add_view(request, form_url, context)
@@ -293,10 +294,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
+        context = {'is_sdo': self.sdo_group in request.user.groups.all()}
         if request.GET.get('form') == 'edit_fire':
-            context = {'form_title': 'Change Bushfire'}
+            context.update({'form_title': 'Change Bushfire'})
         else:
-            context = {'form_title': 'Change Prescribed Burn'}
+            context.update({'form_title': 'Change Prescribed Burn'})
 
         return super(PrescribedBurnAdmin, self).change_view(
             request, object_id, extra_context=context)
