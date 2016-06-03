@@ -49,6 +49,22 @@ $(function() {
 
     });
 
+    $("#id_fire_id").change(function () {
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'admin:prescription_view' %}",
+            data: {
+                district: $("#id_district :selected").val(),
+                fire_id: $("#id_fire_id").val()
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                $( "#id_bushfire_code").remove()
+                $( "<p id='id_bushfire_code'>" + response['bushfire_id'] + "</p>" ).insertAfter( "#id_fire_id" );
+            }
+        })
+    });
+
 
         $("select#id_risk").prop('disabled', true);
         $("a#add_id_risk").hide();
