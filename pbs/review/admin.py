@@ -381,7 +381,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #today = date(2016,4,12)
         tomorrow = today + timedelta(days=1)
         yesterday = today - timedelta(days=1)
-        if action == "Submit":
+        if action == "District Entered" or action == "Submit":
             count = 0
             if report=='epfp_planned':
                 not_acknowledged = []
@@ -436,7 +436,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-        elif action == "Endorse":
+        elif action == "Regional Acknowledgement" or action == "Endorse":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
                 message = "Only a SRM and SDO roles can ENDORSE burns"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
@@ -500,7 +500,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-        elif action == "Approve":
+        elif action == "State Acknowledgement" or action == "Approve":
             if self.sdo_group not in request.user.groups.all():
                 message = "Only a SDO role can APPROVED burns"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
@@ -565,7 +565,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-        elif action == "Delete Approve":
+        elif action == "Delete State Acknowledgement" or action == "Delete Approve":
             if self.sdo_group not in request.user.groups.all():
                 message = "Only a SDO role can delete an APPROVAL"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
@@ -595,7 +595,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "No 'Approved' records were removed"
                 msg_type = "info"
 
-        elif action == "Delete Endorse":
+        elif action == "Delete Regional Acknowledgement" or action == "Delete Endorse":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
                 message = "Only a SRM and SDO roles can delete an ENDORSEMENT"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
@@ -625,7 +625,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "No 'Endorsed' records were removed"
                 msg_type = "info"
 
-        elif action == "Delete Submit":
+        elif action == "Delete Entry" or action == "Delete Submit":
             count = 0
             for obj in objects:
                 if report=='epfp_planned':
