@@ -8,7 +8,7 @@ from pbs.review.models import BurnState, PrescribedBurn, Acknowledgement
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
         PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm
     )
-from pbs.prescription.models import Prescription, Approval, Region
+from pbs.prescription.models import Prescription, Approval, Region, District
 from datetime import datetime, date, timedelta
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -317,12 +317,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     def prescription_view(self, request, extra_context=None):
         """
         Used for pre-populating location and tenures fields in PrescribedBurnForm, via ajax call
+        also for calculating and returning the bushfire_id string for the FireForm
         """
         if request.is_ajax():
             if request.REQUEST.has_key('burn_id'):
                 burn_id = str( request.REQUEST.get('burn_id') )
-#                if not burn_id or burn_id.startswith('---'):
-#                    return
                 logger.info('burn_id '.format(burn_id))
                 p = Prescription.objects.filter(burn_id=burn_id)[0]
                 tenures = ', '.join([i.name for i in p.tenures.all()])
@@ -340,7 +339,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     "prescription_area": str(p.area),
                     }
                 return HttpResponse(json.dumps(d))
-        return HttpResponse(json.dumps({"location": None, "tenures": None}))
+
+            if request.REQUEST.has_key('fire_id'):
+                fire_id = str( request.REQUEST.get('fire_id') )
+                district_id = request.REQUEST.get('district')
+                code = District.objects.get(id=district_id).code
+
+                bushfire_id = code + '_' + fire_id
+                return HttpResponse(json.dumps({'bushfire_id': bushfire_id}))
+
+        return HttpResponse(json.dumps({"location": None, "tenures": None, 'bushfire_id': None}))
 
     def action_view(self, request, extra_context=None):
         if request.REQUEST.has_key('report'):

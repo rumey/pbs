@@ -83,7 +83,6 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         prescriptions = self.fields['prescription'].queryset
         self.fields['prescription'].queryset = prescriptions.filter(
             burnstate__review_type__in=['FMSB','DRFMS'], planning_status=Prescription.PLANNING_APPROVED).distinct().order_by('burn_id')
-        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
         self.fields['status'].label = 'Burn Status'
 
         now = datetime.now()
@@ -106,7 +105,6 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         self.fields['prescription'].required = True
         self.fields['status'].required = True
         self.fields['area'].required = True
-        self.fields['location'].required = True
 
     def clean(self):
         if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
@@ -121,7 +119,7 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'status', 'further_ignitions', 'completed', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
+        fields = ('prescription', 'date', 'status', 'further_ignitions', 'completed', 'external_assist', 'area', 'tenures')
 
 
 class PrescribedBurnEditActiveForm(forms.ModelForm):
@@ -129,7 +127,6 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         super(PrescribedBurnEditActiveForm, self).__init__(*args, **kwargs)
 
         self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
-        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
         self.fields['status'].label = 'Burn Status'
 
         now = datetime.now()
@@ -151,7 +148,6 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
         self.fields['status'].required = True
         self.fields['area'].required = True
-        self.fields['location'].required = True
 
     def clean_prescription(self):
         instance = getattr(self, 'instance', None)
@@ -162,7 +158,7 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'status', 'further_ignitions', 'completed', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
+        fields = ('prescription', 'date', 'status', 'further_ignitions', 'completed', 'external_assist', 'area', 'tenures')
 
 
 

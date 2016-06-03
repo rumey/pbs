@@ -112,7 +112,7 @@ class PrescribedBurn(Audit):
     #fire = models.ForeignKey(Fire, null=True, blank=True)
 
     # Required for Fire records
-    fire_id = models.CharField(verbose_name="ID", max_length=10, null=True, blank=True)
+    fire_id = models.CharField(verbose_name="Fire Number", max_length=10, null=True, blank=True)
     fire_name = models.TextField(verbose_name="Name", null=True, blank=True)
     region = models.PositiveSmallIntegerField(choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     district = ChainedForeignKey(
