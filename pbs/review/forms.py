@@ -246,23 +246,22 @@ class FireEditForm(forms.ModelForm):
         fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'further_ignitions', 'completed', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
 
 
-class PrescribedBurnFilterForm(forms.Form):
-    region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
-    district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
+class PrescribedBurnFilterForm(forms.ModelForm):
     approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
 
+    class Meta:
+        fields = ('region', 'district', 'approval_status')
+        model = PrescribedBurn
 
-class FireLoadFilterForm(forms.Form):
-    region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
-    district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
+
+class FireLoadFilterForm(forms.ModelForm):
     fire_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Bushfires')])
     approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
 
-
-class FireFormSet(forms.ModelForm):
     class Meta:
+        fields = ('region', 'district', 'fire_type', 'approval_status')
         model = PrescribedBurn
-        exclude = ('prescription', )
+
 
 class CsvForm(forms.Form):
     def __init__(self, *args, **kwargs):
