@@ -255,7 +255,7 @@
       <td>{% if qs.sdo_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_a_record  }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td >{% if qs.has_conditions %}<div class="text-center" data-toggle="tooltip" title="Click to view Special Conditions"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td><a id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
-      <td><a id="delete-plannedburn" href="{% url 'admin:review_prescribedburn_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+      <td><a id="delete-plannedburn" href="{% url 'admin:bulk_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
     <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
 
@@ -665,7 +665,13 @@ $('#update-button').click(function(){
             checked_list.push(parseInt(checkboxes[i].value))
         }
     }
-    //console.log("Actions " + $("#actions").val());
+    console.log("Actions " + $("#actions").val());
+    if ($("#actions :selected").text() == "Delete Record"){
+        console.log("Delete Selected ************ ");
+        //window.location.href = "{% url 'admin:bulk_delete' 1 %}";
+        window.location.href = "/review/prescribedburn/bulk_delete/" + checked_list.toString();
+        return;
+    }
 
     var urll;
     urll = "{% url 'admin:action_view' %}";

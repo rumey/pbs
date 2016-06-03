@@ -252,6 +252,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             url(r'^csv',
                 wrap(self.csv_view),
                 name='csv_view'),
+            #url(r'^bulk_delete/(\d+)/$',
+            #url(r'^bulk_delete/(\w+)/$',
+            #url(r'^bulk_delete/([\d,]+)$',
+            url(r'^bulk_delete/([\w\,]+)/$',
+                wrap(self.bulk_delete),
+                name='bulk_delete'),
 
         )
         return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
@@ -659,18 +665,31 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         self.message_user(request, "Only a SDO role can delete an APPROVED burn")
                         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-            count = objects.count()
-            objects.delete()
-            if objects.count() == 0:
-                message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
-                msg_type = "success"
-            else:
-                message = "Failed to delete {} submitted burn{} (Records: {})".format(
-                    objects.count(),
-                    "s" if objects.count()>1 else "",
-                    ', '.join([i.fire_id for i in objects])
-                )
-                msg_type = "danger"
+            object_ids = [obj.id for obj in objects]
+            url = reverse('admin:bulk_delete', args=object_ids)
+            #import ipdb; ipdb.set_trace()
+            #return HttpResponseRedirect(url)
+            return HttpResponse(url)
+#            context = {
+#                'deletable_objects': objects,
+#                'current': objects[0],
+#            }
+#            template = 'admin/delete_selected_confirmation.html'
+#            import ipdb; ipdb.set_trace()
+#            return TemplateResponse(request, template, context) #, current_app=self.admin_site.name)
+
+#            count = objects.count()
+#            objects.delete()
+#            if objects.count() == 0:
+#                message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
+#                msg_type = "success"
+#            else:
+#                message = "Failed to delete {} submitted burn{} (Records: {})".format(
+#                    objects.count(),
+#                    "s" if objects.count()>1 else "",
+#                    ', '.join([i.fire_id for i in objects])
+#                )
+#                msg_type = "danger"
 
         elif action == "Copy Record to Tomorrow":
             if not (dt >= yesterday or dt <= tomorrow):
@@ -694,8 +713,31 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "No records were modified"
                 msg_type = "info"
 
-
         return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
+    #def bulk_delete(self, request, object_id, extra_context=None):
+    def bulk_delete(self, request, object_ids, extra_context=None):
+        """
+        View to bulk delete prescribed burns/fires
+        """
+        import ipdb; ipdb.set_trace()
+        object_ids = map(int, object_ids.split(','))
+        #obj = self.get_object(request, unquote(object_id))
+
+        if request.method == 'POST':
+            url = reverse('admin:prescription_prescription_detail',
+                          args=[str(obj.id)])
+            if request.POST.get('_cancel'):
+                return HttpResponseRedirect(url)
+
+        #import ipdb; ipdb.set_trace()
+        objects = PrescribedBurn.objects.filter(id__in=object_ids)
+        context = {
+            'deletable_objects': objects,
+            'current': objects[0],
+        }
+        template = 'admin/review/prescribedburn/delete_selected_confirmation.html'
+        return TemplateResponse(request, template, context) #, current_app=self.admin_site.name)
 
     def daily_burn_program(self, request, extra_context=None):
         """
