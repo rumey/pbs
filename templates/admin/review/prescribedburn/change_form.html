@@ -10,8 +10,12 @@
 $(function() {
 
     $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
-    $("#id_planned_area").attr("min", 0.1)
-    $("#id_area").attr("min", 0.0)
+    $("#id_planned_area").attr("min", 0.1);
+    $("#id_area").attr("min", 0.0);
+
+    {% if not is_sdo %}
+        $("#id_conditions").attr("disabled", "disabled");
+    {% endif %}
 
     $("#id_prescription").change(function () {
         console.log('True  ' + $("#id_prescription").val() )
