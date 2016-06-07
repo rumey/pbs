@@ -241,7 +241,7 @@
   "pk": 6,
   "model": "auth.group",
   "fields": {
-    "name": "State Regional Manager",
+    "name": "Regional Duty Officer",
     "permissions": [
       ["can_endorse", "review", "prescribedburn"]
     ]

@@ -153,7 +153,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
     @property
     def srm_group(self):
-        return Group.objects.get(name='State Regional Manager')
+        return Group.objects.get(name='Regional Duty Officer')
 
     @property
     def sdo_group(self):
@@ -473,6 +473,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
+                    elif not obj.formA_user_acknowledged:
+                        message = "record must first be submitted"
+                        msg_type = "danger"
+
                     elif obj.formA_srm_acknowledged:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
@@ -496,6 +500,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                                 msg_type = "success"
                             else:
                                 not_acknowledged.append(obj.fire_idd)
+
+                        elif not obj.formB_user_acknowledged:
+                            message = "record must first be submitted"
+                            msg_type = "danger"
 
                         elif obj.formB_srm_acknowledged:
                             already_acknowledged.append(obj.fire_idd)
@@ -532,6 +540,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
+                    elif not obj.formA_srm_acknowledged:
+                        message = "record must first be regionally acknowledged"
+                        msg_type = "danger"
+
                     elif obj.formA_sdo_acknowledged:
                         already_acknowledged.append(obj.fire_idd)
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
@@ -561,6 +573,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                                 msg_type = "success"
                             else:
                                 not_acknowledged.append(obj.fire_idd)
+
+                        elif not obj.formB_srm_acknowledged:
+                            message = "record must first be regionally acknowledged"
+                            msg_type = "danger"
 
                         elif obj.formB_sdo_acknowledged:
                             already_acknowledged.append(obj.fire_idd)
@@ -715,23 +731,22 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
 
-    #def bulk_delete(self, request, object_id, extra_context=None):
     def bulk_delete(self, request, object_ids, extra_context=None):
         """
         View to bulk delete prescribed burns/fires
         """
-        import ipdb; ipdb.set_trace()
         object_ids = map(int, object_ids.split(','))
-        #obj = self.get_object(request, unquote(object_id))
+        objects = PrescribedBurn.objects.filter(id__in=object_ids)
+        for obj in objects:
+            if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
+                if self.sdo_group not in request.user.groups.all():
+                    self.message_user(request, "Only a SDO role can delete an APPROVED burn")
+                    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         if request.method == 'POST':
-            url = reverse('admin:prescription_prescription_detail',
-                          args=[str(obj.id)])
-            if request.POST.get('_cancel'):
-                return HttpResponseRedirect(url)
+            objects.delete()
+            return HttpResponseRedirect(reverse('admin:daily_burn_program'))
 
-        #import ipdb; ipdb.set_trace()
-        objects = PrescribedBurn.objects.filter(id__in=object_ids)
         context = {
             'deletable_objects': objects,
             'current': objects[0],
@@ -866,7 +881,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
 
         tomorrow = dt + timedelta(days=1) # relative to dt
-        objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE).exclude(completed=True)]
+        #objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE).exclude(completed=True)]
+        objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE).exclude(ignition_status=PrescribedBurn.IGNITION_STATUS_COMPLETED)]
         now = timezone.now()
         admin = User.objects.get(username='admin')
         count = 0
@@ -1024,6 +1040,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         planned_burns = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268A, acknowledgements__acknow_type__in=['SDO_A']).exclude(prescription__isnull=True)
         fireload = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268B, status=PrescribedBurn.BURN_ACTIVE, acknowledgements__acknow_type__in=['SDO_B'])
 
+        planned_burns_rdo = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268A, acknowledgements__acknow_type__in=['SRM_A']).exclude(prescription__isnull=True).exclude(acknowledgements__acknow_type__in=['SDO_A'])
+        fireload_rdo = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268B, status=PrescribedBurn.BURN_ACTIVE, acknowledgements__acknow_type__in=['SRM_B']).exclude(acknowledgements__acknow_type__in=['SDO_B'])
+
         def acknow(burns, acknow_type):
             acknowledgements = Acknowledgement.objects.filter(burn__in=burns, acknow_type=acknow_type).distinct()
             return ', '.join(set([i.user.get_full_name() for i in acknowledgements]))
@@ -1052,7 +1071,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         subtitles = {
             #"daily_burn_program": "Part A - Daily Burn Program",
             "form268a": "268a - Planned Burns",
+            "form268a_rdo": "268a - Planned Burns (RDO ONLY)",
             "form268b": "268b - Fire Load",
+            "form268b_rdo": "268b - Fire Load (RDO ONLY)",
             "form268c": "268c - Approved Burns",
         }
         embed = False if request.GET.get("embed") == "false" else True
@@ -1061,9 +1082,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'date': datetime.now().strftime('%d %b %Y'),
             'region': region_name,
             'time': datetime.now().strftime('%H:%M'),
+            'report_date': report_date.strftime('%d %b %Y'),
             'state_regional_manager': datetime.now().strftime('%H:%M'),
             'qs_planned_burns': planned_burns.order_by('prescription__burn_id'),
             'qs_fireload': fireload.order_by('prescription__burn_id'),
+            'qs_planned_burns_rdo': planned_burns_rdo.order_by('prescription__burn_id'),
+            'qs_fireload_rdo': fireload_rdo.order_by('prescription__burn_id'),
             'acknow_records': acknow_records,
             'active_records': self.active_records(report_date, region),
             'current': obj,

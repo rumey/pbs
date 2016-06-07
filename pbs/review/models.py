@@ -45,7 +45,18 @@ class BurnState(models.Model):
 
 @python_2_unicode_compatible
 class ExternalAssist(models.Model):
-    name = models.CharField(max_length=12)
+    name = models.CharField(max_length=25)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+@python_2_unicode_compatible
+class FireTenure(models.Model):
+    name = models.CharField(max_length=50)
 
     class Meta:
         ordering = ['name']
@@ -88,15 +99,24 @@ class PrescribedBurn(Audit):
         (BURN_INACTIVE, 'Inactive'),
     )
 
+    IGNITION_STATUS_NONE = 1
+    IGNITION_STATUS_REQUIRED = 2
+    IGNITION_STATUS_COMPLETED = 3
+    IGNITION_STATUS_CHOICES = (
+        (IGNITION_STATUS_NONE, '----'),
+        (IGNITION_STATUS_REQUIRED, 'Further ignitions required'),
+        (IGNITION_STATUS_COMPLETED, 'Ignition now complete'),
+    )
+
     APPROVAL_DRAFT = 'DRAFT'
     APPROVAL_SUBMITTED = 'USER'
     APPROVAL_ENDORSED = 'SRM'
     APPROVAL_APPROVED = 'SDO'
     APPROVAL_CHOICES = (
         (APPROVAL_DRAFT, 'Draft'),
-        (APPROVAL_SUBMITTED, 'Submitted'),
-        (APPROVAL_ENDORSED, 'Endorsed'),
-        (APPROVAL_APPROVED, 'Approved'),
+        (APPROVAL_SUBMITTED, 'DDO Submit'),
+        (APPROVAL_ENDORSED, 'RDO Endorse'),
+        (APPROVAL_APPROVED, 'SDO Approved'),
     )
 
     FORM_268A = 1
@@ -112,20 +132,24 @@ class PrescribedBurn(Audit):
     #fire = models.ForeignKey(Fire, null=True, blank=True)
 
     # Required for Fire records
-    fire_id = models.CharField(verbose_name="Fire Number", max_length=10, null=True, blank=True)
+    fire_id = models.CharField(verbose_name="Fire Number", max_length=7, null=True, blank=True)
     fire_name = models.TextField(verbose_name="Name", null=True, blank=True)
     region = models.PositiveSmallIntegerField(choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     district = ChainedForeignKey(
         District, chained_field="region", chained_model_field="region",
         show_all=False, auto_choose=True, blank=True, null=True)
+    fire_tenures = models.ManyToManyField(FireTenure, blank=True)
 
     date = models.DateField(auto_now_add=False)
     form_name = models.PositiveSmallIntegerField(verbose_name="Form Name (268a / 268b)", choices=FORM_NAME_CHOICES, editable=True)
 
     status = models.PositiveSmallIntegerField(verbose_name="Fire Status", choices=BURN_CHOICES, null=True, blank=True)
 
-    further_ignitions = models.NullBooleanField(verbose_name="Further ignitions required?")
-    completed = models.NullBooleanField(verbose_name="Ignition now complete?")
+    ignition_status = models.PositiveSmallIntegerField(verbose_name="Ignition Status", choices=IGNITION_STATUS_CHOICES, null=True, blank=True)
+
+    #further_ignitions = models.NullBooleanField(verbose_name="Further ignitions required?")
+    #completed = models.NullBooleanField(verbose_name="Ignition now complete?")
+
     external_assist = models.ManyToManyField(ExternalAssist, blank=True)
     planned_area = models.DecimalField(
         verbose_name="Planned Burn Area (ha)", max_digits=12, decimal_places=1,
@@ -277,7 +301,10 @@ class PrescribedBurn(Audit):
 
     @property
     def tenures_str(self):
-        return self.tenures #', '.join([t.name for t in self.tenures.all()])
+        if self.prescription:
+            return self.tenures #', '.join([t.name for t in self.tenures.all()])
+        else:
+            return ', '.join([i.name for i in self.fire_tenures.all()])
 
     @property
     def had_external_assist(self):

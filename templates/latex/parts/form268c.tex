@@ -9,10 +9,10 @@
     }
   }
 
-\fancyfoot[L]{ \leftmark\newline\textbf Custodian: Principal Fire Operations Officer}
-\noindent Sent by: {{ user }}\hfill Date: {{date}} \\
+\fancyfoot[L]{ \leftmark\newline\textbf Custodian: Principal Fire Operations Officer - {{date}} {{time}}}
+\noindent Sent by: {{ user }}\hfill Date: {{report_date}} \\
 \noindent To: Office of Bushfire Risk Management (OBRM) [obrm@dfes.wa.gov.au] \\
-\noindent From: State Duty Officer (SDO), Department of Parks and Wildlife & \hfill Region: {{region}}
+\noindent From: State Duty Officer (SDO), Department of Parks and Wildlife
 \subsection{\hfil SUMMARY \hfil}
 
 \vspace{5mm}
@@ -56,10 +56,9 @@ The Following burns, which have been approved for ignition today, have been plan
 {% endfor %}
 \end{longtabu}
 
-\subsubsection{Acknowledged}
 \begin{tabu} to \linewidth { | X[0.4] | X | }
 \hline
-\textbf{for State Duty Officer} & \textbf{ {{ acknow_records.sdo_A }} } \\
+\textbf{Approved by State Duty Officer} & \textbf{ {{ acknow_records.sdo_A }} } \\
 \hline
 \end{tabu}\\%%[\baselineskip]
 

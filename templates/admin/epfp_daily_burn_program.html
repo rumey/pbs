@@ -183,6 +183,8 @@
     <li><a value="form268a" href="javascript: pdf_url('form268a');">Form 268a</a></li>
     <li><a value="form268b" href="javascript: pdf_url('form268b');">Form 268b</a></li>
     <li><a value="form268c" href="javascript: pdf_url('form268c');">Form 268c</a></li>
+    <li><a value="form268a_rdo" href="javascript: pdf_url('form268a_rdo');">Form 268a (RDO)</a></li>
+    <li><a value="form268b_rdo" href="javascript: pdf_url('form268b_rdo');">Form 268b (RDO)</a></li>
     <li><a value="export_csv" href="{% url 'admin:daily_burn_program_exportcsv' %}?date={{date}}&Export_CSV=export_csv">Export CSV</a></li>
     <li><a value="export_csv" href="{% url 'admin:csv_view' %}">FMSB Report</a></li>
   </ul>
@@ -233,7 +235,7 @@
       <th></th>
     </tr>
     <tr>
-      <th><div class="text-center" data-toggle="tooltip" title="District Nomination">Submit</div></th>
+      <th><div class="text-center" data-toggle="tooltip" title="District Nomination">DDO</div></th>
       <th><div class="text-center" data-toggle="tooltip" title="Regional Endorsement">RDO</div></th>
       <th><div class="text-center" data-toggle="tooltip" title="State Approval">SDO</div></th>
     </tr>
@@ -246,7 +248,7 @@
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
       <td nowrap><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>{% if qs.rolled %}<font color="red"> (r)</font>{% endif %}</td>
-      <td>{{ qs.prescription.name }}</td>
+      <td><div class="text-center" data-toggle="tooltip" title="Click on row to view the special conditions">{{ qs.prescription.name }}</div></td>
       <td>{{ qs.location }}</td>
       <td><div class="text-center">{{ qs.planned_area }}</div></td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
@@ -338,16 +340,15 @@
       <th rowspan="2">ID</th>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
-      <th colspan="3"><div class="text-center">Burn Status</div></th>
+      <th colspan="2"><div class="text-center">Burn Status</div></th>
       <th colspan="3"><div class="text-center">Acknowledgement</div></th>
       <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
       <th rowspan="2"><div class="text-center">External Assist</div></th>
     </tr>
     <tr>
       <th> Active </th>
-      <th> Further ignitions req </th>
-      <th> Ignition now completed </th>
-      <th> Submit</th>
+      <th> Ignitions Status </th>
+      <th> DDO</th>
       <th> RDO</th>
       <th> SDO </th>
     </tr>
@@ -366,12 +367,11 @@
         {% endif %}
         {% if qs.rolled %}<font color="red"> (r)</font>{% endif %}
       </td>
-      <td>{{ qs.name }}</td>
+      <td><div class="text-center" data-toggle="tooltip" title="Click on row to view the special conditions">{{ qs.name }}</div></td>
       <td>{{ qs.fire_type }}</td>
 
       <td>{% if qs.active %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% elif qs.active == None %}<span style="display:none">1</span><font color="red">Unset</font>{% else %}<span style="display:none">0</span>{% endif %}</td>
-      <td>{% if qs.further_ignitions %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
-      <td>{% if qs.completed %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
+      <td>{% if qs.ignition_status %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
 
       <td>{% if qs.user_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.user_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{% if qs.srm_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
@@ -489,7 +489,7 @@
         {% endif %}
       </td>
       <td>{{ qs.prescription.name }}</td>
-      <td><div class="text-center">{{ qs.prescription.location_text }}</div></td>
+      <td>{{ qs.prescription.location_text }}</td>
       <td>{{ qs.prescription.purposes_list }}</td>
       <td><div class="text-center">{{ qs.area }}</div></td>
       <td>
@@ -666,35 +666,36 @@ $('#update-button').click(function(){
         }
     }
     console.log("Actions " + $("#actions").val());
+
     if ($("#actions :selected").text() == "Delete Record"){
-        console.log("Delete Selected ************ ");
+        //console.log("Delete Selected ************ " + checked_list.toString());
         //window.location.href = "{% url 'admin:bulk_delete' 1 %}";
         window.location.href = "/review/prescribedburn/bulk_delete/" + checked_list.toString();
-        return;
+
+    } else {
+        var urll;
+        urll = "{% url 'admin:action_view' %}";
+        $.ajax({
+            type: 'POST',
+            //url: "{% url 'admin:action_view' %}",
+            url: urll,
+            data: {
+                "action": $("#actions :selected").text(),
+                "data": checked_list.toString(),
+                "date": "{{date}}",
+                "report": "{{report}}",
+                "csrfmiddlewaretoken": "{{ csrf_token }}",
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                //window.location.href = response.redirect; // to redirect
+                //location.reload();
+                $(".main-table").load(window.location + " .main-table");
+                growl(response);
+
+            }
+        })
     }
-
-    var urll;
-    urll = "{% url 'admin:action_view' %}";
-    $.ajax({
-        type: 'POST',
-        //url: "{% url 'admin:action_view' %}",
-        url: urll,
-        data: {
-            "action": $("#actions :selected").text(),
-            "data": checked_list.toString(),
-            "date": "{{date}}",
-            "report": "{{report}}",
-            "csrfmiddlewaretoken": "{{ csrf_token }}",
-        },
-        success: function(response){
-            var response = JSON.parse(response);
-            //window.location.href = response.redirect; // to redirect
-            //location.reload();
-            $(".main-table").load(window.location + " .main-table");
-            growl(response);
-
-        }
-    })
 
 });
 
