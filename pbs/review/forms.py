@@ -45,7 +45,7 @@ class PrescribedBurnForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'external_assist', 'planned_area', 'tenures', 'location', 'est_start', 'conditions',)
+        fields = ('region', 'prescription', 'date', 'external_assist', 'planned_area', 'tenures', 'location', 'est_start', 'conditions',)
 
 
 class PrescribedBurnEditForm(forms.ModelForm):
@@ -53,6 +53,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnEditForm, self).__init__(*args, **kwargs)
 
+        self.fields['region'].widget.attrs['disabled'] = 'disabled'
         self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
         #self.fields['prescription'].widget.attrs['readonly'] = 'readonly'
 
@@ -70,10 +71,17 @@ class PrescribedBurnEditForm(forms.ModelForm):
         else:
             return self.cleaned_data['prescription']
 
+    def clean_region(self):
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.region
+        else:
+            return self.cleaned_data['region']
+
     class Meta:
         model = PrescribedBurn
         #exclude = ('fire_id', 'fire_name', 'region', 'district', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
-        fields = ('prescription', 'date', 'external_assist', 'planned_area', 'tenures', 'location', 'est_start', 'conditions',)
+        fields = ('region', 'prescription', 'date', 'external_assist', 'planned_area', 'tenures', 'location', 'est_start', 'conditions',)
 
 
 class PrescribedBurnActiveForm(forms.ModelForm):
@@ -113,13 +121,14 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'tenures')
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'tenures')
 
 
 class PrescribedBurnEditActiveForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnEditActiveForm, self).__init__(*args, **kwargs)
 
+        self.fields['region'].widget.attrs['disabled'] = 'disabled'
         self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
         self.fields['status'].label = 'Burn Status'
 
@@ -144,9 +153,16 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         else:
             return self.cleaned_data['prescription']
 
+    def clean_region(self):
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.region
+        else:
+            return self.cleaned_data['region']
+
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'tenures')
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'tenures')
 
 
 

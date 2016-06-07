@@ -128,7 +128,12 @@ class PrescribedBurn(Audit):
 
     fmt = "%Y-%m-%d %H:%M"
 
-    prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
+#    prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
+    prescription = ChainedForeignKey(
+        Prescription, chained_field="region", chained_model_field="region",
+        show_all=False, auto_choose=True, blank=True, null=True)
+
+    fire_tenures = models.ManyToManyField(FireTenure, blank=True)
     #fire = models.ForeignKey(Fire, null=True, blank=True)
 
     # Required for Fire records
