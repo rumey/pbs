@@ -17,7 +17,22 @@ $(function() {
         $("#id_conditions").attr("disabled", "disabled");
     {% endif %}
 
-    $("#id_prescription").change(function () {
+    $("#id_planned_area").change(function () {
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'admin:prescription_view' %}",
+            data: {
+                burn_id: $("#id_prescription :selected").text()
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                $("#id_planned_area").attr("max", response['prescription_area'])
+
+            }
+        })
+    });
+
+    $("#id_prescription #id_planned_area").change(function () {
         console.log('True  ' + $("#id_prescription").val() )
         //$("#id_tenures").text( $('option:selected', $("#id_prescription")).text() );
         //$("#id_location").val("{% url 'admin:prescription_view' %}");

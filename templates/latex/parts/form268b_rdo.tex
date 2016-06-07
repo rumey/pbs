@@ -1,5 +1,5 @@
 \fancyhead[R] {
-    {\bfseries FIRE268b} \break
+    {\bfseries FIRE268b (RDO ONLY)} \break
     {\bfseries Fire Management Services Branch} \break
     \textsc{\Small
     Technology Park, Western Precinct \break
@@ -11,7 +11,7 @@
 
 \fancyfoot[L]{ \leftmark\newline\textbf Custodian: Principal Fire Operations Officer - {{date}} {{time}}}
 \noindent Sent by: {{ user }}\hfill Date: {{report_date}}\hfill Region: {{region}}
-\subsection{\hfil SUMMARY OF CURRENT FIRE LOAD\hfil}
+\subsection{\hfil SUMMARY OF CURRENT FIRE LOAD (RDO Acknowledged)\hfil}
 
 \begin{table}[h]
 \footnotesize
@@ -22,7 +22,7 @@
 \textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \bfseries\makecell[c]{Further \\ Ignitions \\ Required} & \bfseries\makecell[c]{Ignition \\ Completed} & \bfseries\makecell[c]{Achieved \\ Yesterday \\ (ha)} & \textbf{Tenure} & \bfseries\makecell[c]{External \\ Assistance}\\
 \hline
 \endhead
-{% for pb in qs_fireload %}
+{% for pb in qs_fireload_rdo %}
 {% if pb.prescription %}
    \textbf{ {{ pb|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
@@ -50,7 +50,7 @@
 \textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \bfseries\makecell[c]{Further \\ Ignitions \\ Required} & \bfseries\makecell[c]{Ignition \\ Completed} & \bfseries\makecell[c]{Achieved \\ Yesterday \\ (ha)} & \textbf{Tenure} & \bfseries\makecell[c]{External \\ Assistance}\\
 \hline
 \endhead
-{% for pb in qs_fireload %}
+{% for pb in qs_fireload_rdo %}
 {% if not pb.prescription %}
    \textbf{ {{ pb|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
@@ -71,8 +71,6 @@
 
 \subsubsection{Acknowledged}
 \begin{tabu} to \linewidth { | X[0.4] | X | }
-\hline
-\textbf{for Regional Duty Officer} & \textbf{ {{ acknow_records.srm_B }} } \\
 \hline
 \textbf{for State Duty Officer} & \textbf{ {{ acknow_records.sdo_B }} } \\
 \hline

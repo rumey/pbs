@@ -3,14 +3,225 @@
   "pk": 1,
   "model": "review.externalassist",
   "fields": {
-    "name": "Volunteers"
+    "name": "DFES"
   }
 },
 {
   "pk": 2,
   "model": "review.externalassist",
   "fields": {
-    "name": "DFES"
+    "name": "DPaW External"
+  }
+},
+{
+  "pk": 3,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "BFB"
+  }
+},
+{
+  "pk": 4,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "FPC"
+  }
+},
+{
+  "pk": 5,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "LGA"
+  }
+},
+{
+  "pk": 6,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Main Roads"
+  }
+},
+{
+  "pk": 7,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Mining Company"
+  }
+},
+{
+  "pk": 8,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "PP Owner"
+  }
+},
+{
+  "pk": 9,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Private Contractors"
+  }
+},
+{
+  "pk": 10,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "SES"
+  }
+},
+{
+  "pk": 11,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "WAPOL"
+  }
+},
+{
+  "pk": 12,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Western Power"
+  }
+},
+{
+  "pk": 13,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Other"
+  }
+},
+
+{
+  "pk": 1,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "5(1)(G)"
+  }
+},
+{
+  "pk": 2,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "5(1)(H)"
+  }
+},
+{
+  "pk": 3,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Conservation Park"
+  }
+},
+{
+  "pk": 4,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Department of Defence"
+  }
+},
+{
+  "pk": 5,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Executive Director Freehold"
+  }
+},
+{
+  "pk": 6,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Ex-Pastoral Lease"
+  }
+},
+{
+  "pk": 7,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Local Government Reserve"
+  }
+},
+{
+  "pk": 8,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "National Park"
+  }
+},
+{
+  "pk": 9,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Nature Reserve"
+  }
+},
+{
+  "pk": 10,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Other"
+  }
+},
+{
+  "pk": 11,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Other Crown Land"
+  }
+},
+{
+  "pk": 12,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Pastoral Lease"
+  }
+},
+{
+  "pk": 13,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Private Property"
+  }
+},
+{
+  "pk": 14,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Regional Park"
+  }
+},
+{
+  "pk": 15,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Road Reserve"
+  }
+},
+{
+  "pk": 16,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "State Forest"
+  }
+},
+{
+  "pk": 17,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Unallocated Crown Land"
+  }
+},
+{
+  "pk": 18,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Unmanaged Reserve"
+  }
+},
+{
+  "pk": 19,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Water Corporation"
   }
 },
 
@@ -29,7 +240,7 @@
     "date": "2016-05-26",
     "status": null,
     "form_name": 1,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": null,
     "est_start": "18:59:59",
@@ -51,7 +262,7 @@
     "date": "2016-05-26",
     "status": null,
     "form_name": 1,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": null,
     "est_start": "18:59:59",
@@ -73,7 +284,7 @@
     "date": "2016-05-26",
     "status": null,
     "form_name": 1,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": null,
     "est_start": "18:59:59",
@@ -95,7 +306,7 @@
     "date": "2016-05-26",
     "status": null,
     "form_name": 1,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": null,
     "est_start": "18:59:59",
@@ -117,7 +328,7 @@
     "date": "2016-05-26",
     "status": null,
     "form_name": 1,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": null,
     "est_start": "18:59:59",
@@ -140,7 +351,7 @@
     "date": "2016-05-26",
     "status": 1,
     "form_name": 2,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": 0.1,
     "est_start": "18:59:59",
@@ -163,7 +374,7 @@
     "date": "2016-05-26",
     "status": 1,
     "form_name": 2,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": 0.1,
     "est_start": "18:59:59",
@@ -186,7 +397,7 @@
     "date": "2016-05-26",
     "status": 1,
     "form_name": 2,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": 0.2,
     "est_start": "18:59:59",
@@ -209,7 +420,7 @@
     "date": "2016-05-26",
     "status": 1,
     "form_name": 2,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": null,
     "est_start": "18:59:59",
@@ -232,7 +443,7 @@
     "date": "2016-05-26",
     "status": 2,
     "form_name": 2,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": 1.0,
     "est_start": "18:59:59",
@@ -255,7 +466,7 @@
     "date": "2016-05-24",
     "status": 2,
     "form_name": 2,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": 1.0,
     "est_start": "18:59:59",
@@ -278,7 +489,7 @@
     "date": "2016-05-25",
     "status": 2,
     "form_name": 2,
-    "further_ignitions": "False",
+    "ignition_status": 1,
     "planned_area": 10,
     "area": 1.0,
     "est_start": "18:59:59",

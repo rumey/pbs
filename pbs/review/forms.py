@@ -96,12 +96,6 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         status = self.fields['status']
         status.choices = status.choices[1:]
 
-        further_ignitions = self.fields['further_ignitions']
-        further_ignitions.widget.choices = further_ignitions.widget.choices[1:]
-
-        completed = self.fields['completed']
-        completed.widget.choices = completed.widget.choices[1:]
-
         self.fields['prescription'].required = True
         self.fields['status'].required = True
         self.fields['area'].required = True
@@ -119,7 +113,7 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'status', 'further_ignitions', 'completed', 'external_assist', 'area', 'tenures')
+        fields = ('prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'tenures')
 
 
 class PrescribedBurnEditActiveForm(forms.ModelForm):
@@ -140,12 +134,6 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         status = self.fields['status']
         status.choices = status.choices[1:]
 
-        further_ignitions = self.fields['further_ignitions']
-        further_ignitions.widget.choices = further_ignitions.widget.choices[1:]
-
-        completed = self.fields['completed']
-        completed.widget.choices = completed.widget.choices[1:]
-
         self.fields['status'].required = True
         self.fields['area'].required = True
 
@@ -158,7 +146,7 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'status', 'further_ignitions', 'completed', 'external_assist', 'area', 'tenures')
+        fields = ('prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'tenures')
 
 
 
@@ -166,15 +154,14 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 class FireForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FireForm, self).__init__(*args, **kwargs)
-        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
         self.fields['region'].required = True
         self.fields['district'].required = True
         self.fields['fire_id'].required = True
         self.fields['fire_name'].required = True
         self.fields['status'].required = True
-        self.fields['location'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
+        self.fields['fire_id'].widget.attrs.update({'placeholder': 'Digits must be between 001-999'})
         now = datetime.now()
         today = now.date()
         tomorrow = today + timedelta(days=1)
@@ -185,15 +172,9 @@ class FireForm(forms.ModelForm):
         status = self.fields['status']
         status.choices = status.choices[1:]
 
-        further_ignitions = self.fields['further_ignitions']
-        further_ignitions.widget.choices = further_ignitions.widget.choices[1:]
-
-        completed = self.fields['completed']
-        completed.widget.choices = completed.widget.choices[1:]
-
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'further_ignitions', 'completed', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'fire_tenures',)
 
 
 class FireEditForm(forms.ModelForm):
@@ -203,18 +184,11 @@ class FireEditForm(forms.ModelForm):
 
         self.fields['fire_name'].required = True
         self.fields['status'].required = True
-        self.fields['location'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
 
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
         self.fields['district'].widget.attrs['disabled'] = 'disabled'
         self.fields['fire_id'].widget.attrs['disabled'] = 'disabled'
-
-        further_ignitions = self.fields['further_ignitions']
-        further_ignitions.widget.choices = further_ignitions.widget.choices[1:]
-
-        completed = self.fields['completed']
-        completed.widget.choices = completed.widget.choices[1:]
 
     def clean_region(self):
         instance = getattr(self, 'instance', None)
@@ -239,7 +213,7 @@ class FireEditForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'further_ignitions', 'completed', 'external_assist', 'area', 'tenures', 'location', 'conditions',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'fire_tenures',)
 
 
 class PrescribedBurnFilterForm(forms.ModelForm):
