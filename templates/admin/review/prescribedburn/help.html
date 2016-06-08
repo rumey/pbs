@@ -1,0 +1,27 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n %}
+{% load admin_urls %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+<li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+<li><a href="javascript: history.go(-1)">{% trans 'Daily Burn Program' %}</a> <span class="divider">/</span></li>
+<li>{% trans 'Help' %}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+    {% if report == "epfp_planned" %}
+      <h1>Help - Form 268a</h1>
+      <p>{% blocktrans %}Here are some instructions for Form A ...{% endblocktrans %}</p>
+    {% else %}
+      <h1>Help - Form 268b</h1>
+      <p>{% blocktrans %}Here are some instructions for Form B ...{% endblocktrans %}</p>
+    {% endif %}
+
+    <form action="" method="post">{% csrf_token %}
+    <div>
+    <a id="id_cancel_button" href="javascript: history.go(-1)" class="btn btn-info">Return</a>
+    </div>
+    </form>
+{% endblock %}

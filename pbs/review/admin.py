@@ -174,11 +174,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             if request.REQUEST.get('form')=='edit_burn':
                 return PrescribedBurnEditForm
 
-    def get_form_kwargs(self):
-            kwargs = super(PrescribedBurnAdmin, self).get_form_kwargs()
-            kwargs.update({'user': self.request.user})
-            import ipdb; ipdb.set_trace()
-            return kwargs
+#    def get_form_kwargs(self):
+#            kwargs = super(PrescribedBurnAdmin, self).get_form_kwargs()
+#            kwargs.update({'user': self.request.user})
+#            import ipdb; ipdb.set_trace()
+#            return kwargs
 
     def csv_view(self, request):
         """ view to render the FMSB Report form """
@@ -252,13 +252,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             url(r'^csv',
                 wrap(self.csv_view),
                 name='csv_view'),
-            #url(r'^bulk_delete/(\d+)/$',
-            #url(r'^bulk_delete/(\w+)/$',
-            #url(r'^bulk_delete/([\d,]+)$',
             url(r'^bulk_delete/([\w\,]+)/$',
                 wrap(self.bulk_delete),
                 name='bulk_delete'),
-
+            url(r'^help',
+                wrap(self.help_view),
+                name='help_view'),
         )
         return urlpatterns + super(PrescribedBurnAdmin, self).get_urls()
 
@@ -313,6 +312,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         """
         Redirect to main page on delete.
         """
+        obj = self.get_object(request, unquote(object_id))
+        if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
+            if self.sdo_group not in request.user.groups.all():
+                self.message_user(request, "Only a SDO role can delete an APPROVED burn")
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
         response = super(PrescribedBurnAdmin, self).delete_view(request, object_id, extra_context)
 
         if isinstance(response, HttpResponseRedirect):
@@ -675,37 +680,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 msg_type = "info"
 
         elif action == "Delete Record":
-            for obj in objects:
-                if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
-                    if self.sdo_group not in request.user.groups.all():
-                        self.message_user(request, "Only a SDO role can delete an APPROVED burn")
-                        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-            object_ids = [obj.id for obj in objects]
-            url = reverse('admin:bulk_delete', args=object_ids)
-            #import ipdb; ipdb.set_trace()
-            #return HttpResponseRedirect(url)
-            return HttpResponse(url)
-#            context = {
-#                'deletable_objects': objects,
-#                'current': objects[0],
-#            }
-#            template = 'admin/delete_selected_confirmation.html'
-#            import ipdb; ipdb.set_trace()
-#            return TemplateResponse(request, template, context) #, current_app=self.admin_site.name)
-
-#            count = objects.count()
-#            objects.delete()
-#            if objects.count() == 0:
-#                message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
-#                msg_type = "success"
-#            else:
-#                message = "Failed to delete {} submitted burn{} (Records: {})".format(
-#                    objects.count(),
-#                    "s" if objects.count()>1 else "",
-#                    ', '.join([i.fire_id for i in objects])
-#                )
-#                msg_type = "danger"
+            """ This function now dealt with by javascript --> which calls prescription_view()"""
+            pass
 
         elif action == "Copy Record to Tomorrow":
             if not (dt >= yesterday or dt <= tomorrow):
@@ -753,6 +729,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         }
         template = 'admin/review/prescribedburn/delete_selected_confirmation.html'
         return TemplateResponse(request, template, context) #, current_app=self.admin_site.name)
+
+    def help_view(self, request, extra_context=None):
+        return TemplateResponse(request, 'admin/review/prescribedburn/help.html', {'report': request.GET['report']})
 
     def daily_burn_program(self, request, extra_context=None):
         """

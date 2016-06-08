@@ -197,6 +197,7 @@
     {% comment %}
     <a class="btn btn-small btn-info" style="float: right" href="{{ add_prescribed_burn }}"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
     {% endcomment %}
+    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_view' %}?report=epfp_planned"><i class="icon-info"></i> Help</a>
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_burn"><i class="icon-plus icon-white"></i> Add Planned Burn</a>
 
     <select id="actions">
@@ -250,7 +251,7 @@
       <td nowrap><a href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>{% if qs.rolled %}<font color="red"> (r)</font>{% endif %}</td>
       <td><div class="text-center" data-toggle="tooltip" title="Click on row to view the special conditions">{{ qs.prescription.name }}</div></td>
       <td>{{ qs.location }}</td>
-      <td><div class="text-center">{{ qs.planned_area }}</div></td>
+      <td><div class="text-center">{{ qs.planned_area_str }}</div></td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
       <td>{% if qs.user_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.user_a_record }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{% if qs.srm_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_a_record  }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
@@ -314,6 +315,7 @@
     {% comment %}
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Bushfire</a>
     {% endcomment %}
+    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_view' %}?report=epfp_fireload"><i class="icon-info"></i> Help</a>
     <a class="btn btn-small btn-danger" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_fire"><i class="icon-plus icon-white"></i> Add Bushfire</a>
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_active_burn"><i class="icon-plus icon-white"></i> Add Burn</a>
 
@@ -377,7 +379,7 @@
       <td>{% if qs.srm_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{% if qs.sdo_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
 
-      <td>{% if qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% else %}<div class="text-center">{{ qs.area }}</div>{% endif %}</td>
+      <td>{% if qs.area == None %}<div class="text-center"><font color="red">Unset</font></div>{% else %}<div class="text-center">{{ qs.area_str }}</div>{% endif %}</td>
       <td>{% if qs.had_external_assist %}<div class="text-center" data-toggle="tooltip" title="Click to view External Assist details"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       {% if qs.prescription %}
         <td><a id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_active_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
@@ -491,7 +493,7 @@
       <td>{{ qs.prescription.name }}</td>
       <td>{{ qs.prescription.location_text }}</td>
       <td>{{ qs.prescription.purposes_list }}</td>
-      <td><div class="text-center">{{ qs.area }}</div></td>
+      <td><div class="text-center">{{ qs.planned_area_str }}</div></td>
       <td>
         {% if not qs.active %}
           <div class="text-center">{{ qs.est_start }}</div>
