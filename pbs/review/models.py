@@ -99,11 +99,9 @@ class PrescribedBurn(Audit):
         (BURN_INACTIVE, 'Inactive'),
     )
 
-    IGNITION_STATUS_NONE = 1
-    IGNITION_STATUS_REQUIRED = 2
-    IGNITION_STATUS_COMPLETED = 3
+    IGNITION_STATUS_REQUIRED = 1
+    IGNITION_STATUS_COMPLETED = 2
     IGNITION_STATUS_CHOICES = (
-        (IGNITION_STATUS_NONE, '----'),
         (IGNITION_STATUS_REQUIRED, 'Further ignitions required'),
         (IGNITION_STATUS_COMPLETED, 'Ignition now complete'),
     )
@@ -126,12 +124,19 @@ class PrescribedBurn(Audit):
         (FORM_268B, 'Form 268b'),
     )
 
+    UNITS_KM = 1
+    UNITS_HA = 2
+    UNITS_CHOICES = (
+        (UNITS_KM, 'km'),
+        (UNITS_HA, 'ha'),
+    )
+
     fmt = "%Y-%m-%d %H:%M"
 
-#    prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
-    prescription = ChainedForeignKey(
-        Prescription, chained_field="region", chained_model_field="region",
-        show_all=False, auto_choose=True, blank=True, null=True)
+    prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
+#    prescription = ChainedForeignKey(
+#        Prescription, chained_field="region", chained_model_field="region",
+#        show_all=False, auto_choose=True, blank=True, null=True)
 
     fire_tenures = models.ManyToManyField(FireTenure, blank=True)
     #fire = models.ForeignKey(Fire, null=True, blank=True)
@@ -157,11 +162,13 @@ class PrescribedBurn(Audit):
 
     external_assist = models.ManyToManyField(ExternalAssist, blank=True)
     planned_area = models.DecimalField(
-        verbose_name="Planned Burn Area (ha)", max_digits=12, decimal_places=1,
+        verbose_name="Planned Burn Area", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
     area = models.DecimalField(
-        verbose_name="Area Burnt Yesterday (ha)", max_digits=12, decimal_places=1,
+        verbose_name="Area Burnt Yesterday", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
+    planned_area_unit = models.PositiveSmallIntegerField(verbose_name="Area Units", choices=UNITS_CHOICES, null=True, blank=True)
+    area_unit = models.PositiveSmallIntegerField(verbose_name="Area Units", choices=UNITS_CHOICES, null=True, blank=True)
     tenures= models.TextField(verbose_name="Tenure")
     location= models.TextField(verbose_name="Location", null=True, blank=True)
     est_start = models.TimeField('Estimated Start Time', null=True, blank=True)
@@ -303,6 +310,14 @@ class PrescribedBurn(Audit):
         if self.conditions:
             return True
         return False
+
+    @property
+    def planned_area_str(self):
+        return str(self.planned_area) + self.get_planned_area_unit_display()
+
+    @property
+    def area_str(self):
+        return str(self.area) + self.get_area_unit_display()
 
     @property
     def tenures_str(self):
