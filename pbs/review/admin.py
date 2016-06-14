@@ -528,8 +528,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
             count = 0
             if report=='epfp_planned':
-                self.copy_ongoing_records(dt) # copy yesterdays ongoing active records to today
-
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
@@ -557,6 +555,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             elif report=='epfp_fireload':
+                self.copy_ongoing_records(dt) # copy yesterdays ongoing active records to today
                 unset_objects = self.check_rolled_records(dt) # check records are correctly set
                 if len(unset_objects) > 0:
                     message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
