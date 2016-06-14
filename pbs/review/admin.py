@@ -422,26 +422,25 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 already_acknowledged = []
                 unset_acknowledged = []
                 for obj in objects:
-                    if obj.active:
-                        if obj.area>=0 and obj.status:
-                            if obj.formB_isDraft:
-                                if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
-                                    Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
-                                    obj.save()
-                                    count += 1
-                                    message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                                    msg_type = "success"
-                                else:
-                                    not_acknowledged.append(obj.fire_idd)
+                    if obj.area>=0 and obj.status:
+                        if obj.formB_isDraft:
+                            if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
+                                Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
+                                obj.save()
+                                count += 1
+                                message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                                msg_type = "success"
+                            else:
+                                not_acknowledged.append(obj.fire_idd)
 
-                            elif obj.formB_user_acknowledged:
-                                already_acknowledged.append(obj.fire_idd)
-                                message = "record already acknowledged {}".format(', '.join(already_acknowledged))
-                                msg_type = "danger"
-                        else:
-                            unset_acknowledged.append(obj.fire_idd)
-                            message = "Cannot acknowledge {}. First set Area/Status field(s)".format(', '.join(unset_acknowledged))
+                        elif obj.formB_user_acknowledged:
+                            already_acknowledged.append(obj.fire_idd)
+                            message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                             msg_type = "danger"
+                    else:
+                        unset_acknowledged.append(obj.fire_idd)
+                        message = "Cannot acknowledge {}. First set Area/Status field(s)".format(', '.join(unset_acknowledged))
+                        msg_type = "danger"
 
                 if not_acknowledged:
                     message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
@@ -495,25 +494,24 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
-                    if obj.active:
-                        if obj.formB_user_acknowledged:
-                            if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B').count() == 0:
-                                Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
-                                obj.save()
-                                count += 1
-                                message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                                msg_type = "success"
-                            else:
-                                not_acknowledged.append(obj.fire_idd)
+                    if obj.formB_user_acknowledged:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
+                            obj.save()
+                            count += 1
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
 
-                        elif not obj.formB_user_acknowledged:
-                            message = "record must first be submitted"
-                            msg_type = "danger"
+                    elif not obj.formB_user_acknowledged:
+                        message = "record must first be submitted"
+                        msg_type = "danger"
 
-                        elif obj.formB_srm_acknowledged:
-                            already_acknowledged.append(obj.fire_idd)
-                            message = "record already acknowledged {}".format(', '.join(already_acknowledged))
-                            msg_type = "danger"
+                    elif obj.formB_srm_acknowledged:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        msg_type = "danger"
 
                 if not_acknowledged:
                     message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
@@ -568,25 +566,24 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
-                    if obj.active:
-                        if obj.formB_srm_acknowledged:
-                            if Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_B').count() == 0:
-                                Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_B', acknow_date=now)
-                                obj.save()
-                                count += 1
-                                message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                                msg_type = "success"
-                            else:
-                                not_acknowledged.append(obj.fire_idd)
+                    if obj.formB_srm_acknowledged:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_B').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_B', acknow_date=now)
+                            obj.save()
+                            count += 1
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
 
-                        elif not obj.formB_srm_acknowledged:
-                            message = "record must first be regionally acknowledged"
-                            msg_type = "danger"
+                    elif not obj.formB_srm_acknowledged:
+                        message = "record must first be regionally acknowledged"
+                        msg_type = "danger"
 
-                        elif obj.formB_sdo_acknowledged:
-                            already_acknowledged.append(obj.fire_idd)
-                            message = "record already acknowledged {}".format(', '.join(already_acknowledged))
-                            msg_type = "danger"
+                    elif obj.formB_sdo_acknowledged:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        msg_type = "danger"
 
                 if not_acknowledged:
                     message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
