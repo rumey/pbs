@@ -650,7 +650,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "No 'Endorsed' records were removed"
                 msg_type = "info"
 
-        elif action == "Delete Entry" or action == "Delete District Submit":
+        elif action == "Delete District Entry" or action == "Delete District Submit":
             count = 0
             for obj in objects:
                 if report=='epfp_planned':
