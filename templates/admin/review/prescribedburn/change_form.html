@@ -1,6 +1,5 @@
 {% extends "admin/change_form.html" %}
 
-
 {% block extrahead %}{{ block.super }}
 <button type="button">Click</button>
 
@@ -8,6 +7,11 @@
 
 <script>
 $(function() {
+
+    var current_url = $(location).attr('href');
+    if (current_url.indexOf('add_fire') > -1) {
+        $("#id_breadcrumb_name").text("Add Bushfire");
+    }
 
     $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
     $("#id_planned_area").attr("min", 0.1);
