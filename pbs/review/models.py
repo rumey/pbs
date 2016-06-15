@@ -124,11 +124,11 @@ class PrescribedBurn(Audit):
         (FORM_268B, 'Form 268b'),
     )
 
-    UNITS_KM = 1
-    UNITS_HA = 2
+    UNITS_HA = 1
+    UNITS_KM = 2
     UNITS_CHOICES = (
-        (UNITS_KM, 'km'),
         (UNITS_HA, 'ha'),
+        (UNITS_KM, 'km'),
     )
 
     fmt = "%Y-%m-%d %H:%M"
