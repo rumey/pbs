@@ -155,10 +155,10 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         time_now = now.time()
         date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
         self.fields['date'].widget.attrs.update({'value': date_str})
-        self.initial['status'] = 1
+        #self.initial['status'] = 1
 
-        status = self.fields['status']
-        status.choices = status.choices[1:]
+        #status = self.fields['status']
+        #status.choices = status.choices[1:]
 
         area_unit = self.fields['area_unit']
         area_unit.choices = area_unit.choices[1:]
