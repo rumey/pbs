@@ -148,7 +148,7 @@ class PrescribedBurn(Audit):
     district = ChainedForeignKey(
         District, chained_field="region", chained_model_field="region",
         show_all=False, auto_choose=True, blank=True, null=True)
-    fire_tenures = models.ManyToManyField(FireTenure, blank=True)
+    fire_tenures = models.ManyToManyField(FireTenure, verbose_name="Tenures", blank=True)
 
     date = models.DateField(auto_now_add=False)
     form_name = models.PositiveSmallIntegerField(verbose_name="Form Name (268a / 268b)", choices=FORM_NAME_CHOICES, editable=True)

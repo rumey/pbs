@@ -414,7 +414,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             elif report=='epfp_fireload':
@@ -443,7 +444,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "Regional Acknowledgement" or action == "Regional Endorsement":
@@ -487,7 +489,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             elif report=='epfp_fireload':
@@ -514,7 +517,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "State Acknowledgement" or action == "State Approval":
@@ -551,7 +555,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
                 self.copy_planned_approved_records(dt)
@@ -587,7 +592,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
+                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "Delete State Acknowledgement" or action == "Delete State Approval":
