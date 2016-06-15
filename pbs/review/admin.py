@@ -554,6 +554,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
+                self.copy_planned_approved_records(dt)
+
             elif report=='epfp_fireload':
                 self.copy_ongoing_records(dt) # copy yesterdays ongoing active records to today
                 unset_objects = self.check_rolled_records(dt) # check records are correctly set
@@ -875,6 +877,46 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 obj.approval_268b_status = PrescribedBurn.APPROVAL_DRAFT
                 obj.approval_268b_status_modified = now
                 obj.acknowledgements.all().delete()
+                obj.rolled = True
+                obj.save()
+                count += 1
+            except:
+                # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+
+    def copy_planned_approved_records(self, dt):
+        """
+        Copy today's 'planned' records (268a), that have been SDO approved. to tomorrow
+
+        set Active and Area Burnt fields to None
+        """
+
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+        if not (dt == today or dt == tomorrow):
+            # Can only copy records for today, or tomorrow
+            return
+
+        tomorrow = dt + timedelta(days=1) # relative to dt
+        objects = PrescribedBurn.objects.filter(date=dt, acknowledgements__acknow_type__in=['SDO_A'], form_name=PrescribedBurn.FORM_268A)
+        now = timezone.now()
+        admin = User.objects.get(username='admin')
+        count = 0
+        for obj in objects:
+            if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                continue
+            try:
+                obj.pk = None
+                obj.date = tomorrow
+                obj.area = None
+                obj.status = None
+                obj.approval_268a_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268a_status_modified = now
+                obj.approval_268b_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268b_status_modified = now
+                #obj.acknowledgements.all().delete()
+                obj.form_name=PrescribedBurn.FORM_268B
                 obj.rolled = True
                 obj.save()
                 count += 1
