@@ -41,6 +41,10 @@ class PrescribedBurnForm(forms.ModelForm):
             prescription = self.cleaned_data['prescription']
             #region = self.cleaned_data['region']
             dt = self.cleaned_data['date']
+
+            if dt > prescription.current_approval.valid_to:
+                raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
+
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A)
             if objects:
                 raise ValidationError("Burn ID  {}  already exists on this date".format(objects[0].prescription.burn_id))

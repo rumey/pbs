@@ -13,6 +13,25 @@
 \noindent Sent by: {{ user }}\hfill Date: {{report_date}}\hfill Region: {{region}}
 \subsection{\hfil SUMMARY OF CURRENT FIRE LOAD (RDO Acknowledged)\hfil}
 
+\vspace{5mm}
+\begin{table}[h]
+\begin{tabular}{cc}
+    \begin{minipage}{.4\linewidth}
+        \begin{tabular} { | l | c | c | }
+        \hline
+        & Active Burns & Active Fires \\
+        \hline
+        \textbf{ACTIVE BURNS AND FIRES STATEWIDE} & {{ active_records.active_burns_statewide }} & {{ active_records.active_fires_statewide  }} \\
+        \hline
+        \textbf{ACTIVE BURNS AND FIRES - SOUTH-WEST BUSHFIRE RISK ZONE} & {{ active_records.active_burns_non_statewide }} & {{ active_records.active_fires_non_statewide  }} \\
+        \hline
+        \end{tabular}
+    \end{minipage}
+
+\end{tabular}
+\end{table}
+\vspace{5mm}
+
 \begin{table}[h]
 \footnotesize
 \subsubsection{Prescribed Burns}

@@ -205,17 +205,8 @@ class PrescribedBurn(Audit):
     def clean_date(self):
         today = date.today()
         tomorrow = today + timedelta(days=1)
-        #if not self.pk and (self.date < today or self.date > tomorrow):
         if not self.pk and (self.date < today or self.date > tomorrow):
             raise ValidationError("You must enter burn plans for today or tommorow's date only.")
-
-    def clean_sdo_approve(self):
-        """
-        Check that status 'Active' and 'Area burnt yesterday' are not Null.
-        Cannot approve if data is missing from 268b records
-        """
-        #TODO - 1254
-        pass
 
     @property
     def is_acknowledged(self):
