@@ -34,6 +34,7 @@ from django.db.models import Q
 import subprocess
 import sys, traceback
 from django.db import IntegrityError
+from django.forms import ModelChoiceField
 
 import logging
 logger = logging.getLogger('pbs')
@@ -364,7 +365,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 bushfire_id = code + '_' + fire_id
                 return HttpResponse(json.dumps({'bushfire_id': bushfire_id}))
 
-        return HttpResponse(json.dumps({"location": None, "tenures": None, 'bushfire_id': None}))
+            if request.REQUEST.has_key('region'):
+                qs = Prescription.objects.filter(burnstate__review_type__in=['FMSB'], planning_status=Prescription.PLANNING_APPROVED).filter(burnstate__review_type__in=['DRFMS']).distinct()
+                qs = qs.filter(region=request.REQUEST.get('region')).order_by('burn_id')
+
+                #burn_ids = ["<option value={}>{}</option>".format(p.id, p.burn_id) for p in qs]
+                burn_ids = ModelChoiceField(queryset=qs).widget.render(value="pk_prescription", name="prescription")
+
+        return HttpResponse(json.dumps({"location": None, "tenures": None, 'bushfire_id': None, 'burn_ids': burn_ids}))
 
     def action_view(self, request, extra_context=None):
         if request.REQUEST.has_key('report'):
@@ -689,7 +697,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 msg_type = "info"
 
         elif action == "Delete Record":
-            """ This function now dealt with by javascript --> which calls prescription_view()"""
+            """ This function now dealt with by javascript --> which calls bulk_delete()"""
             pass
 
         elif action == "Copy Record to Tomorrow":

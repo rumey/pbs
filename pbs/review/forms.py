@@ -15,9 +15,10 @@ class PrescribedBurnForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnForm, self).__init__(*args, **kwargs)
 
-        prescriptions = self.fields['prescription'].queryset
-        self.fields['prescription'].queryset = prescriptions.filter(
-            burnstate__review_type__in=['FMSB'], planning_status=Prescription.PLANNING_APPROVED).filter(burnstate__review_type__in=['DRFMS']).distinct().order_by('burn_id')
+#        prescriptions = self.fields['prescription'].queryset
+#        self.fields['prescription'].queryset = prescriptions.filter(
+#            burnstate__review_type__in=['FMSB'], planning_status=Prescription.PLANNING_APPROVED).filter(burnstate__review_type__in=['DRFMS']).distinct().order_by('burn_id')
+        self.fields['prescription'].required = True
         self.fields['planned_area_unit'].required = True
         self.fields['planned_area'].required=True
         self.fields['location'].required = True
@@ -36,13 +37,17 @@ class PrescribedBurnForm(forms.ModelForm):
         self.initial['status'] = 1
 
     def clean(self):
+
+        if not self.cleaned_data.has_key('prescription'):
+            raise ValidationError("Prescription is Required")
+
         if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
             # check for integrity constraint - duplicate keys
             prescription = self.cleaned_data['prescription']
             #region = self.cleaned_data['region']
             dt = self.cleaned_data['date']
 
-            if dt > prescription.current_approval.valid_to:
+            if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to:
                 raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
 
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A)
@@ -62,7 +67,7 @@ class PrescribedBurnForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'external_assist', 'planned_area', 'planned_area_unit', 'tenures', 'location', 'est_start', 'conditions',)
+        fields = ('region', 'prescription', 'date', 'external_assist', 'planned_area', 'planned_area_unit', 'tenures', 'location', 'est_start', 'conditions',)
 
 
 class PrescribedBurnEditForm(forms.ModelForm):
@@ -70,7 +75,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnEditForm, self).__init__(*args, **kwargs)
 
-        #self.fields['region'].widget.attrs['disabled'] = 'disabled'
+        self.fields['region'].widget.attrs['disabled'] = 'disabled'
         self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
         #self.fields['prescription'].widget.attrs['readonly'] = 'readonly'
 
@@ -99,16 +104,16 @@ class PrescribedBurnEditForm(forms.ModelForm):
     class Meta:
         model = PrescribedBurn
         #exclude = ('fire_id', 'fire_name', 'region', 'district', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
-        fields = ('prescription', 'date', 'external_assist', 'planned_area', 'planned_area_unit', 'tenures', 'location', 'est_start', 'conditions',)
+        fields = ('region', 'prescription', 'date', 'external_assist', 'planned_area', 'planned_area_unit', 'tenures', 'location', 'est_start', 'conditions',)
 
 
 class PrescribedBurnActiveForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnActiveForm, self).__init__(*args, **kwargs)
 
-        prescriptions = self.fields['prescription'].queryset
-        self.fields['prescription'].queryset = prescriptions.filter(
-            burnstate__review_type__in=['FMSB'], planning_status=Prescription.PLANNING_APPROVED).filter(burnstate__review_type__in=['DRFMS']).distinct().order_by('burn_id')
+#        prescriptions = self.fields['prescription'].queryset
+#        self.fields['prescription'].queryset = prescriptions.filter(
+#            burnstate__review_type__in=['FMSB'], planning_status=Prescription.PLANNING_APPROVED).filter(burnstate__review_type__in=['DRFMS']).distinct().order_by('burn_id')
         self.fields['status'].label = 'Burn Status'
 
         now = datetime.now()
@@ -143,13 +148,14 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'area_unit', 'tenures')
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'area_unit', 'tenures')
 
 
 class PrescribedBurnEditActiveForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnEditActiveForm, self).__init__(*args, **kwargs)
 
+        self.fields['region'].widget.attrs['disabled'] = 'disabled'
         self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
         self.fields['status'].label = 'Burn Status'
 
@@ -187,7 +193,7 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'area_unit', 'tenures')
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area', 'area_unit', 'tenures')
 
 
 
