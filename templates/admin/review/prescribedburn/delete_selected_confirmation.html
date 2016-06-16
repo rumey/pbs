@@ -15,6 +15,13 @@
         <ul>{{ deletable_object }}</ul>
     {% endfor %}
 
+    {% if non_deletable_objects %}
+        <p>{% blocktrans %}The following {{ objects_name }} cannot be deleted, because these have been rolled from yesterday {% endblocktrans %}</p>
+        {% for non_deletable_object in non_deletable_objects %}
+            <ul>{{ non_deletable_object }}</ul>
+        {% endfor %}
+    {% endif %}
+
     <form action="" method="post">{% csrf_token %}
     <div>
     {% for obj in queryset %}

@@ -18,7 +18,7 @@ from django.contrib.admin.util import quote, unquote, flatten_fieldsets
 from django.conf import settings
 from pbs.admin import BaseAdmin
 from pbs.prescription.admin import PrescriptionMixin
-from django.contrib import admin
+from django.contrib import admin, messages
 from functools import update_wrapper, partial
 from django.core.exceptions import (FieldError, ValidationError,
                                     PermissionDenied)
@@ -318,6 +318,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 self.message_user(request, "Only a SDO role can delete an APPROVED burn")
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+        if not (obj.status or obj.area):
+            self.message_user(request, "Cannot delete a rolled record (record that was active or planned yesterday)", level=messages.ERROR)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
         response = super(PrescribedBurnAdmin, self).delete_view(request, object_id, extra_context)
 
         if isinstance(response, HttpResponseRedirect):
@@ -352,6 +356,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 return HttpResponse(json.dumps(d))
 
             if request.REQUEST.has_key('fire_id'):
+                # calculate and return the bushfire_id string for the FireForm
                 fire_id = str( request.REQUEST.get('fire_id') )
                 district_id = request.REQUEST.get('district')
                 code = District.objects.get(id=district_id).code
@@ -716,7 +721,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         View to bulk delete prescribed burns/fires
         """
         object_ids = map(int, object_ids.split(','))
-        objects = PrescribedBurn.objects.filter(id__in=object_ids)
+        #objects = PrescribedBurn.objects.filter(id__in=object_ids)
+        objects = PrescribedBurn.objects.filter(id__in=object_ids).exclude(status__isnull=True).exclude(area__isnull=True)
+        non_deletable_objects = PrescribedBurn.objects.filter(id__in=object_ids, status__isnull=True, area__isnull=True)
         for obj in objects:
             if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
                 if self.sdo_group not in request.user.groups.all():
@@ -724,12 +731,17 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         if request.method == 'POST':
-            objects.delete()
-            return HttpResponseRedirect(reverse('admin:daily_burn_program'))
+            if objects:
+                objects.delete()
+                return HttpResponseRedirect(reverse('admin:daily_burn_program'))
+            else:
+                self.message_user(request, "Cannot delete rolled records (records that were active or planned yesterday)", level=messages.ERROR)
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         context = {
             'deletable_objects': objects,
-            'current': objects[0],
+            'non_deletable_objects': non_deletable_objects,
+            'current': objects[0] if objects else None,
         }
         template = 'admin/review/prescribedburn/delete_selected_confirmation.html'
         return TemplateResponse(request, template, context) #, current_app=self.admin_site.name)
