@@ -1002,7 +1002,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             fire_type = pb.fire_type
             dt = pb.date.strftime('%Y-%m-%d')
             burn_status = pb.get_status_display()
-            further_ignitions = "Yes" if pb.further_ignitions else ""
+            ignition_status = pb.get_ignition_status_display()
             external_assist = ', '.join([i.name for i in pb.external_assist.all()])
             planned_area = pb.planned_area
             area = pb.area
@@ -1020,7 +1020,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             rolled = "Yes" if pb.rolled else ""
 
             query_list.append([fire_id, name, region, district, fire_type,
-                               dt, burn_status, further_ignitions, external_assist,
+                               dt, burn_status, ignition_status, external_assist,
                                planned_area, area, tenures, location, est_start, conditions,
                                user_acknow_formA, srm_acknow_formA, sdo_acknow_formA,
                                user_acknow_formB, srm_acknow_formB, sdo_acknow_formB,
@@ -1032,7 +1032,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         writer = unicodecsv.writer(response, quoting=unicodecsv.QUOTE_ALL)
 
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type",
-            "Date", "Burn Status", "Further Ignitions", "External Assist",
+            "Date", "Burn Status", "Ignition Status", "External Assist",
             "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
             "User Acknow FormA", "SRM Acknow FormA", "SDO Acknow FormA",
             "User Acknow FormB", "SRM Acknow FormB", "SDO Acknow FormB",
