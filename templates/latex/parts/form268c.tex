@@ -45,7 +45,7 @@ The following burns, which have been approved for ignition today, have been plan
 {% for pb in qs_planned_burns %}
     \textbf{ {{ pb|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
-    {{ pb.prescription.location_text|texify|safe }} & 
+    {{ pb.location|texify|safe }} & 
     {{ pb.prescription.purposes_list|texify|safe }} & 
     {{ pb.planned_area_str|texify|safe }} & 
     {{ pb.est_start }} & 
