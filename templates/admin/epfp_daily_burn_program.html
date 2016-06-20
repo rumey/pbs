@@ -364,7 +364,7 @@
     {% comment %}
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Bushfire</a>
     {% endcomment %}
-    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_view' %}?report=epfp_fireload" target="popup"><i class="icon-info"></i> Help</a>
+    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_view' %}?report=epfp_fireload"><i class="icon-info"></i> Help</a>
     <a class="btn btn-small btn-danger" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_fire"><i class="icon-plus icon-white"></i> Add Bushfire</a>
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_active_burn"><i class="icon-plus icon-white"></i> Add Burn</a>
 
@@ -452,8 +452,8 @@
                 {% else %}
                 <td>{{ qs.fire_id  }}</td>
                 {% endif %}
-                <th colspan="3">Burn name</th>
-                <td>{{ qs.name }}</td>
+                <th>Burn name</th>
+                <td colspan="3">{{ qs.name }}</td>
               </tr>
               <tr>
                 <th>Region</th>
@@ -721,7 +721,23 @@ $('#update-button').click(function(){
     if ($("#actions :selected").text() == "Delete Record"){
         //console.log("Delete Selected ************ " + checked_list.toString());
         //window.location.href = "{% url 'admin:bulk_delete' 1 %}";
-        window.location.href = "/review/prescribedburn/bulk_delete/" + checked_list.toString();
+        if (checked_list.toString() == '') {
+            $.growl('No records selected', {
+                type: 'danger',
+                delay: 10000,
+                allow_dismiss: true,
+                animate: {
+                    enter: 'animated bounceIn',
+                    exit: 'animated bounceOut'
+                },
+                offset: {
+                    x: 100,
+                    y: 20
+                }
+            });
+        } else {
+            window.location.href = "/review/prescribedburn/bulk_delete/" + checked_list.toString();
+        }
 
     } else {
         var urll;

@@ -1054,8 +1054,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type",
             "Date", "Burn Status", "Ignition Status", "External Assist",
             "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
-            "User Acknow FormA", "SRM Acknow FormA", "SDO Acknow FormA",
-            "User Acknow FormB", "SRM Acknow FormB", "SDO Acknow FormB",
+            "DDO Acknow FormA", "RDO Acknow FormA", "SDO Acknow FormA",
+            "DDO Acknow FormB", "RDO Acknow FormB", "SDO Acknow FormB",
             "Rolled"])
 
         for row in query_list:
