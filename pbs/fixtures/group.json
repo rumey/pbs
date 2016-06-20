@@ -257,6 +257,15 @@
       ["can_approve", "review", "prescribedburn"]
     ]
   }
+},
+{
+  "pk": 8,
+  "model": "auth.group",
+  "fields": {
+    "name": "State Duty Officer Assistant",
+    "permissions": [
+    ]
+  }
 }
 
 ]

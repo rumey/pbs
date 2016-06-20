@@ -160,6 +160,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     def sdo_group(self):
         return Group.objects.get(name='State Duty Officer')
 
+    @property
+    def sdo_assist_group(self):
+        return Group.objects.get(name='State Duty Officer Assistant')
+
     def get_form(self, request, obj=None, **kwargs):
         if request.GET.has_key('form'):
             if request.REQUEST.get('form')=='add_fire':
@@ -290,13 +294,13 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         # check lockout time
         if today >= obj.date and time_now.hour > settings.DAY_ROLLOVER_HOUR:
             # only SDO can edit current day's burn after cut-off hour.
-            if self.sdo_group not in request.user.groups.all():
+            if self.sdo_group not in request.user.groups.all() and self.sdo_assist_group not in request.user.groups.all():
                 self.message_user(request, "Only a SDO role can edit this burn (after cut-off hour - {}:00)".format(settings.DAY_ROLLOVER_HOUR))
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
-            if self.sdo_group not in request.user.groups.all():
-                self.message_user(request, "Only a SDO role can edit an APPROVED burn")
+            if self.sdo_group not in request.user.groups.all() and self.sdo_assist_group not in request.user.groups.all():
+                self.message_user(request, "Only a 'SDO' or 'SDO Assist' role can edit an APPROVED burn")
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
