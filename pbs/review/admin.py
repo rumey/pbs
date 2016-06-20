@@ -319,7 +319,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 self.message_user(request, "Only a SDO role can delete an APPROVED burn")
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-        if not (obj.status or obj.area):
+        if obj.form_name==PrescribedBurn.FORM_268B and not (obj.status or obj.area):
             self.message_user(request, "Cannot delete a rolled record (record that was active or planned yesterday)", level=messages.ERROR)
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
@@ -730,8 +730,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         """
         object_ids = map(int, object_ids.split(','))
         #objects = PrescribedBurn.objects.filter(id__in=object_ids)
-        objects = PrescribedBurn.objects.filter(id__in=object_ids).exclude(status__isnull=True).exclude(area__isnull=True)
-        non_deletable_objects = PrescribedBurn.objects.filter(id__in=object_ids, status__isnull=True, area__isnull=True)
+        objects = PrescribedBurn.objects.filter(Q(id__in=object_ids), ~Q(Q(status__isnull=True) & Q(area__isnull=True) & Q(form_name=PrescribedBurn.FORM_268B)))
+        non_deletable_objects = PrescribedBurn.objects.filter(id__in=object_ids, status__isnull=True, area__isnull=True, form_name=PrescribedBurn.FORM_268B)
         for obj in objects:
             if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
                 if self.sdo_group not in request.user.groups.all():

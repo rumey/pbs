@@ -364,7 +364,7 @@
     {% comment %}
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Bushfire</a>
     {% endcomment %}
-    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_view' %}?report=epfp_fireload"><i class="icon-info"></i> Help</a>
+    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_view' %}?report=epfp_fireload" target="popup"><i class="icon-info"></i> Help</a>
     <a class="btn btn-small btn-danger" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_fire"><i class="icon-plus icon-white"></i> Add Bushfire</a>
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_prescribedburn_add' %}?form=add_active_burn"><i class="icon-plus icon-white"></i> Add Burn</a>
 
@@ -540,7 +540,7 @@
         {% endif %}
       </td>
       <td>{{ qs.prescription.name }}</td>
-      <td>{{ qs.prescription.location_text }}</td>
+      <td>{{ qs.location }}</td>
       <td>{{ qs.prescription.purposes_list }}</td>
       <td><div class="text-center">{{ qs.planned_area_str }}</div></td>
       <td>

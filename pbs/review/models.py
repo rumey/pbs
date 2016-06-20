@@ -177,7 +177,7 @@ class PrescribedBurn(Audit):
 
     def clean(self):
         if not self.form_name:
-            if self.prescription and not self.active:
+            if self.prescription and self.area==None:
                 self.form_name = 1
             else:
                 self.form_name = 2
