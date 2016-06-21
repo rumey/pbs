@@ -1103,8 +1103,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         obj = Prescription.objects.get(id=620)
         template = request.GET.get("template", "pfp")
         response = HttpResponse(content_type='application/pdf')
-        texname = template + ".tex"
-        filename = template + ".pdf"
+        #texname = template + ".tex"
+        #filename = template + ".pdf"
+        texname = template + "_" + request.user.username + ".tex"
+        filename = template + "_" + request.user.username + ".pdf"
         now = timezone.localtime(timezone.now())
         timestamp = now.isoformat().rsplit(
             ".")[0].replace(":", "")
