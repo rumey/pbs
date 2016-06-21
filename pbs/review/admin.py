@@ -1155,8 +1155,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             '{0}; filename="{1}"'.format(
                 disposition, downloadname))
 
-        directory = os.path.join(settings.MEDIA_ROOT, 'prescriptions',
-                                    str(obj.season), obj.burn_id + os.sep)
+        directory = os.path.join(settings.MEDIA_ROOT, 'daily-burn-program' + os.sep)
         if not os.path.exists(directory):
             logger.debug("Making a new directory: {}".format(directory))
             os.makedirs(directory)
