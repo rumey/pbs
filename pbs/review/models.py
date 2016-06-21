@@ -182,7 +182,7 @@ class PrescribedBurn(Audit):
             else:
                 self.form_name = 2
 
-        if self.prescription and not (self.region or self.district):
+        if self.prescription and not (self.region and self.district):
             self.region = self.prescription.region.id
             self.district = self.prescription.district
 
