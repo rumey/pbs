@@ -35,10 +35,10 @@
 \begin{table}[h]
 \footnotesize
 \subsubsection{Prescribed Burns}
-\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X | }
+\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X | }
 %%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
 \hline
-\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \bfseries\makecell[c]{Further \\ Ignitions \\ Required} & \bfseries\makecell[c]{Ignition \\ Completed} & \bfseries\makecell[c]{Achieved \\ Yesterday} & \textbf{Tenure} & \bfseries\makecell[c]{External \\ Assistance}\\
+\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \bfseries\makecell[c]{Further \\ Ignitions \\ Required} & \bfseries\makecell[c]{Achieved \\ Yesterday} & \textbf{Tenure} & \bfseries\makecell[c]{External \\ Assistance}\\
 \hline
 \endhead
 {% for pb in qs_fireload_rdo %}
@@ -46,8 +46,7 @@
    \textbf{ {{ pb|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
     {% if pb.active %}Yes{% else %}No{% endif %} & 
-    {% if pb.further_ignitions %}Yes{% else %}No{% endif %} & 
-    {% if pb.completed %}Yes{% else %}No{% endif %} & 
+    {% if pb.further_ignitions_req %}Yes{% else %}No{% endif %} & 
     {{ pb.area_str }} & 
     {{ pb.tenures_str }} & 
     {{ pb.external_assist_str }}\\
@@ -63,10 +62,10 @@
 \begin{table}[h]
 \footnotesize
 \subsubsection{Bushfires}
-\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X | }
+\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
 %%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
 \hline
-\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \bfseries\makecell[c]{Further \\ Ignitions \\ Required} & \bfseries\makecell[c]{Ignition \\ Completed} & \bfseries\makecell[c]{Achieved \\ Yesterday} & \textbf{Tenure} & \bfseries\makecell[c]{External \\ Assistance}\\
+\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \textbf{Area} & \textbf{Tenure} & \bfseries\makecell[c]{External \\ Assistance}\\
 \hline
 \endhead
 {% for pb in qs_fireload_rdo %}
@@ -74,8 +73,6 @@
    \textbf{ {{ pb|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
     {% if pb.active %}Yes{% else %}No{% endif %} & 
-    {% if pb.further_ignitions %}Yes{% else %}No{% endif %} & 
-    {% if pb.completed %}Yes{% else %}No{% endif %} & 
     {{ pb.area_str }} & 
     {{ pb.tenures_str }} & 
     {{ pb.external_assist_str }}\\

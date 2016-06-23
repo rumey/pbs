@@ -100,7 +100,7 @@
                 <label for="id_district" class="control-label">District</label>
                 {{ form.district }}
 
-                <label for="id_approval_status" class="control-label">Approval</label>
+                <label for="id_approval_status" class="control-label">Approval Status</label>
                 {{ form.approval_status }}
 
                 <input class="hidden" style="float: right;" name="report" value="epfp_planned">
@@ -122,7 +122,7 @@
                 <label for="id_fire_type" class="control-label">Fire Type</label>
                 {{ form.fire_type }}
 
-                <label for="id_approval_status" class="control-label">Approval</label>
+                <label for="id_approval_status" class="control-label">Approval Status</label>
                 {{ form.approval_status }}
 
                 <input class="hidden" style="float: right;" name="report" value="epfp_fireload">
@@ -154,7 +154,7 @@
     <li id="planned-tab"  "{% if report == "epfp_planned" %} class="active"{% endif %}>
         <a href="{% url 'admin:daily_burn_program' %}?report=epfp_planned&date={{date}}">
             <i class="icon-tag"></i>
-            Planned (268a)
+            Planned Burns (268a)
         </a>
     </li>
     <li id="fireload-tab" {% if report == "epfp_fireload" %} class="active"{% endif %}>
@@ -226,19 +226,19 @@
   <thead>
     <tr>
       <th rowspan="2"><input type="checkbox" name ="check_all" onClick=toggle(this) /></th>
-      <th rowspan="2">Burn ID</th>
-      <th rowspan="2">Name</th>
-      <th rowspan="2"><div class="text-left">Location</div></th>
-      <th rowspan="2"><div class="text-left">Area</div></th>
-      <th rowspan="2"><div class="text-center">Est Start<br>WST</div></th>
+      <th rowspan="2">Burn ID <i class="icon-sort"></i></th>
+      <th rowspan="2">Name <i class="icon-sort"></i></th>
+      <th rowspan="2"><div class="text-left">Location <i class="icon-sort"></i></div></th>
+      <th rowspan="2"><div class="text-left">Area <i class="icon-sort"></i></div></th>
+      <th rowspan="2"><div class="text-center">Est Start <i class="icon-sort"></i><br>WST</div></th>
       <th colspan="3"><div class="text-center">Approval Status</div></th>
-      <th rowspan="2"><div class="text-center">Special<br>Conditions</div></th>
+      <th rowspan="2"><div class="text-center">Special  <i class="icon-sort"></i><br>Conditions</div></th>
       <th></th>
     </tr>
     <tr>
-      <th><div class="text-center" data-toggle="tooltip" title="District Nomination">DDO</div></th>
-      <th><div class="text-center" data-toggle="tooltip" title="Regional Endorsement">RDO</div></th>
-      <th><div class="text-center" data-toggle="tooltip" title="State Approval">SDO</div></th>
+        <th><div class="text-center" data-toggle="tooltip" title="District Nomination">DDO <i class="icon-sort"></i></div></th>
+        <th><div class="text-center" data-toggle="tooltip" title="Regional Endorsement">RDO <i class="icon-sort"></i></div></th>
+        <th><div class="text-center" data-toggle="tooltip" title="State Approval">SDO <i class="icon-sort"></i></div></th>
     </tr>
 
   </thead>
@@ -388,20 +388,20 @@
   <thead>
     <tr>
       <th rowspan="2"><input type="checkbox" name ="check_all" onClick=toggle(this) /></th>
-      <th rowspan="2">ID</th>
-      <th rowspan="2">Name</th>
-      <th rowspan="2">Type</th>
+      <th rowspan="2">ID <i class="icon-sort"></i></th>
+      <th rowspan="2">Name <i class="icon-sort"></i></th>
+      <th rowspan="2">Type <i class="icon-sort"></i></th>
       <th colspan="2"><div class="text-center">Burn Status</div></th>
       <th colspan="3"><div class="text-center">Acknowledgement</div></th>
-      <th rowspan="2"><div class="text-center">Achieved yesterday</div></th>
-      <th rowspan="2"><div class="text-center">External Assist</div></th>
+      <th rowspan="2"><div class="text-center">Achieved yesterday <i class="icon-sort"></i></div></th>
+      <th rowspan="2"><div class="text-center">External Assist <i class="icon-sort"></i></div></th>
     </tr>
     <tr>
-      <th> Active </th>
-      <th> Ignitions Status </th>
-      <th> DDO</th>
-      <th> RDO</th>
-      <th> SDO </th>
+        <th> Active  <i class="icon-sort"></i></th>
+        <th> <div class="text-center">Further ignitions <i class="icon-sort"></i><br>required</div></th>
+        <th> DDO <i class="icon-sort"></i></th>
+        <th> RDO <i class="icon-sort"></i></th>
+        <th> SDO  <i class="icon-sort"></i></th>
     </tr>
 
   </thead>
@@ -422,7 +422,7 @@
       <td>{{ qs.fire_type }}</td>
 
       <td>{% if qs.active %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% elif qs.active == None %}<span style="display:none">1</span><font color="red">Unset</font>{% else %}<span style="display:none">0</span>{% endif %}</td>
-      <td>{% if qs.ignition_status %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
+      <td>{% if qs.further_ignitions_req %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
 
       <td>{% if qs.user_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.user_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{% if qs.srm_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
@@ -519,12 +519,12 @@
   <thead>
     <tr>
       <th></th>
-      <th rowspan="1"><div class="text-center">Burn ID</div></th>
-      <th rowspan="1"><div class="text-center">Name/Block</div></th>
-      <th rowspan="1"><div class="text-center">Position</div></th>
-      <th rowspan="1"><div class="text-center">Burn Purpose</div></th>
-      <th rowspan="1"><div class="text-center">Area</div></th>
-      <th rowspan="1"><div class="text-center">Est Start WST</div></th>
+      <th rowspan="1"><div class="text-center">Burn ID <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Name/Block <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Position <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Burn Purpose <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Area <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Est Start WST <i class="icon-sort"></i></div></th>
     </tr>
   </thead>
   <tbody>
