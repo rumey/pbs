@@ -14,8 +14,10 @@ $(function() {
     }
 
     $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
-    $("#id_planned_area").attr("min", 0.1);
+    $("#id_planned_area").attr("min", 0.0);
     $("#id_area").attr("min", 0.0);
+    $("#id_planned_distance").attr("min", 0.0);
+    $("#id_distance").attr("min", 0.0);
 
     {% if not is_sdo %}
         $("#id_conditions").attr("disabled", "disabled");
@@ -73,7 +75,7 @@ $(function() {
                 $("#id_tenures").val(response['tenures']);
 
                 $( "#id_prescription_name").remove()
-                $( "<p id='id_prescription_name'>" + response['prescription_name'] + "</p>" ).insertAfter( "#id_prescription" );
+                $( "<span id='id_prescription_name'>  " + response['prescription_name'] + "</span>" ).insertAfter( "#id_prescription" );
                 $("#id_planned_area").attr("max", response['prescription_area'])
 
             }
@@ -94,10 +96,17 @@ $(function() {
             success: function(response){
                 var response = JSON.parse(response);
                 $( "#id_bushfire_code").remove()
-                $( "<p id='id_bushfire_code'>" + response['bushfire_id'] + "</p>" ).insertAfter( "#id_fire_id" );
+                $( "<span id='id_bushfire_code'>  " + response['bushfire_id'] + "</span>" ).insertAfter( "#id_fire_id" );
             }
         })
     });
+
+    $( "<div class='help-inline'><span id='id_status_help'> The definition of 'active' can be found in the glossary of the Prescribed Fire Manual</span></div>" ).insertAfter( "#id_status" );
+
+    $( "<div class='help-inline'><span id='id_planned_area_help'> Must input at least one of Area or Distance</span></div>" ).insertAfter( "#id_planned_area" );
+    if (current_url.indexOf('active_burn') > -1) {
+        $( "<div class='help-inline'><span id='id_planned_area_help'> Must input at least one of Area or Distance</span></div>" ).insertAfter( "#id_area" );
+    }
 
 
         $("select#id_risk").prop('disabled', true);
