@@ -124,13 +124,13 @@ class PrescribedBurn(Audit):
         (FORM_268B, 'Form 268b'),
     )
 
-    UNITS_HA = 1
-    UNITS_KM = 2
-    UNITS_CHOICES = (
-        (UNITS_HA, 'ha'),
-        (UNITS_KM, 'km'),
-    )
-
+#    UNITS_HA = 1
+#    UNITS_KM = 2
+#    UNITS_CHOICES = (
+#        (UNITS_HA, 'ha'),
+#        (UNITS_KM, 'km'),
+#    )
+#
     fmt = "%Y-%m-%d %H:%M"
 
     prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
@@ -161,14 +161,21 @@ class PrescribedBurn(Audit):
     #completed = models.NullBooleanField(verbose_name="Ignition now complete?")
 
     external_assist = models.ManyToManyField(ExternalAssist, blank=True)
+
     planned_area = models.DecimalField(
-        verbose_name="Planned Burn Area", max_digits=12, decimal_places=1,
+        verbose_name="Planned Burn Area (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
     area = models.DecimalField(
-        verbose_name="Area Burnt Yesterday", max_digits=12, decimal_places=1,
+        verbose_name="Area Burnt Yesterday (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
-    planned_area_unit = models.PositiveSmallIntegerField(verbose_name="Area Units", choices=UNITS_CHOICES, null=True, blank=True)
-    area_unit = models.PositiveSmallIntegerField(verbose_name="Area Units", choices=UNITS_CHOICES, null=True, blank=True)
+
+    planned_distance = models.DecimalField(
+        verbose_name="Planned Burn Distance (km)", max_digits=12, decimal_places=1,
+        validators=[MinValueValidator(0.0)], null=True, blank=True)
+    distance = models.DecimalField(
+        verbose_name="Distance Burnt Yesterday (km)", max_digits=12, decimal_places=1,
+        validators=[MinValueValidator(0.0)], null=True, blank=True)
+
     tenures= models.TextField(verbose_name="Tenure")
     location= models.TextField(verbose_name="Location", null=True, blank=True)
     est_start = models.TimeField('Estimated Start Time', null=True, blank=True)
@@ -177,7 +184,7 @@ class PrescribedBurn(Audit):
 
     def clean(self):
         if not self.form_name:
-            if self.prescription and self.area==None:
+            if self.prescription and self.area==None and self.distance==None:
                 self.form_name = 1
             else:
                 self.form_name = 2
@@ -207,6 +214,14 @@ class PrescribedBurn(Audit):
         tomorrow = today + timedelta(days=1)
         if not self.pk and (self.date < today or self.date > tomorrow):
             raise ValidationError("You must enter burn plans for today or tommorow's date only.")
+
+    def clean_planned_distance(self):
+        if not (self.planned_area or self.planned_distance):
+            raise ValidationError("Must input at least one of Area or Distance")
+
+    def clean_distance(self):
+        if not (self.area or self.distance):
+            raise ValidationError("Must input at least one of Area or Distance")
 
     @property
     def is_acknowledged(self):
@@ -313,11 +328,25 @@ class PrescribedBurn(Audit):
 
     @property
     def planned_area_str(self):
-        return str(self.planned_area) + self.get_planned_area_unit_display()
+        _str = ''
+        if self.planned_area:
+            _str += str(self.planned_area) + "ha {} ".format('-' if self.planned_distance else '')
+
+        if self.planned_distance:
+            _str += str(self.planned_distance) + "km"
+
+        return _str
 
     @property
     def area_str(self):
-        return str(self.area) + self.get_area_unit_display()
+        _str = ''
+        if self.area:
+            _str += str(self.area) + "ha {} ".format('-' if self.distance else '')
+
+        if self.distance:
+            _str += str(self.distance) + "km"
+
+        return _str
 
     @property
     def tenures_str(self):
