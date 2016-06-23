@@ -467,12 +467,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         elif action == "Regional Acknowledgement" or action == "Regional Endorsement":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
-                message = "Only a SRM and SDO roles can ENDORSE burns"
+                message = "Only regional and state levels can acknowledge burns"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             # TODO can approve records for today or tomorrow only?
             if not (dt == today or dt == tomorrow):
-                message = "Can only endorse burns for today {}, or tomorrow {}.".format(today, tomorrow)
+                message = "Can only acknowledge burns for today {}, or tomorrow {}.".format(today, tomorrow)
                 msg_type = "danger"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
                 #self.message_user(request, "Can only endorse burns for today {}, or tomorrow {}.".format(today, tomorrow))
@@ -539,12 +539,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "State Acknowledgement" or action == "State Approval":
+            #approval_desc = "acknowledge" if action == "State Acknowledgement" else "approve"
+            burn_desc = "burns/bushfires" if action == "State Acknowledgement" else "burns"
             if self.sdo_group not in request.user.groups.all():
-                message = "Only a SDO role can APPROVED burns"
+                message = "Only regional and state levels can acknowledge {}".format(burn_desc)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             if not (dt == today or dt == tomorrow):
-                message = "Can only approve burns for today {}, or tomorrow {}.".format(today, tomorrow)
+                message = "Can only acknowledge {} for today {}, or tomorrow {}.".format(burn_desc, today, tomorrow)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             count = 0
@@ -615,7 +617,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         elif action == "Delete State Acknowledgement" or action == "Delete State Approval":
             if self.sdo_group not in request.user.groups.all():
-                message = "Only a SDO role can delete an APPROVAL"
+                message = "Only state levels can delete state acknowledgements"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             count = 0
@@ -645,7 +647,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         elif action == "Delete Regional Acknowledgement" or action == "Delete Regional Endorsement":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
-                message = "Only a SRM and SDO roles can delete an ENDORSEMENT"
+                message = "Only regional and state levels can delete regional acknowledgements"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             count = 0
@@ -687,13 +689,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             msg_type = "success"
                 else:
                     if obj.formB_user_acknowledged:
-                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A')
                         ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B')
                         if ack:
                             ack[0].delete()
                             obj.save()
                             count += 1
-                            message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
+                            message = "Successfully deleted {0} submitted burn{1}/bushfire{1}".format(count, "s" if count>1 else "")
                             msg_type = "success"
 
             if count == 0:
@@ -732,6 +733,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         """
         View to bulk delete prescribed burns/fires
         """
+        burn_desc = "burns/bushfires" if 'epfp_fireload' in request.META.get('HTTP_REFERER') else "burns"
         object_ids = map(int, object_ids.split(','))
         #objects = PrescribedBurn.objects.filter(id__in=object_ids)
         objects = PrescribedBurn.objects.filter(Q(id__in=object_ids), ~Q(Q(status__isnull=True) & Q(area__isnull=True) & Q(form_name=PrescribedBurn.FORM_268B)))
@@ -739,7 +741,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         for obj in objects:
             if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
                 if self.sdo_group not in request.user.groups.all():
-                    self.message_user(request, "Only a SDO role can delete an APPROVED burn")
+                    self.message_user(request, "Only state levels can delete a state acknowledged {}".format(burn_desc))
                     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         if request.method == 'POST':
@@ -1023,6 +1025,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 region = str(pb.region)
                 district = str(pb.district)
 
+            form_name = pb.get_form_name_display().strip('Form ')
             fire_type = pb.fire_type
             dt = pb.date.strftime('%Y-%m-%d')
             burn_status = pb.get_status_display()
@@ -1043,7 +1046,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             sdo_acknow_formB = pb.sdo_b_record
             rolled = "Yes" if pb.rolled else ""
 
-            query_list.append([fire_id, name, region, district, fire_type,
+            query_list.append([fire_id, name, region, district, fire_type, form_name,
                                dt, burn_status, ignition_status, external_assist,
                                planned_area, area, tenures, location, est_start, conditions,
                                user_acknow_formA, srm_acknow_formA, sdo_acknow_formA,
@@ -1055,7 +1058,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         writer = unicodecsv.writer(response, quoting=unicodecsv.QUOTE_ALL)
 
-        writer.writerow(["Fire ID", "Name", "Region", "District", "Type",
+        writer.writerow(["Fire ID", "Name", "Region", "District", "Type", "Form",
             "Date", "Burn Status", "Ignition Status", "External Assist",
             "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
             "DDO Acknow FormA", "RDO Acknow FormA", "SDO Acknow FormA",

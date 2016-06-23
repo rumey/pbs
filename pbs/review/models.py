@@ -289,6 +289,15 @@ class PrescribedBurn(Audit):
             return self.fire_id
 
     @property
+    def further_ignitions_req(self):
+        if self.ignition_status==self.IGNITION_STATUS_REQUIRED:
+            return True
+        elif self.ignition_status==self.IGNITION_STATUS_COMPLETED:
+            return False
+        return None
+
+
+    @property
     def active(self):
         if self.status==self.BURN_ACTIVE:
             return True
