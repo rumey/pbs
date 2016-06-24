@@ -21,9 +21,11 @@ class PrescribedBurnForm(forms.ModelForm):
 #        self.fields['prescription'].queryset = prescriptions.filter(
 #            burnstate__review_type__in=['FMSB'], planning_status=Prescription.PLANNING_APPROVED).filter(burnstate__review_type__in=['DRFMS']).distinct().order_by('burn_id')
         self.fields['prescription'].required = True
-        #self.fields['planned_area'].required=True
         self.fields['location'].required = True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
+
+        self.fields['planned_area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
+        self.fields['planned_distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
 
         now = datetime.now()
         today = now.date()
@@ -45,7 +47,6 @@ class PrescribedBurnForm(forms.ModelForm):
         if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
             # check for integrity constraint - duplicate keys
             prescription = self.cleaned_data['prescription']
-            #region = self.cleaned_data['region']
             dt = self.cleaned_data['date']
 
             if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to:
@@ -57,18 +58,9 @@ class PrescribedBurnForm(forms.ModelForm):
             else:
                 return self.cleaned_data
 
-#    def clean_region(self):
-#        import ipdb; ipdb.set_trace()
-#        instance = getattr(self, 'instance', None)
-#        if instance and instance.pk:
-#            return instance.region
-#        else:
-#            return self.cleaned_data['region']
-
-
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'prescription', 'date', 'external_assist', 'planned_area',
+        fields = ('region', 'prescription', 'date', 'planned_area',
                   'planned_distance', 'tenures', 'location', 'est_start', 'conditions',
                  )
 
@@ -83,8 +75,10 @@ class PrescribedBurnEditForm(forms.ModelForm):
         #self.fields['prescription'].widget.attrs['readonly'] = 'readonly'
 
         self.fields['location'].required = True
-        #self.fields['planned_area'].required = True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
+
+        self.fields['planned_area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
+        self.fields['planned_distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
 
     def clean_prescription(self):
         instance = getattr(self, 'instance', None)
@@ -100,20 +94,9 @@ class PrescribedBurnEditForm(forms.ModelForm):
         else:
             return self.cleaned_data['region']
 
-#    def clean_planned_distance(self):
-#        if not (self.cleaned_data['planned_area'] or self.cleaned_data['planned_distance']):
-#            raise ValidationError("Must input at least one of Area or Distance")
-#
-#        instance = getattr(self, 'instance', None)
-#        if instance and instance.pk:
-#            return instance.planned_distance
-#        else:
-#            return self.cleaned_data['planned_distance']
-
     class Meta:
         model = PrescribedBurn
-        #exclude = ('fire_id', 'fire_name', 'region', 'district', 'approval_268a_status', 'approval_268b_status', 'further_ignitions', 'form_name',)
-        fields = ('region', 'prescription', 'date', 'external_assist', 'planned_area',
+        fields = ('region', 'prescription', 'date', 'planned_area',
                   'planned_distance', 'tenures', 'location', 'est_start', 'conditions',
                  )
 
@@ -140,7 +123,9 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
         self.fields['prescription'].required = True
         self.fields['status'].required = True
-        #self.fields['area'].required = True
+
+        self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
+        self.fields['distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
 
     def clean(self):
         if not (self.cleaned_data['area'] or self.cleaned_data['distance']):
@@ -158,9 +143,7 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area',
-                  'distance', 'tenures',
-                 )
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures',)
 
 
 class PrescribedBurnEditActiveForm(forms.ModelForm):
@@ -177,13 +160,11 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         time_now = now.time()
         date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
         self.fields['date'].widget.attrs.update({'value': date_str})
-        #self.initial['status'] = 1
-
-        #status = self.fields['status']
-        #status.choices = status.choices[1:]
 
         self.fields['status'].required = True
-        #self.fields['area'].required = True
+
+        self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
+        self.fields['distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
 
     def clean_prescription(self):
         instance = getattr(self, 'instance', None)
@@ -192,20 +173,9 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         else:
             return self.cleaned_data['prescription']
 
-#    def clean_region(self):
-#        instance = getattr(self, 'instance', None)
-#        if instance and instance.pk:
-#            return instance.region
-#        else:
-#            return self.cleaned_data['region']
-
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'external_assist', 'area',
-                  'distance', 'tenures',
-                 )
-
-
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures',)
 
 
 class FireForm(forms.ModelForm):
@@ -230,6 +200,8 @@ class FireForm(forms.ModelForm):
         status = self.fields['status']
         status.choices = status.choices[1:]
 
+        self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
+
     class Meta:
         model = PrescribedBurn
         fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'fire_tenures',)
@@ -248,6 +220,8 @@ class FireEditForm(forms.ModelForm):
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
         self.fields['district'].widget.attrs['disabled'] = 'disabled'
         self.fields['fire_id'].widget.attrs['disabled'] = 'disabled'
+
+        self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
 
     def clean_region(self):
         instance = getattr(self, 'instance', None)

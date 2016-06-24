@@ -32,17 +32,6 @@ class BurnState(models.Model):
             self.prescription, self.review_type, self.record)
 
 
-#@python_2_unicode_compatible
-#class ApprovingRole(models.Model):
-#    name = models.CharField(max_length=320)
-#
-#    def __str__(self):
-#        return self.name
-#
-#    class Meta:
-#        ordering = ['name']
-
-
 @python_2_unicode_compatible
 class ExternalAssist(models.Model):
     name = models.CharField(max_length=25)
@@ -87,8 +76,6 @@ class Acknowledgement(models.Model):
         return "{} - {} - {}".format(
             self.burn, self.acknow_type, self.record)
 
-#    class Meta:
-#        unique_together = ('burn', 'acknow_type',)
 
 @python_2_unicode_compatible
 class PrescribedBurn(Audit):
@@ -112,9 +99,9 @@ class PrescribedBurn(Audit):
     APPROVAL_APPROVED = 'SDO'
     APPROVAL_CHOICES = (
         (APPROVAL_DRAFT, 'Draft'),
-        (APPROVAL_SUBMITTED, 'DDO Submit'),
-        (APPROVAL_ENDORSED, 'RDO Endorse'),
-        (APPROVAL_APPROVED, 'SDO Approved'),
+        (APPROVAL_SUBMITTED, 'District Submitted'),
+        (APPROVAL_ENDORSED, 'Region Endorsed'),
+        (APPROVAL_APPROVED, 'State Approved'),
     )
 
     FORM_268A = 1
@@ -124,22 +111,14 @@ class PrescribedBurn(Audit):
         (FORM_268B, 'Form 268b'),
     )
 
-#    UNITS_HA = 1
-#    UNITS_KM = 2
-#    UNITS_CHOICES = (
-#        (UNITS_HA, 'ha'),
-#        (UNITS_KM, 'km'),
-#    )
-#
     fmt = "%Y-%m-%d %H:%M"
 
-    prescription = models.ForeignKey(Prescription, related_name='prescribed_burn', null=True, blank=True)
+    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='prescribed_burn', null=True, blank=True)
 #    prescription = ChainedForeignKey(
 #        Prescription, chained_field="region", chained_model_field="region",
 #        show_all=False, auto_choose=True, blank=True, null=True)
 
     fire_tenures = models.ManyToManyField(FireTenure, blank=True)
-    #fire = models.ForeignKey(Fire, null=True, blank=True)
 
     # Required for Fire records
     fire_id = models.CharField(verbose_name="Fire Number", max_length=7, null=True, blank=True)
@@ -149,17 +128,10 @@ class PrescribedBurn(Audit):
         District, chained_field="region", chained_model_field="region",
         show_all=False, auto_choose=True, blank=True, null=True)
     fire_tenures = models.ManyToManyField(FireTenure, verbose_name="Tenures", blank=True)
-
     date = models.DateField(auto_now_add=False)
     form_name = models.PositiveSmallIntegerField(verbose_name="Form Name (268a / 268b)", choices=FORM_NAME_CHOICES, editable=True)
-
     status = models.PositiveSmallIntegerField(verbose_name="Fire Status", choices=BURN_CHOICES, null=True, blank=True)
-
     ignition_status = models.PositiveSmallIntegerField(verbose_name="Ignition Status", choices=IGNITION_STATUS_CHOICES, null=True, blank=True)
-
-    #further_ignitions = models.NullBooleanField(verbose_name="Further ignitions required?")
-    #completed = models.NullBooleanField(verbose_name="Ignition now complete?")
-
     external_assist = models.ManyToManyField(ExternalAssist, blank=True)
 
     planned_area = models.DecimalField(
@@ -179,7 +151,7 @@ class PrescribedBurn(Audit):
     tenures= models.TextField(verbose_name="Tenure")
     location= models.TextField(verbose_name="Location", null=True, blank=True)
     est_start = models.TimeField('Estimated Start Time', null=True, blank=True)
-    conditions = models.TextField(verbose_name='Special Conditions', null=True, blank=True)
+    conditions = models.TextField(verbose_name='SDO Special Conditions', null=True, blank=True)
     rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
 
     def clean(self):
@@ -387,30 +359,6 @@ class PrescribedBurn(Audit):
     @property
     def can_approve(self):
         return (self.status == self.APPROVAL_ENDORSED)
-
-#    def save(self, **kwargs):
-#        #import ipdb; ipdb.set_trace()
-#        if self.prescription:
-#            objects = PrescribedBurn.objects.filter(prescription=self.prescription, date=self.date, form_name=self.form_name)
-#        else:
-#            objects = PrescribedBurn.objects.filter(fire_id=self.fire_id, date=self.date, form_name=self.form_name)
-#
-#        if objects:
-#            raise ValidationError("Duplicate ID already exist".format(objects[0]))
-#        super(PrescribedBurn, self).save(**kwargs)
-
-#    def save(self, **kwargs):
-#        super(PrescribedBurn, self).save(**kwargs)
-#        tenures = self.tenures_str
-#        if not self.location:
-#            if len(self.prescription.location.split('|')) > 1:
-#                tokens = self.prescription.location.split('|')
-#                self.location = tokens[1] + 'km ' + tokens[2] + ' of ' + tokens[3]
-#            else:
-#                self.location = self.prescription.location
-#        if not self.tenures and tenures:
-#            self.tenures = tenures
-#        super(PrescribedBurn, self).save()
 
     def __str__(self):
         return self.prescription.burn_id if self.prescription else self.fire_id
