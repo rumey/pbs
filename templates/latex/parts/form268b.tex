@@ -9,17 +9,17 @@
     }
   }
 
-\fancyfoot[L]{ \leftmark\newline\textbf Custodian: Principal Fire Operations Officer - {{date}} {{time}}}
+\fancyfoot[L]{ \leftmark\newline\textbf {{date}} {{time}}}
 \noindent Sent by: {{ user }}\hfill Date: {{report_date}}\hfill Region: {{region}}
 \subsection{\hfil SUMMARY OF CURRENT FIRE LOAD\hfil}
 
 \begin{table}[h]
 \footnotesize
 \subsubsection{Prescribed Burns}
-\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X | }
+\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
 %%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
 \hline
-\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \bfseries\makecell[c]{Further \\ Ignitions \\ Required} & \bfseries\makecell[c]{Achieved \\ Yesterday} & \textbf{Tenure} & \bfseries\makecell[c]{External \\ Assistance}\\
+\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \bfseries\makecell[c]{Further \\ Ignitions \\ Required} & \bfseries\makecell[c]{Achieved \\ Yesterday} & \textbf{Tenure} \\
 \hline
 \endhead
 {% for pb in qs_fireload %}
@@ -30,7 +30,6 @@
     {% if pb.further_ignitions_req %}Yes{% else %}No{% endif %} & 
     {{ pb.area_str }} & 
     {{ pb.tenures_str }} & 
-    {{ pb.external_assist_str }}\\
     \hline
 {% endif %}
 {% empty %}
@@ -46,7 +45,7 @@
 \begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
 %%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
 \hline
-\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \textbf{Area} & \textbf{Tenure} & \bfseries\makecell[c]{External \\ Assistance}\\
+\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \textbf{Area} & \textbf{Tenure} & \bfseries\makecell[c]{Assistance \\ received from}\\
 \hline
 \endhead
 {% for pb in qs_fireload %}

@@ -179,12 +179,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             if request.REQUEST.get('form')=='edit_burn':
                 return PrescribedBurnEditForm
 
-#    def get_form_kwargs(self):
-#            kwargs = super(PrescribedBurnAdmin, self).get_form_kwargs()
-#            kwargs.update({'user': self.request.user})
-#            import ipdb; ipdb.set_trace()
-#            return kwargs
-
     def csv_view(self, request):
         """ view to render the FMSB Report form """
         context = {'form': CsvForm()}
@@ -431,7 +425,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
@@ -461,7 +454,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
@@ -475,12 +467,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "Can only acknowledge burns for today {}, or tomorrow {}.".format(today, tomorrow)
                 msg_type = "danger"
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
-                #self.message_user(request, "Can only endorse burns for today {}, or tomorrow {}.".format(today, tomorrow))
-                #return HttpResponse(json.dumps({"redirect": request.META.get('HTTP_REFERER')}))
 
             # Only Submitted plans can be endorsed
-            #submitted_objects = PrescribedBurn.objects.filter(date=date, )
-
             count = 0
             if report=='epfp_planned':
                 not_acknowledged = []
@@ -497,7 +485,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             not_acknowledged.append(obj.fire_idd)
 
                     elif not obj.formA_user_acknowledged:
-                        message = "record must first be submitted"
+                        message = "record must first be submitted by district"
                         msg_type = "danger"
 
                     elif obj.formA_srm_acknowledged:
@@ -506,7 +494,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
@@ -525,7 +512,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             not_acknowledged.append(obj.fire_idd)
 
                     elif not obj.formB_user_acknowledged:
-                        message = "record must first be submitted"
+                        message = "record must first be submitted by district"
                         msg_type = "danger"
 
                     elif obj.formB_srm_acknowledged:
@@ -534,12 +521,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "State Acknowledgement" or action == "State Approval":
-            #approval_desc = "acknowledge" if action == "State Acknowledgement" else "approve"
             burn_desc = "burns/bushfires" if action == "State Acknowledgement" else "burns"
             if self.sdo_group not in request.user.groups.all():
                 message = "Only regional and state levels can acknowledge {}".format(burn_desc)
@@ -574,7 +559,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
@@ -611,7 +595,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    #message = "Could not acknowledge. First remove existing acknowledgment {}\n".format(', '.join(not_acknowledged))
                     message = "record already acknowledged {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
@@ -714,18 +697,18 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "{} record{} copied".format(count, "s" if count > 1 else "")
                 msg_type = "info"
 
-        elif action == "Set Active":
-            count = 0
-            for obj in objects:
-                obj.status = PrescribedBurn.BURN_ACTIVE
-                obj.save()
-                count += 1
-                message = "Successfully set {} record{} ACTIVE".format(count, "s" if count>1 else "")
-                msg_type = "success"
-
-            if count == 0:
-                message = "No records were modified"
-                msg_type = "info"
+#        elif action == "Set Active":
+#            count = 0
+#            for obj in objects:
+#                obj.status = PrescribedBurn.BURN_ACTIVE
+#                obj.save()
+#                count += 1
+#                message = "Successfully set {} record{} ACTIVE".format(count, "s" if count>1 else "")
+#                msg_type = "success"
+#
+#            if count == 0:
+#                message = "No records were modified"
+#                msg_type = "info"
 
         return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
 
@@ -890,7 +873,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
 
         tomorrow = dt + timedelta(days=1) # relative to dt
-        #objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE).exclude(completed=True)]
         objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE).exclude(ignition_status=PrescribedBurn.IGNITION_STATUS_COMPLETED)]
         now = timezone.now()
         admin = User.objects.get(username='admin')
@@ -1059,7 +1041,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         writer = unicodecsv.writer(response, quoting=unicodecsv.QUOTE_ALL)
 
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type", "Form",
-            "Date", "Burn Status", "Ignition Status", "External Assist",
+            "Date", "Burn Status", "Ignition Status", "Assistance received from",
             "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
             "DDO Acknow FormA", "RDO Acknow FormA", "SDO Acknow FormA",
             "DDO Acknow FormB", "RDO Acknow FormB", "SDO Acknow FormB",

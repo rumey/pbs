@@ -9,7 +9,7 @@
     }
   }
 
-\fancyfoot[L]{ \leftmark\newline\textbf Custodian: Principal Fire Operations Officer - {{date}} {{time}}}
+\fancyfoot[L]{ \leftmark\newline\textbf {{date}} {{time}}}
 \noindent Sent by: {{ user }}\hfill Date: {{report_date}}\hfill Region: {{region}}
 \subsubsection{Part A: TODAY'S PLANNED BURN PROGRAM (RDO Endorsed)}
 
@@ -38,14 +38,14 @@
 
 The following Burns are proposed for ignition today subject to the approval of the State Duty Officer. The burns will be conducted in accordance with the approved burn plan.
 \footnotesize
-\begin{longtabu} to \linewidth { | X[0.7] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X | }
+\begin{longtabu} to \linewidth { | X[0.7] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
 %%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
 \hline
-\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \textbf{Area} & \bfseries\makecell[c]{Est Start \\ WST} & \textbf{Invite to Assist}\\
+\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \textbf{Area} & \bfseries\makecell[c]{Est Start \\ WST} \\
 \hline
 \endhead
 {% for pb in qs_planned_burns_rdo %}
-\textbf{ {{ pb|texify|safe }}} & {{ pb.name|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.prescription.purposes_list|texify|safe }} & {{ pb.planned_area_str }} & {{ pb.est_start }} & {{ pb.external_assist_str }}\\
+\textbf{ {{ pb|texify|safe }}} & {{ pb.name|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.prescription.purposes_list|texify|safe }} & {{ pb.planned_area_str }} & {{ pb.est_start }} \\
 \hline
 {% empty %}
 \multicolumn{6}{|X|}{No Burns Planned for Today} \\
