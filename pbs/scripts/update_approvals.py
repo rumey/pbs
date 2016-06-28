@@ -58,8 +58,8 @@ if __name__ == "__main__":
     update_currently_approved(cur_approved_ids)
     #print cur_approved_ids, len(cur_approved_ids)
 
-#    seeking_approval_ids = read_ids('pbs/scripts/seeking_approval.txt')
-#    update_seeking_approval(seeking_approval_ids)
+    seeking_approval_ids = read_ids('pbs/scripts/seeking_approval.txt')
+    update_seeking_approval(seeking_approval_ids)
 
     update_season_ids = read_ids('pbs/scripts/update_season.txt')
     update_season(update_season_ids)
