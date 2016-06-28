@@ -188,11 +188,11 @@ class PrescribedBurn(Audit):
             raise ValidationError("You must enter burn plans for today or tommorow's date only.")
 
     def clean_planned_distance(self):
-        if not (self.planned_area or self.planned_distance):
+        if self.planned_area==None and self.planned_distance==None:
             raise ValidationError("Must input at least one of Area or Distance")
 
     def clean_distance(self):
-        if not (self.area or self.distance):
+        if self.area==None and self.distance==None:
             raise ValidationError("Must input at least one of Area or Distance")
 
     @property
@@ -302,21 +302,21 @@ class PrescribedBurn(Audit):
     def planned_area_str(self):
         _str = ''
         if self.planned_area:
-            _str += str(self.planned_area) + "ha {} ".format('-' if self.planned_distance else '')
+            _str += str(self.planned_area) + " ha {} ".format('-' if self.planned_distance else '')
 
         if self.planned_distance:
-            _str += str(self.planned_distance) + "km"
+            _str += str(self.planned_distance) + " km"
 
         return _str
 
     @property
     def area_str(self):
         _str = ''
-        if self.area:
-            _str += str(self.area) + "ha {} ".format('-' if self.distance else '')
+        if self.area>=0:
+            _str += str(self.area) + " ha {} ".format('-' if self.distance else '')
 
-        if self.distance:
-            _str += str(self.distance) + "km"
+        if self.distance>=0:
+            _str += str(self.distance) + " km"
 
         return _str
 
