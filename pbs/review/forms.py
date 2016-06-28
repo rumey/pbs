@@ -108,7 +108,6 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 #        prescriptions = self.fields['prescription'].queryset
 #        self.fields['prescription'].queryset = prescriptions.filter(
 #            burnstate__review_type__in=['FMSB'], planning_status=Prescription.PLANNING_APPROVED).filter(burnstate__review_type__in=['DRFMS']).distinct().order_by('burn_id')
-        self.fields['status'].label = 'Burn Status'
 
         now = datetime.now()
         today = now.date()
@@ -152,7 +151,9 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
         self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
-        self.fields['status'].label = 'Burn Status'
+
+        status = self.fields['status']
+        status.choices = status.choices[1:]
 
         now = datetime.now()
         today = now.date()
@@ -220,6 +221,9 @@ class FireEditForm(forms.ModelForm):
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
         self.fields['district'].widget.attrs['disabled'] = 'disabled'
         self.fields['fire_id'].widget.attrs['disabled'] = 'disabled'
+
+        status = self.fields['status']
+        status.choices = status.choices[1:]
 
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
 
