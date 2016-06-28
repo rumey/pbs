@@ -43,6 +43,24 @@ $(function() {
         })
     });
 
+    // next section required for page refresh following validation error on page
+    var region_selected = $("#id_region :selected").text();
+    if (region_selected.indexOf('---------') < 0) { // search for substring '-----' --> returns true if not present --> can filter prescriptions based on selected filter
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'admin:prescription_view' %}",
+            data: {
+                region: $("#id_region :selected").val()
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                $("#id_prescription").html(response.burn_ids)
+
+            }
+        })
+    }
+
+
     $("#id_planned_area").change(function () {
         $.ajax({
             type: 'GET',
@@ -83,6 +101,7 @@ $(function() {
 
 
     });
+
 
     $("#id_fire_id").change(function () {
         $.ajax({
