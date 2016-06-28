@@ -1062,7 +1062,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         if request.GET.has_key('region'):
             region = request.GET.get('region', None)
-            prescribed_burns = prescribed_burns.filter(prescription__region=region)
+            prescribed_burns = prescribed_burns.filter(region=region)
             region_name = Region.objects.get(id=int(region)).name
         else:
             region = None
