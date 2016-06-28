@@ -132,7 +132,7 @@ class PrescribedBurn(Audit):
     form_name = models.PositiveSmallIntegerField(verbose_name="Form Name (268a / 268b)", choices=FORM_NAME_CHOICES, editable=True)
     status = models.PositiveSmallIntegerField(verbose_name="Fire Status", choices=BURN_CHOICES, null=True, blank=True)
     ignition_status = models.PositiveSmallIntegerField(verbose_name="Ignition Status", choices=IGNITION_STATUS_CHOICES, null=True, blank=True)
-    external_assist = models.ManyToManyField(ExternalAssist, blank=True)
+    external_assist = models.ManyToManyField(ExternalAssist, verbose_name="Assistance received from", blank=True)
 
     planned_area = models.DecimalField(
         verbose_name="Planned Burn Area (ha)", max_digits=12, decimal_places=1,

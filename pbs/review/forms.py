@@ -128,7 +128,6 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         self.fields['distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
 
     def clean(self):
-        import ipdb; ipdb.set_trace()
         if self.cleaned_data['area']==None and self.cleaned_data['distance']==None:
             raise ValidationError("Must input at least one of Area or Distance")
 

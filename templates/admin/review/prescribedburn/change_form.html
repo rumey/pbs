@@ -19,6 +19,11 @@ $(function() {
     $("#id_planned_distance").attr("min", 0.0);
     $("#id_distance").attr("min", 0.0);
 
+    $('label:contains("Planned Burn Area (ha):")').text('Planned Burn Area (ha)*:').css("font-weight","Bold")
+    $('label:contains("Planned Burn Distance (km):")').text('Planned Burn Distance (km)*:').css("font-weight","Bold")
+    $('label:contains("Area Burnt Yesterday (ha):")').text('Area Burnt Yesterday (ha)*:').css("font-weight","Bold")
+    $('label:contains("Distance Burnt Yesterday (km):")').text('Distance Burnt Yesterday (km)*:').css("font-weight","Bold")
+
     {% if not is_sdo %}
         $("#id_conditions").attr("disabled", "disabled");
     {% endif %}

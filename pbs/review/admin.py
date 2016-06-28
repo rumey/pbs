@@ -506,7 +506,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
                             obj.save()
                             count += 1
-                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            message = "Successfully approved {} record{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                         else:
                             not_acknowledged.append(obj.fire_idd)
@@ -517,11 +517,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
                     elif obj.formB_srm_acknowledged:
                         already_acknowledged.append(obj.fire_idd)
-                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        message = "record already approved {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
+                    message = "record already approved {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "State Acknowledgement" or action == "State Approval":
@@ -580,22 +580,22 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_B', acknow_date=now)
                             obj.save()
                             count += 1
-                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            message = "Successfully approved {} record{}".format(count, "s" if count>1 else "")
                             msg_type = "success"
                         else:
                             not_acknowledged.append(obj.fire_idd)
 
                     elif not obj.formB_srm_acknowledged:
-                        message = "record must first be regionally acknowledged"
+                        message = "record must first be regionally approved"
                         msg_type = "danger"
 
                     elif obj.formB_sdo_acknowledged:
                         already_acknowledged.append(obj.fire_idd)
-                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        message = "record already approved {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
 
                 if not_acknowledged:
-                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
+                    message = "record already approved {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
         elif action == "Delete State Acknowledgement" or action == "Delete State Approval":
