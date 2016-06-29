@@ -433,7 +433,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 already_acknowledged = []
                 unset_acknowledged = []
                 for obj in objects:
-                    if obj.area>=0 and obj.status:
+                    if (obj.area>=0 or obj.distance>=0) and obj.status:
                         if obj.formB_isDraft:
                             if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
                                 Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
