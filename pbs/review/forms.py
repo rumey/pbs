@@ -115,10 +115,7 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         time_now = now.time()
         date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
         self.fields['date'].widget.attrs.update({'value': date_str})
-        self.initial['status'] = 1
-
-        status = self.fields['status']
-        status.choices = status.choices[1:]
+        #self.initial['status'] = 1
 
         self.fields['prescription'].required = True
         self.fields['status'].required = True
@@ -197,9 +194,6 @@ class FireForm(forms.ModelForm):
         time_now = now.time()
         date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
         self.fields['date'].widget.attrs.update({'value': date_str})
-
-        status = self.fields['status']
-        status.choices = status.choices[1:]
 
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
 

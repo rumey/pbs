@@ -44,8 +44,9 @@ $(function() {
     });
 
     // next section required for page refresh following validation error on page
+    /*
     var region_selected = $("#id_region :selected").text();
-    if (region_selected.indexOf('---------') < 0) { // search for substring '-----' --> returns true if not present --> can filter prescriptions based on selected filter
+    if (region_selected.indexOf('---------') < 0 && current_url.indexOf('edit') < 0) { // search for substring '-----' --> returns true if not present and not an edit form --> can filter prescriptions based on selected filter
         $.ajax({
             type: 'GET',
             url: "{% url 'admin:prescription_view' %}",
@@ -59,7 +60,7 @@ $(function() {
             }
         })
     }
-
+    */
 
     $("#id_planned_area").change(function () {
         $.ajax({
