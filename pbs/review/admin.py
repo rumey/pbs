@@ -924,6 +924,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 obj.pk = None
                 obj.date = tomorrow
                 obj.area = None
+                obj.distance = None
                 obj.status = None
                 obj.approval_268a_status = PrescribedBurn.APPROVAL_DRAFT
                 obj.approval_268a_status_modified = now
@@ -954,6 +955,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 i.pk = None
                 i.date = tomorrow
                 i.area = None
+                i.distance = None
                 i.status = 1
                 i.approval_268a_status = PrescribedBurn.APPROVAL_DRAFT
                 i.approval_268a_status_modified = now
@@ -976,7 +978,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return list of objects that are unset
         """
         rolled_objects = PrescribedBurn.objects.filter(date=today, rolled=True).exclude(form_name=PrescribedBurn.FORM_268A) #.exclude(completed=True)
-        unset_objects = list(set(rolled_objects.filter(area__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
+        unset_objects = list(set(rolled_objects.filter(area__isnull=True, distance__isnull=True)).union(rolled_objects.filter(status__isnull=True)))
         return unset_objects
 
     def export_to_csv(self, request, extra_context=None):
