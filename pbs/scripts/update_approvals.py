@@ -52,15 +52,32 @@ def update_season(ids):
         count += 1
     print 'Updated Seeking Approval status from DRAFT to APPROVED for {} ePFPs'.format(count)
 
+def update_seeking_approval_2(ids):
+    count = 0
+    for p in Prescription.objects.filter(burn_id__in=ids):
+        p.planning_status = 3                                                   # corporate approved
+        p.financial_year = '2016/2017'                                          # SEASON
+        p.planning_status_modified = datetime(2016, 7, 01, tzinfo=pytz.UTC)     # approval date
+        a=p.approval_set.all()
+        if len(a) > 0:
+            a[0].valid_to=date(2016, 7, 15)                                     # approved until date
+            a[0].save()
+        p.save()
+        count += 1
+    print 'Updated Seeking Approval status from DRAFT to APPROVED and Approval Date for {} ePFPs'.format(count)
+
 
 if __name__ == "__main__":
-    cur_approved_ids = read_ids('pbs/scripts/currently_approved.txt')
-    update_currently_approved(cur_approved_ids)
+#    cur_approved_ids = read_ids('pbs/scripts/currently_approved.txt')
+#    update_currently_approved(cur_approved_ids)
     #print cur_approved_ids, len(cur_approved_ids)
 
-    seeking_approval_ids = read_ids('pbs/scripts/seeking_approval.txt')
-    update_seeking_approval(seeking_approval_ids)
+#    seeking_approval_ids = read_ids('pbs/scripts/seeking_approval.txt')
+#    update_seeking_approval(seeking_approval_ids)
 
-    update_season_ids = read_ids('pbs/scripts/update_season.txt')
-    update_season(update_season_ids)
+#    update_season_ids = read_ids('pbs/scripts/update_season.txt')
+#    update_season(update_season_ids)
 
+    seeking_approval_ids = read_ids('pbs/scripts/seeking_approval-2.txt')
+    #print seeking_approval_ids, len(seeking_approval_ids)
+    update_seeking_approval_2(seeking_approval_ids)
