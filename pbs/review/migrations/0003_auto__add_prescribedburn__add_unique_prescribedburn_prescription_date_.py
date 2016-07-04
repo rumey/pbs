@@ -26,8 +26,8 @@ class Migration(SchemaMigration):
             ('ignition_status', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
             ('planned_area', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
             ('area', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
-            ('planned_area_unit', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
-            ('area_unit', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
+            ('planned_distance', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
+            ('distance', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
             ('tenures', self.gf('django.db.models.fields.TextField')()),
             ('location', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
             ('est_start', self.gf('django.db.models.fields.TimeField')(null=True, blank=True)),
@@ -54,8 +54,8 @@ class Migration(SchemaMigration):
         ))
         db.create_unique(m2m_table_name, ['prescribedburn_id', 'externalassist_id'])
 
-        # Adding unique constraint on 'PrescribedBurn', fields ['prescription', 'date', 'form_name']
-        db.create_unique(u'review_prescribedburn', ['prescription_id', 'date', 'form_name'])
+        # Adding unique constraint on 'PrescribedBurn', fields ['prescription', 'date', 'form_name', 'location']
+        db.create_unique(u'review_prescribedburn', ['prescription_id', 'date', 'form_name', 'location'])
 
         # Adding model 'Acknowledgement'
         db.create_table(u'review_acknowledgement', (
@@ -83,8 +83,8 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        # Removing unique constraint on 'PrescribedBurn', fields ['prescription', 'date', 'form_name']
-        db.delete_unique(u'review_prescribedburn', ['prescription_id', 'date', 'form_name'])
+        # Removing unique constraint on 'PrescribedBurn', fields ['prescription', 'date', 'form_name', 'location']
+        db.delete_unique(u'review_prescribedburn', ['prescription_id', 'date', 'form_name', 'location'])
 
         # Deleting model 'PrescribedBurn'
         db.delete_table(u'review_prescribedburn')
@@ -189,7 +189,7 @@ class Migration(SchemaMigration):
             'endorsement_status_modified': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'endorsing_roles': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['prescription.EndorsingRole']", 'symmetrical': 'False'}),
             'endorsing_roles_determined': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'financial_year': ('django.db.models.fields.CharField', [], {'default': "u'2015/2016'", 'max_length': '10'}),
+            'financial_year': ('django.db.models.fields.CharField', [], {'default': "u'2016/2017'", 'max_length': '10'}),
             'forecast_areas': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['prescription.ForecastArea']", 'null': 'True', 'blank': 'True'}),
             'forest_blocks': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'fuel_types': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['prescription.FuelType']", 'null': 'True', 'blank': 'True'}),
@@ -285,13 +285,13 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
         u'review.prescribedburn': {
-            'Meta': {'unique_together': "(('prescription', 'date', 'form_name'),)", 'object_name': 'PrescribedBurn'},
+            'Meta': {'unique_together': "(('prescription', 'date', 'form_name', 'location'),)", 'object_name': 'PrescribedBurn'},
             'area': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
-            'area_unit': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'conditions': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'creator': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_prescribedburn_created'", 'to': u"orm['auth.User']"}),
             'date': ('django.db.models.fields.DateField', [], {}),
+            'distance': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
             'district': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['prescription.District']", 'null': 'True', 'blank': 'True'}),
             'est_start': ('django.db.models.fields.TimeField', [], {'null': 'True', 'blank': 'True'}),
             'external_assist': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['review.ExternalAssist']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -305,7 +305,7 @@ class Migration(SchemaMigration):
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'modifier': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_prescribedburn_modified'", 'to': u"orm['auth.User']"}),
             'planned_area': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
-            'planned_area_unit': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'planned_distance': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
             'prescription': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'prescribed_burn'", 'null': 'True', 'to': u"orm['prescription.Prescription']"}),
             'region': ('django.db.models.fields.PositiveSmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'rolled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
