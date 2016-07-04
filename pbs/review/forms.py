@@ -107,7 +107,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
                 raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
 
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A, location=location)
-            if objects:
+            if objects[0] != getattr(self, 'instance', None):
                 raise ValidationError("Burn ID  {}  already exists on this date, with this location".format(objects[0].prescription.burn_id))
             else:
                 return self.cleaned_data['location']
