@@ -409,19 +409,24 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 not_acknowledged = []
                 already_acknowledged = []
                 for obj in objects:
-                    if obj.formA_isDraft:
-                        if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
-                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
-                            obj.save()
-                            count += 1
-                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                            msg_type = "success"
-                        else:
-                            not_acknowledged.append(obj.fire_idd)
+                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
+                        if obj.formA_isDraft:
+                            if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
+                                Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
+                                obj.save()
+                                count += 1
+                                message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                                msg_type = "success"
+                            else:
+                                not_acknowledged.append(obj.fire_idd)
 
-                    elif obj.formA_user_acknowledged:
-                        already_acknowledged.append(obj.fire_idd)
-                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        elif obj.formA_user_acknowledged:
+                            already_acknowledged.append(obj.fire_idd)
+                            message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                            msg_type = "danger"
+
+                    else:
+                        message = "Burn is not Corporate Approved {}".format(obj.fire_idd)
                         msg_type = "danger"
 
                 if not_acknowledged:
@@ -433,24 +438,29 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 already_acknowledged = []
                 unset_acknowledged = []
                 for obj in objects:
-                    if (obj.area>=0 or obj.distance>=0) and obj.status:
-                        if obj.formB_isDraft:
-                            if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
-                                Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
-                                obj.save()
-                                count += 1
-                                message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                                msg_type = "success"
-                            else:
-                                not_acknowledged.append(obj.fire_idd)
+                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
+                        if (obj.area>=0 or obj.distance>=0) and obj.status:
+                            if obj.formB_isDraft:
+                                if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
+                                    Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
+                                    obj.save()
+                                    count += 1
+                                    message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                                    msg_type = "success"
+                                else:
+                                    not_acknowledged.append(obj.fire_idd)
 
-                        elif obj.formB_user_acknowledged:
-                            already_acknowledged.append(obj.fire_idd)
-                            message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                            elif obj.formB_user_acknowledged:
+                                already_acknowledged.append(obj.fire_idd)
+                                message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                                msg_type = "danger"
+                        else:
+                            unset_acknowledged.append(obj.fire_idd)
+                            message = "Cannot acknowledge {}. First set Area/Status field(s)".format(', '.join(unset_acknowledged))
                             msg_type = "danger"
+
                     else:
-                        unset_acknowledged.append(obj.fire_idd)
-                        message = "Cannot acknowledge {}. First set Area/Status field(s)".format(', '.join(unset_acknowledged))
+                        message = "Burn is not Corporate Approved {}".format(obj.fire_idd)
                         msg_type = "danger"
 
                 if not_acknowledged:
