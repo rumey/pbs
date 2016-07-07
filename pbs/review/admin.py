@@ -1149,6 +1149,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'baseurl': request.build_absolute_uri("/")[:-1]
         }
         disposition = "attachment"
+        #disposition = "inline"
         response['Content-Disposition'] = (
             '{0}; filename="{1}"'.format(
                 disposition, downloadname))
