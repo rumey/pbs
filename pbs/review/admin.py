@@ -360,7 +360,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 district_id = request.REQUEST.get('district')
                 code = District.objects.get(id=district_id).code
 
-                bushfire_id = code + '_' + fire_id
+                district = PrescribedBurn.BUSHFIRE_DISTRICT_ALIASES[code] if PrescribedBurn.BUSHFIRE_DISTRICT_ALIASES.has_key(code) else code
+                bushfire_id = district + '_' + fire_id
                 return HttpResponse(json.dumps({'bushfire_id': bushfire_id}))
 
             if request.REQUEST.has_key('region'):
