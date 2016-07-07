@@ -188,8 +188,9 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         self.fields['prescription'].queryset = prescription.queryset.filter(burn_id=prescribed_burn.fire_idd)
         self.fields['prescription'].widget.attrs['readonly'] = True
 
-        status = self.fields['status']
-        status.choices = status.choices[1:]
+        #status = self.fields['status']
+        #status.choices = status.choices[1:]
+        self.initial['status'] = 0
 
         now = datetime.now()
         today = now.date()

@@ -499,6 +499,11 @@ select, button{
                     <th>Last Ignition</th>
                     <td colspan="3">{{ qs.last_ignition }}</td>
                 </tr>
+                <tr>
+                    <th>Location</th>
+                    <td colspan="5">{{ qs.prescription.location }}</td>
+                </tr>
+
               {% endif %}
 
               <tr>
