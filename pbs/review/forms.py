@@ -44,7 +44,10 @@ class PrescribedBurnForm(forms.ModelForm):
         if not (self.cleaned_data['planned_area'] or self.cleaned_data['planned_distance']):
             raise ValidationError("Must input at least one of Area or Distance")
 
-        if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
+        if not self.cleaned_data.has_key('location'):
+            raise ValidationError("Must input location")
+
+        if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date') and self.cleaned_data.has_key('location'):
             # check for integrity constraint - duplicate keys
             prescription = self.cleaned_data['prescription']
             dt = self.cleaned_data['date']
@@ -70,10 +73,17 @@ class PrescribedBurnEditForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnEditForm, self).__init__(*args, **kwargs)
+        prescribed_burn = kwargs.get('instance')
 
+        # hack to get the instance choices (region and prescription) to display read-only/disabled
+        region = self.fields['region']
+        region_idx = [i[0] for i in region.choices if prescribed_burn.get_region_display()==i[1]][0]
+        region.choices = [region.choices[region_idx]]
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
-        self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
-        #self.fields['prescription'].widget.attrs['readonly'] = 'readonly'
+
+        prescription = self.fields['prescription']
+        self.fields['prescription'].queryset = prescription.queryset.filter(burn_id=prescribed_burn.fire_idd)
+        self.fields['prescription'].widget.attrs['readonly'] = True
 
         self.fields['location'].required = True
         self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
@@ -166,9 +176,17 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 class PrescribedBurnEditActiveForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrescribedBurnEditActiveForm, self).__init__(*args, **kwargs)
+        prescribed_burn = kwargs.get('instance')
 
+        # hack to get the instance choices (region and prescription) to display read-only/disabled
+        region = self.fields['region']
+        region_idx = [i[0] for i in region.choices if prescribed_burn.get_region_display()==i[1]][0]
+        region.choices = [region.choices[region_idx]]
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
-        self.fields['prescription'].widget.attrs['disabled'] = 'disabled'
+
+        prescription = self.fields['prescription']
+        self.fields['prescription'].queryset = prescription.queryset.filter(burn_id=prescribed_burn.fire_idd)
+        self.fields['prescription'].widget.attrs['readonly'] = True
 
         status = self.fields['status']
         status.choices = status.choices[1:]
