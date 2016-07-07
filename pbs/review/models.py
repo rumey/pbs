@@ -111,6 +111,16 @@ class PrescribedBurn(Audit):
         (FORM_268B, 'Form 268b'),
     )
 
+    BUSHFIRE_DISTRICT_ALIASES = {
+        'PHS' : 'PH',
+        'SWC' : 'SC',
+        'EKM' : 'KIMB',
+        'WKM' : 'KIMB',
+        'KAL' : 'GF',
+        'PIL' : 'PF',
+    }
+
+
     fmt = "%Y-%m-%d %H:%M"
 
     prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='prescribed_burn', null=True, blank=True)
@@ -167,14 +177,15 @@ class PrescribedBurn(Audit):
 
 
     def clean_fire_id(self):
-        if not (len(self.fire_id)==7 and self.fire_id[3]=='_'): # ignore if this is an edit (field is readonly)
+        if not (len(self.fire_id)>=6 and self.fire_id[-4]=='_'): # ignore if this is an edit (field is readonly)
             if not self.fire_id or str(self.fire_id)[0] in ('-', '+') or not str(self.fire_id).isdigit() or not len(self.fire_id)==3:
                 raise ValidationError("You must enter numeric digit with 3 characters (001 - 999).")
 
             if int(self.fire_id)<1 or int(self.fire_id)>999:
                 raise ValidationError("Value must be in range (001 - 999).")
 
-            fire_id = "%s_%s" % (self.district.code, self.fire_id)
+            district = self.BUSHFIRE_DISTRICT_ALIASES[self.district.code] if self.BUSHFIRE_DISTRICT_ALIASES.has_key(self.district.code) else self.district.code
+            fire_id = "%s_%s" % (district, self.fire_id)
             pb = PrescribedBurn.objects.filter(fire_id=fire_id, date=self.date)
             if pb and pb[0].id != self.id:
                 raise ValidationError("{} already exists for date {}".format(fire_id, self.date))
