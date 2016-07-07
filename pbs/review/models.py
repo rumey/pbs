@@ -360,6 +360,14 @@ class PrescribedBurn(Audit):
     def can_approve(self):
         return (self.status == self.APPROVAL_ENDORSED)
 
+    @property
+    def last_ignition(self):
+        if self.prescription:
+            area_achievements = self.prescription.areaachievement_set.all()
+            if area_achievements:
+                return max([i.ignition for i in area_achievements])
+        return None
+
     def __str__(self):
         return self.prescription.burn_id if self.prescription else self.fire_id
 

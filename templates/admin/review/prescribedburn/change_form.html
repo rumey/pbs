@@ -96,11 +96,8 @@ $(function() {
                 $( "#id_prescription_name").remove()
                 $( "<span id='id_prescription_name'>  " + response['prescription_name'] + "</span>" ).insertAfter( "#id_prescription" );
                 $("#id_planned_area").attr("max", response['prescription_area'])
-
             }
         })
-
-
     });
 
 

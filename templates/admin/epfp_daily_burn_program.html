@@ -343,6 +343,11 @@ select, button{
                 <td colspan="5">{{ qs.conditions }}</td>
               </tr>
               <tr>
+                <th>Last Ignition</th>
+                <td colspan="5">{{ qs.last_ignition }}</td>
+              </tr>
+
+              <tr>
                 <th>Submit</th>
                 <td>{{ qs.user_a_record  }}</td>
                 <th>RDO</th>
@@ -491,17 +496,8 @@ select, button{
                 <tr>
                     <th>Prohibited Period</th>
                     <td>{% if qs.prescription.prohibited_period %}{{ qs.prescription.prohibited_period }}{% else %}None{% endif %}</td>
-                    <th>Burn Purpose(s)</th>
-                    <td colspan="3">
-                    {% if qs.prescription.purposes %}
-                        {% for purpose in qs.prescription.purposes.all %}
-                        {{ purpose.name }}
-                        <br>
-                        {% endfor %}
-                    {% else %}
-                        None
-                    {% endif %}
-                    </td>
+                    <th>Last Ignition</th>
+                    <td colspan="3">{{ qs.last_ignition }}</td>
                 </tr>
               {% endif %}
 
