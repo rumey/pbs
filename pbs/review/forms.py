@@ -262,6 +262,7 @@ class FireForm(forms.ModelForm):
 class FireEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FireEditForm, self).__init__(*args, **kwargs)
+        prescribed_burn = kwargs.get('instance')
         self.initial['fire_id'] = self.initial['fire_id'][-3:]
 
         self.fields['fire_name'].required = True
@@ -269,9 +270,17 @@ class FireEditForm(forms.ModelForm):
         self.fields['area'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
 
+        # hack to get the instance choices (region and district) to display read-only/disabled
+        region = self.fields['region']
+        region_idx = [i[0] for i in region.choices if prescribed_burn.get_region_display()==i[1]][0]
+        region.choices = [region.choices[region_idx]]
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
-        self.fields['district'].widget.attrs['disabled'] = 'disabled'
-        self.fields['fire_id'].widget.attrs['disabled'] = 'disabled'
+
+        district = self.fields['district']
+        self.fields['district'].queryset = district.queryset.filter(name=prescribed_burn.district)
+        self.fields['district'].widget.attrs['readonly'] = True
+
+        self.fields['fire_id'].widget.attrs['readonly'] = True
 
         status = self.fields['status']
         status.choices = status.choices[1:]
@@ -279,18 +288,21 @@ class FireEditForm(forms.ModelForm):
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
 
     def clean_region(self):
+        """
+        need this when widget is disabled
+        """
         instance = getattr(self, 'instance', None)
         if instance and instance.pk:
             return instance.region
         else:
             return self.cleaned_data['region']
 
-    def clean_district(self):
-        instance = getattr(self, 'instance', None)
-        if instance and instance.pk:
-            return instance.district
-        else:
-            return self.cleaned_data['district']
+#    def clean_district(self):
+#        instance = getattr(self, 'instance', None)
+#        if instance and instance.pk:
+#            return instance.district
+#        else:
+#            return self.cleaned_data['district']
 
     def clean_fire_id(self):
         instance = getattr(self, 'instance', None)
