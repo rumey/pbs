@@ -892,6 +892,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
                 continue
+            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                continue
             try:
                 obj.pk = None
                 obj.date = tomorrow
@@ -929,6 +932,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         count = 0
         for obj in objects:
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                continue
+            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
                 continue
             try:
