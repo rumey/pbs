@@ -87,8 +87,8 @@ $(function() {
             success: function(response){
                 var response = JSON.parse(response);
                 //$("#id_area").attr("max", response['prescription_area'])
-                $( "#id_max_area_exceeded").remove()
-                if ($("#id_area").val() > response['prescription_area']) {
+                $( "#id_max_area_exceeded").remove();
+                if (parseFloat($("#id_area").val()) > parseFloat(response['prescription_area'])) {
                     $( "<div class='help-inline'><span id='id_max_area_exceeded'><font color='red'> NOTE: Input exceeds max. Planned Area (" + response['prescription_area'] + " ha) </font></span></div>" ).insertAfter( "#id_area_help" );
                 }
 
