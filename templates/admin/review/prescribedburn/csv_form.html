@@ -44,7 +44,11 @@
     {% comment %}
     <a id="id_save_button" href="#" class="btn pull-right btn-success">{% trans 'Export' %}</a>
     {% endcomment %}
-    <a class="btn btn-small btn-info" style="float: right" href="javascript: csv_url();" target=""><i class="icon-plus icon-white"></i> Export CSV</a>
+    <p class="pull-right">
+        <a class="btn btn-small btn-info" href="javascript: csv_url();" target=""><i class="icon-plus icon-white"></i> Export CSV</a>
+        <a id="id_cancel_button" href="javascript: history.go(-1)" class="btn btn-danger">Return</a>
+    </p>
+
 </form>
 </div>
 </div>
