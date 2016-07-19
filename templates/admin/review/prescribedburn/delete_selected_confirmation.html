@@ -1,0 +1,36 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n %}
+{% load admin_urls %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+<li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+<li>{% trans 'Delete multiple objects' %}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+    <p>{% blocktrans %}Are you sure you want to delete the selected {{ objects_name }}? All of the following objects and their related items will be deleted:{% endblocktrans %}</p>
+    {% for deletable_object in deletable_objects %}
+        <ul>{{ deletable_object }}</ul>
+    {% endfor %}
+
+    {% if non_deletable_objects %}
+        <p>{% blocktrans %}The following {{ objects_name }} cannot be deleted, because these have been rolled from yesterday {% endblocktrans %}</p>
+        {% for non_deletable_object in non_deletable_objects %}
+            <ul>{{ non_deletable_object }}</ul>
+        {% endfor %}
+    {% endif %}
+
+    <form action="" method="post">{% csrf_token %}
+    <div>
+    {% for obj in queryset %}
+    <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}" />
+    {% endfor %}
+    <input type="hidden" name="action" value="delete_selected" />
+    <input type="hidden" name="post" value="yes" />
+    <input type="submit" class="btn" value="{% trans "Yes, I'm sure" %}" />
+    <a id="id_cancel_button" href="javascript: history.go(-1)" class="btn btn-danger">Cancel</a>
+    </div>
+    </form>
+{% endblock %}
