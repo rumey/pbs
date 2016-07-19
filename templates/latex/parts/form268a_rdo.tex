@@ -1,5 +1,5 @@
   \fancyhead[R] {
-    {\bfseries FIRE268a} \break
+    {\bfseries FIRE268a (RDO ONLY)} \break
     {\bfseries Fire Management Services Branch} \break
     \textsc{\Small
     Technology Park, Western Precinct \break
@@ -11,7 +11,7 @@
 
 \fancyfoot[L]{ \leftmark\newline {{date}} {{time}} \\ \footnotesize Web link to Department of Parks and Wildlife Daily Burn Program: \url{% templatetag openbrace %}http://www.dpaw.wa.gov.au/}}
 \noindent Sent by: {{ user }}\hfill Date: {{report_date}}\hfill Region: {{region}}
-\subsubsection{Part A: TODAY'S PLANNED BURN PROGRAM}
+\subsubsection{Part A: TODAY'S PLANNED BURN PROGRAM (RDO Endorsed)}
 
 \begin{table}[h]
 \begin{tabular}{cc}
@@ -41,10 +41,10 @@ The following Burns are proposed for ignition today subject to the approval of t
 \begin{longtabu} to \linewidth { | X[0.7] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
 %%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
 \hline
-\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \textbf{Area} & \bfseries\makecell[c]{Est Start \\ WST}
+\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \textbf{Area} & \bfseries\makecell[c]{Est Start \\ WST} \\
 \hline
 \endhead
-{% for pb in qs_planned_burns %}
+{% for pb in qs_planned_burns_rdo %}
 \textbf{ {{ pb|texify|safe }}} & {{ pb.name|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.prescription.purposes_list|texify|safe }} & {{ pb.planned_area_str }} & {{ pb.est_start }} \\
 \hline
 {% empty %}
@@ -68,7 +68,7 @@ The following Burns are proposed for ignition today subject to the approval of t
 \textbf{Burn ID} & \textbf{Special conditions of approval as specified by the SDO (in addition to the compliance of the approved burn plan)} \\
 \hline
 \endhead
-{% for pb in qs_planned_burns %}
+{% for pb in qs_planned_burns_rdo %}
   {% if pb.conditions %}
     \textbf{ {{ pb|texify|safe }}} & {{ pb.conditions|texify|safe }} \\
      \hline

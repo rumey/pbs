@@ -60,7 +60,7 @@ from pbs.stakeholder.admin import (CriticalStakeholderAdmin,
 from pbs.stakeholder.models import (CriticalStakeholder, PublicContact,
                                     Notification)
 from pbs.review.models import (BurnState, PrescribedBurn)
-from pbs.review.admin import (BurnStateAdmin, PrescribedBurnAdmin, FireAdmin)
+from pbs.review.admin import (BurnStateAdmin, PrescribedBurnAdmin)
 
 from swingers.sauth.sites import AuditSite
 
