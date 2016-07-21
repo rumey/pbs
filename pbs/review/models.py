@@ -392,3 +392,83 @@ class PrescribedBurn(Audit):
         )
 
 
+class Acknowledgement(models.Model):
+    aircraft_burn = models.ForeignKey('AircraftBurn', related_name='approvals')
+    user = models.ForeignKey(User, help_text="User", null=True, blank=True)
+    approval_type = models.CharField(max_length=64, null=True, blank=True)
+    approval_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    fmt = "%d/%m/%Y %H:%M"
+
+    @property
+    def record(self):
+        username = '{} {}'.format(self.user.first_name[0], self.user.last_name)
+        return "{} {}".format(
+            username, self.approval_date.astimezone(tz.tzlocal()).strftime(self.fmt)
+        )
+
+    def remove(self):
+        self.delete()
+
+    def __str__(self):
+        return "{} - {} - {}".format(
+            self.aircraft_burn, self.approval_type, self.record)
+
+
+@python_2_unicode_compatible
+class AircraftBurn(Audit):
+    APPROVAL_DRAFT = 'DRAFT'
+    APPROVAL_SUBMITTED = 'USER'
+    APPROVAL_ENDORSED = 'SRM'
+    APPROVAL_APPROVED = 'SDO'
+    APPROVAL_CHOICES = (
+        (APPROVAL_DRAFT, 'Draft'),
+        (APPROVAL_SUBMITTED, 'District Submitted'),
+        (APPROVAL_ENDORSED, 'Region Endorsed'),
+        (APPROVAL_APPROVED, 'State Approved'),
+    )
+
+    fmt = "%Y-%m-%d %H:%M"
+
+    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='aircraft_burns', null=True, blank=True)
+    #prescribed_burn = models.ForeignKey(PrescribedBurn, verbose_name="Daily Burn ID", related_name='aircraft_burn', null=True, blank=True)
+
+    date = models.DateField(auto_now_add=False)
+    area = models.DecimalField(
+        verbose_name="Area (ha)", max_digits=12, decimal_places=1,
+        validators=[MinValueValidator(0.0)], null=True, blank=True)
+    est_start = models.TimeField('Estimated Start Time', null=True, blank=True)
+    bombing_duration = models.DecimalField(
+        verbose_name="Bombing Duration (hrs)", max_digits=5, decimal_places=1,
+        validators=[MinValueValidator(0.0)], null=True, blank=True)
+    bombing_duration = models.Field('Start Time', null=True, blank=True)
+    min_smc = models.DecimalField(
+        verbose_name="Min SMC", max_digits=5, decimal_places=1,
+        validators=[MinValueValidator(0.0)], null=True, blank=True)
+    max_fdi = models.DecimalField(
+        verbose_name="Max FDI", max_digits=5, decimal_places=1,
+        validators=[MinValueValidator(0.0)], null=True, blank=True)
+    sdi_per_day = models.DecimalField(
+        verbose_name="SDI Each Day", max_digits=5, decimal_places=1,
+        validators=[MinValueValidator(0.0)], null=True, blank=True)
+    flight_seq= models.TextField(verbose_name="Flight Sequence", null=True, blank=True)
+    aircraft_rego= models.TextField(verbose_name="Aircraft Rego", null=True, blank=True)
+    arrival_time= models.TimeField(verbose_name="Arrival Time Over Burn", null=True, blank=True)
+    program= models.TextField(verbose_name="Program", null=True, blank=True)
+    aircrew= models.TextField(verbose_name="Aircrew", null=True, blank=True)
+
+    rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
+
+    def __str__(self):
+        return self.prescription.burn_id
+
+    class Meta:
+        unique_together = ('prescription', 'date')
+        verbose_name = 'Aircraft Burn'
+        verbose_name_plural = 'Aircraft Burns'
+        permissions = (
+            ("can_endorse", "Can endorse burns"),
+            ("can_approve", "Can approve burns"),
+        )
+
+

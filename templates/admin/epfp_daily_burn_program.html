@@ -152,6 +152,15 @@ select, button{
                 {{ form.district }}
 
                 <input class="hidden" style="float: right;" name="report" value="epfp_summary">
+
+            {% elif report == "epfp_aircraft" %}
+                <label for="id_date" class="control-label">Date</label>
+                <input type="text" id="id_date" value="{{date}}" name="date"/>
+
+                <label for="id_region" class="control-label">Region</label>
+                {{ form.prescription.region }}
+
+                <input class="hidden" style="float: right;" name="report" value="epfp_aircraft">
                 <button type="submit" class="btn btn-primary">Update</button>
 
             {% endif %}
@@ -570,6 +579,49 @@ select, button{
 
 {% endif %}
 {% comment %}{% paginate %} {% endcomment %}
+
+{% if report == "epfp_aircraft" %}
+<table id="aircraft-table" class="main-table table table-hover table-compressed">
+  <thead>
+    <tr>
+      <th></th>
+      <th rowspan="1"><div class="text-center">Burn ID <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Burn Name <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Area <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Start Time <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Bombing Duration <i class="icon-sort"></i><br>(hrs)</div></th>
+      <th rowspan="1"><div class="text-center">Min SMC <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">Max FDI <i class="icon-sort"></i></div></th>
+      <th rowspan="1"><div class="text-center">SDI each <i class="icon-sort"></i><br><DAY</div></th>
+      <th rowspan="1"><div class="text-center">Flight <i class="icon-sort"></i><br>Sequence</div></th>
+      <th rowspan="1"><div class="text-center">Aircraft <i class="icon-sort"></i><br>Rego</div></th>
+      <th rowspan="1"><div class="text-center">Arrival Time <i class="icon-sort"></i><br>Over Burn</div></th>
+      <th rowspan="1"><div class="text-center">Program <i class="icon-sort"></i></div></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% comment %}{% autopaginate qs_burn 25 %} {% endcomment%}
+    {% for qs in qs_aircraft %}
+    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
+      <td></td>
+      <td><a data-toggle="tooltip" title="Click to view prescription" href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
+      <td>{{ qs.prescription.name }}</td>
+      <td>{{ qs.area }}</td>
+      <td>{{ qs.est_start }}</td>
+      <td>{{ qs.bombing_duration }}</td>
+      <td>{{ qs.min_smc }}</td>
+      <td>{{ qs.max_fdi }}</td>
+      <td>{{ qs.sdi_per_day }}</td>
+      <td>{{ qs.flight_seq }}</td>
+      <td>{{ qs.aircraft_rego }}</td>
+      <td>{{ qs.arrival_time }}</td>
+      <td>{{ qs.program }}</td>
+    </tr>
+    {% endfor %}
+
+  </tbody>
+</table>
+{% endif %}
 
 
 <div id="dialog-message" title="Region Error" style="display: none;">
