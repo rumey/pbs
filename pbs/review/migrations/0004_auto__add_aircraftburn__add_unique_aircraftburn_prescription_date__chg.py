@@ -8,11 +8,44 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Adding model 'AircraftBurn'
+        db.create_table(u'review_aircraftburn', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('creator', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'review_aircraftburn_created', to=orm['auth.User'])),
+            ('modifier', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'review_aircraftburn_modified', to=orm['auth.User'])),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
+            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
+            ('prescription', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='aircraft_burns', null=True, to=orm['prescription.Prescription'])),
+            ('date', self.gf('django.db.models.fields.DateField')()),
+            ('area', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
+            ('est_start', self.gf('django.db.models.fields.TimeField')(null=True, blank=True)),
+            ('bombing_duration', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=5, decimal_places=1, blank=True)),
+            ('min_smc', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=5, decimal_places=1, blank=True)),
+            ('max_fdi', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=5, decimal_places=1, blank=True)),
+            ('sdi_per_day', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=5, decimal_places=1, blank=True)),
+            ('flight_seq', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('aircraft_rego', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('arrival_time', self.gf('django.db.models.fields.TimeField')(null=True, blank=True)),
+            ('program', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('aircrew', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('rolled', self.gf('django.db.models.fields.BooleanField')(default=False)),
+        ))
+        db.send_create_signal(u'review', ['AircraftBurn'])
+
+        # Adding unique constraint on 'AircraftBurn', fields ['prescription', 'date']
+        db.create_unique(u'review_aircraftburn', ['prescription_id', 'date'])
+
 
         # Changing field 'PrescribedBurn.fire_id'
         db.alter_column(u'review_prescribedburn', 'fire_id', self.gf('django.db.models.fields.CharField')(max_length=8, null=True))
 
     def backwards(self, orm):
+        # Removing unique constraint on 'AircraftBurn', fields ['prescription', 'date']
+        db.delete_unique(u'review_aircraftburn', ['prescription_id', 'date'])
+
+        # Deleting model 'AircraftBurn'
+        db.delete_table(u'review_aircraftburn')
+
 
         # Changing field 'PrescribedBurn.fire_id'
         db.alter_column(u'review_prescribedburn', 'fire_id', self.gf('django.db.models.fields.CharField')(max_length=7, null=True))
@@ -177,6 +210,28 @@ class Migration(SchemaMigration):
             'burn': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'acknowledgements'", 'to': u"orm['review.PrescribedBurn']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'})
+        },
+        u'review.aircraftburn': {
+            'Meta': {'unique_together': "(('prescription', 'date'),)", 'object_name': 'AircraftBurn'},
+            'aircraft_rego': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'aircrew': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'area': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '12', 'decimal_places': '1', 'blank': 'True'}),
+            'arrival_time': ('django.db.models.fields.TimeField', [], {'null': 'True', 'blank': 'True'}),
+            'bombing_duration': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '5', 'decimal_places': '1', 'blank': 'True'}),
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'creator': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_aircraftburn_created'", 'to': u"orm['auth.User']"}),
+            'date': ('django.db.models.fields.DateField', [], {}),
+            'est_start': ('django.db.models.fields.TimeField', [], {'null': 'True', 'blank': 'True'}),
+            'flight_seq': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'max_fdi': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '5', 'decimal_places': '1', 'blank': 'True'}),
+            'min_smc': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '5', 'decimal_places': '1', 'blank': 'True'}),
+            'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'modifier': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'review_aircraftburn_modified'", 'to': u"orm['auth.User']"}),
+            'prescription': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'aircraft_burns'", 'null': 'True', 'to': u"orm['prescription.Prescription']"}),
+            'program': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'rolled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'sdi_per_day': ('django.db.models.fields.DecimalField', [], {'null': 'True', 'max_digits': '5', 'decimal_places': '1', 'blank': 'True'})
         },
         u'review.burnstate': {
             'Meta': {'object_name': 'BurnState'},

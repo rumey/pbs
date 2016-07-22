@@ -362,7 +362,8 @@ class AircraftBurnForm(forms.ModelForm):
         super(AircraftBurnForm, self).__init__(*args, **kwargs)
 
     class Meta:
-        exlude = ()
+        #exlude = ('flight_seq', 'aircraft_rego', 'arrival_time', 'program',)
+        fields = ('prescription', 'date', 'area', 'est_start', 'bombing_duration', 'min_smc', 'max_fdi', 'sdi_per_day', 'aircrew')
         model = AircraftBurn
 
 
@@ -371,7 +372,9 @@ class AircraftBurnEditForm(forms.ModelForm):
         super(AircraftBurnEditForm, self).__init__(*args, **kwargs)
 
     class Meta:
-        exlude = ()
+        fields = ('prescription', 'date', 'area', 'est_start', 'bombing_duration', 'min_smc', 'max_fdi', 'sdi_per_day',
+                  'flight_seq', 'aircraft_rego', 'arrival_time', 'program', 'aircrew'
+            )
         model = AircraftBurn
 
 

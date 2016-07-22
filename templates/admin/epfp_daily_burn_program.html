@@ -592,7 +592,7 @@ select, button{
     {% comment %}
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Bushfire</a>
     {% endcomment %}
-    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_view' %}?report=epfp_aircraft"><i class="icon-info"></i> Help</a>
+    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_aircraft_view' %}?report=epfp_aircraft"><i class="icon-info"></i> Help</a>
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_aircraftburn_add' %}?form=add_aircraft_burn"><i class="icon-plus icon-white"></i> Add Aircraft</a>
 
     <span>Action</span>
@@ -644,6 +644,8 @@ select, button{
       <td>{{ qs.aircraft_rego }}</td>
       <td>{{ qs.arrival_time }}</td>
       <td>{{ qs.program }}</td>
+      <td><a data-toggle="tooltip" title="Edit" id="edit-aircraftburn" href="{% url 'admin:review_aircraftburn_change' qs.id %}?form=edit_aircraft_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
+      <td><a data-toggle="tooltip" title="Delete" id="delete-aircraftburn" href="{% url 'admin:bulk_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
     {% endfor %}
 

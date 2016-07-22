@@ -1216,6 +1216,7 @@ class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         if request.GET.has_key('form'):
+            #import ipdb; ipdb.set_trace()
             if request.REQUEST.get('form')=='add_aircraft_burn':
                 return AircraftBurnForm
             if request.REQUEST.get('form')=='edit_aircraft_burn':
@@ -1266,8 +1267,51 @@ class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
             url(r'^aircraft-burn-program/$',
                 wrap(self.aircraft_burn_program),
                 name='aircraft_burn_program'),
+            url(r'^help',
+                wrap(self.help_view),
+                name='help_aircraft_view'),
+            url(r'^bulk_delete/([\w\,]+)/$',
+                wrap(self.bulk_delete),
+                name='bulk_aircraft_delete'),
+
         )
         return urlpatterns + super(AircraftBurnAdmin, self).get_urls()
+
+    def help_view(self, request, extra_context=None):
+        return TemplateResponse(request, 'admin/review/aircraftburn/help.html', {'report': request.GET['report']})
+
+    def bulk_delete(self, request, object_ids, extra_context=None):
+        """
+        View to bulk delete aircraft burns
+        """
+        pass
+#        burn_desc = "burns/bushfires" if 'epfp_fireload' in request.META.get('HTTP_REFERER') else "burns"
+#        object_ids = map(int, object_ids.split(','))
+#        #objects = PrescribedBurn.objects.filter(id__in=object_ids)
+#        objects = PrescribedBurn.objects.filter(Q(id__in=object_ids), ~Q(Q(status__isnull=True) & Q(area__isnull=True) & Q(form_name=PrescribedBurn.FORM_268B)))
+#        non_deletable_objects = PrescribedBurn.objects.filter(id__in=object_ids, status__isnull=True, area__isnull=True, form_name=PrescribedBurn.FORM_268B)
+#        for obj in objects:
+#            if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
+#                if self.sdo_group not in request.user.groups.all():
+#                    self.message_user(request, "Only state levels can delete a state acknowledged {}".format(burn_desc))
+#                    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+#
+#        if request.method == 'POST':
+#            if objects:
+#                objects.delete()
+#                return HttpResponseRedirect(reverse('admin:daily_burn_program'))
+#            else:
+#                self.message_user(request, "Cannot delete rolled records (records that were active or planned yesterday)", level=messages.ERROR)
+#                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+#
+#        context = {
+#            'deletable_objects': objects,
+#            'non_deletable_objects': non_deletable_objects,
+#            'current': objects[0] if objects else None,
+#        }
+#        template = 'admin/review/prescribedburn/delete_selected_confirmation.html'
+#        return TemplateResponse(request, template, context) #, current_app=self.admin_site.name)
+
 
     def aircraft_burn_program(self, request, extra_context=None):
         """
@@ -1291,7 +1335,7 @@ class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
 
         yesterday = dt - timedelta(days=1)
 
-        qs_burn = AircraftBurn.objects.filter(date=dt)
+        qs_aircraft = AircraftBurn.objects.filter(date=dt)
         if report=='epfp_aircraft':
             title = "Today's Planned Burn Program"
             # assumes all burns entered on date dt are planned (for date dt)
@@ -1301,11 +1345,11 @@ class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
         if request.REQUEST.has_key('region'):
             region = request.REQUEST.get('region', None)
             if region:
-                qs_burn = qs_burn.filter(region=region)
+                qs_aircraft = qs_aircraft.filter(prescription__region=region)
 
         context = {
             'title': title,
-            'qs_burn': qs_burn,
+            'qs_aircraft': qs_aircraft,
             'form': form,
             'report': report,
             'username': request.user.username,

@@ -191,7 +191,12 @@
       ["add_prescribedburn", "review", "prescribedburn"],
       ["view_prescribedburn", "review", "prescribedburn"],
       ["change_prescribedburn", "review", "prescribedburn"],
-      ["delete_prescribedburn", "review", "prescribedburn"]
+      ["delete_prescribedburn", "review", "prescribedburn"],
+      ["add_aircraftburn", "review", "aircraftburn"],
+      ["view_aircraftburn", "review", "aircraftburn"],
+      ["change_aircraftburn", "review", "aircraftburn"],
+      ["delete_aircraftburn", "review", "aircraftburn"]
+
     ]
   }
 },
@@ -266,6 +271,16 @@
     "permissions": [
     ]
   }
+},
+{
+  "pk": 9,
+  "model": "auth.group",
+  "fields": {
+    "name": "State Aviation Officer",
+    "permissions": [
+    ]
+  }
 }
+
 
 ]

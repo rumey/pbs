@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n %}
+{% load admin_urls %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+<li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+<li><a href="javascript: history.go(-1)">{% trans 'Daily Burn Program' %}</a> <span class="divider">/</span></li>
+<li>{% trans 'Help' %}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+    {% if report == "epfp_aircraft" %}
+      <h1>Help - Form 301</h1>
+      <p>{% blocktrans %}
+        <ol>
+            <li>Select the date - this must be today's or tomorrow's date</li>
+            <li>Use the filter buttons to select your region</li>
+            <li>Enter new aircraft using the "Add Aircraft" button</li>
+            <li>...</li>
+        </ol>
+      {% endblocktrans %}</p>
+
+    {% endif %}
+
+    <form action="" method="post">{% csrf_token %}
+    <div>
+    <a id="id_cancel_button" href="javascript: history.go(-1)" class="btn btn-info">Return</a>
+    </div>
+    </form>
+{% endblock %}

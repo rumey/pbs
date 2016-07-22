@@ -441,7 +441,6 @@ class AircraftBurn(Audit):
     bombing_duration = models.DecimalField(
         verbose_name="Bombing Duration (hrs)", max_digits=5, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
-    bombing_duration = models.Field('Start Time', null=True, blank=True)
     min_smc = models.DecimalField(
         verbose_name="Min SMC", max_digits=5, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)

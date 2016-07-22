@@ -42,16 +42,6 @@
         </ol>
       {% endblocktrans %}</p>
 
-    {% elif report == "epfp_aircraft" %}
-      <h1>Help - Form 301</h1>
-      <p>{% blocktrans %}
-        <ol>
-            <li>Select the date - this must be today's or tomorrow's date</li>
-            <li>Use the filter buttons to select your region</li>
-            <li>Enter new aircraft using the "Add Aircraft" button</li>
-        </ol>
-      {% endblocktrans %}</p>
-
     {% endif %}
 
     <form action="" method="post">{% csrf_token %}
