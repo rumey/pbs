@@ -190,6 +190,13 @@ select, button{
             Approved Burns (268c)
         </a>
     </li>
+    <li id="aircraft-tab"  "{% if report == "epfp_aircraft" %} class="active"{% endif %}>
+        <a href="{% url 'admin:aircraft_burn_program' %}?date={{date}}">
+            <i class="icon-plane"></i>
+            Aircraft Burns (301)
+        </a>
+    </li>
+
 <div class="dropdown btn btn-medium" style="float: right">
   <a id="dropdown_btn" data-target="#" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
     Create PDF / Report
@@ -581,6 +588,27 @@ select, button{
 {% comment %}{% paginate %} {% endcomment %}
 
 {% if report == "epfp_aircraft" %}
+<div>
+    {% comment %}
+    <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Bushfire</a>
+    {% endcomment %}
+    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_view' %}?report=epfp_aircraft"><i class="icon-info"></i> Help</a>
+    <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_aircraftburn_add' %}?form=add_aircraft_burn"><i class="icon-plus icon-white"></i> Add Aircraft</a>
+
+    <span>Action</span>
+    <select id="actions">
+    <option value="0" selected="selected">----</option>
+    <option value="1">District Entered</option>
+    <option value="2">Regional Acknowledgement</option>
+    <option value="3">State Acknowledgement</option>
+    <option value="4">Delete District Entry</option>
+    <option value="5">Delete Regional Acknowledgement</option>
+    <option value="6">Delete State Acknowledgement</option>
+    <option value="7">Delete Record</option>
+    </select>
+    <button id="update-button" class="btn btn-small btn-info" type="button" disabled>Go</button>
+</div>
+
 <table id="aircraft-table" class="main-table table table-hover table-compressed">
   <thead>
     <tr>

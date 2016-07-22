@@ -25,7 +25,7 @@
             <li>To approve burn/s at the state level, tick the box/es next to the burn and select "State Approval", click on "Update" button</li>
         </ol>
       {% endblocktrans %}</p>
-    {% else %}
+    {% elif report == "epfp_fireload" %}
       <h1>Help - Form 268b</h1>
       <p>{% blocktrans %}
         <ol>
@@ -39,6 +39,16 @@
             <li>To enter burns and bushfires at the district level, tick the box/es next to the burn and select "District Entered", click on "Update" button</li>
             <li>To acknowledge burns and bushfires at the regional level, tick the box/es next to the burn and select "Regional Acknowledgement", click on "Update" button</li>
             <li>To acknowledge burns and bushfires at state level, tick the box/es next to the burn and select "State Acknowledgement", click on "Update" button</li>
+        </ol>
+      {% endblocktrans %}</p>
+
+    {% elif report == "epfp_aircraft" %}
+      <h1>Help - Form 301</h1>
+      <p>{% blocktrans %}
+        <ol>
+            <li>Select the date - this must be today's or tomorrow's date</li>
+            <li>Use the filter buttons to select your region</li>
+            <li>Enter new aircraft using the "Add Aircraft" button</li>
         </ol>
       {% endblocktrans %}</p>
 

@@ -1,6 +1,6 @@
 from django import forms
 from pbs.prescription.models import Prescription, Region, District
-from pbs.review.models import PrescribedBurn
+from pbs.review.models import PrescribedBurn, AircraftBurn
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.forms import ValidationError
@@ -347,5 +347,31 @@ class CsvForm(forms.Form):
     fromDate = forms.DateField(required=False)
     toDate = forms.DateField(required=True)
 
+
+class AircraftBurnFilterForm(forms.ModelForm):
+    region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
+    approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+
+    class Meta:
+        fields = ('region', 'approval_status')
+        model = AircraftBurn
+
+
+class AircraftBurnForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(AircraftBurnForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        exlude = ()
+        model = AircraftBurn
+
+
+class AircraftBurnEditForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(AircraftBurnEditForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        exlude = ()
+        model = AircraftBurn
 
 

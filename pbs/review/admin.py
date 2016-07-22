@@ -4,9 +4,10 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group, User
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PrescribedBurn, Acknowledgement
+from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
-        PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm
+        PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
+        AircraftBurnForm, AircraftBurnEditForm, AircraftBurnFilterForm
     )
 from pbs.prescription.models import Prescription, Approval, Region, District
 from datetime import datetime, date, timedelta
@@ -1198,6 +1199,120 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         logger.debug("Finally: returning PDF response.")
         return response
 
+
+class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
+
+    @property
+    def srm_group(self):
+        return Group.objects.get(name='Regional Duty Officer')
+
+    @property
+    def sdo_group(self):
+        return Group.objects.get(name='State Duty Officer')
+
+    @property
+    def sao_group(self):
+        return Group.objects.get(name='State Aviation Officer')
+
+    def get_form(self, request, obj=None, **kwargs):
+        if request.GET.has_key('form'):
+            if request.REQUEST.get('form')=='add_aircraft_burn':
+                return AircraftBurnForm
+            if request.REQUEST.get('form')=='edit_aircraft_burn':
+                return AircraftBurnEditForm
+
+#    def response_post_save_change(self, request, obj):
+#        """
+#        Override the redirect url after successful save of an existing PrescribedBurn
+#        """
+#        if 'edit_fire' in request.META.get('HTTP_REFERER') or 'edit_active_burn' in request.META.get('HTTP_REFERER'):
+#            url = reverse('admin:daily_burn_program') + '?report=epfp_fireload&date={}'.format(request.REQUEST['date'])
+#        elif 'edit_burn' in request.META.get('HTTP_REFERER'):
+#            url = reverse('admin:daily_burn_program') + '?report=epfp_planned&date={}'.format(request.REQUEST['date'])
+#        else:
+#            url = reverse('admin:daily_burn_program')
+#
+#        return HttpResponseRedirect(url)
+#
+#    def response_post_save_add(self, request, obj):
+#        """
+#        Override the redirect url after successful save of a new PrescribedBurn
+#        """
+#        if request.REQUEST.has_key('form'):
+#            if 'add_fire' in request.REQUEST['form'] or 'add_active_burn' in request.REQUEST['form']:
+#                url = reverse('admin:daily_burn_program') + '?report=epfp_fireload&date={}'.format(request.REQUEST['date'])
+#            if 'add_burn' in request.REQUEST['form']:
+#                url = reverse('admin:daily_burn_program') + '?report=epfp_planned&date={}'.format(request.REQUEST['date'])
+#        else:
+#            url = reverse('admin:daily_burn_program')
+#
+#        return HttpResponseRedirect(url)
+
+    def get_urls(self):
+        """
+        Add an extra view to handle marking a treatment as complete.
+        """
+        from django.conf.urls import patterns, url
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        info = self.model._meta.app_label, self.model._meta.module_name
+
+        urlpatterns = patterns(
+            '',
+            url(r'^aircraft-burn-program/$',
+                wrap(self.aircraft_burn_program),
+                name='aircraft_burn_program'),
+        )
+        return urlpatterns + super(AircraftBurnAdmin, self).get_urls()
+
+    def aircraft_burn_program(self, request, extra_context=None):
+        """
+        Display a list of the current day's planned aircraft burns
+        """
+        report_set = {'epfp_aircraft'}
+        report = request.GET.get('report', 'epfp_aircraft')
+
+        if request.REQUEST.has_key('report'):
+            report = request.REQUEST.get('report', None)
+
+        if request.REQUEST.has_key('date'):
+            dt = request.REQUEST.get('date', None)
+            if dt:
+                dt = datetime.strptime(dt, '%Y-%m-%d')
+        else:
+            dt = date.today()
+            time_now = datetime.now().time()
+            if time_now.hour > settings.DAY_ROLLOVER_HOUR:
+                dt = dt + timedelta(days=1)
+
+        yesterday = dt - timedelta(days=1)
+
+        qs_burn = AircraftBurn.objects.filter(date=dt)
+        if report=='epfp_aircraft':
+            title = "Today's Planned Burn Program"
+            # assumes all burns entered on date dt are planned (for date dt)
+            #qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268A)
+            form = AircraftBurnFilterForm(request.GET)
+
+        if request.REQUEST.has_key('region'):
+            region = request.REQUEST.get('region', None)
+            if region:
+                qs_burn = qs_burn.filter(region=region)
+
+        context = {
+            'title': title,
+            'qs_burn': qs_burn,
+            'form': form,
+            'report': report,
+            'username': request.user.username,
+            'date': dt.strftime('%Y-%m-%d'),
+        }
+        context.update(extra_context or {})
+        return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
 
 
 

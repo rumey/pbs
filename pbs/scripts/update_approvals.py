@@ -66,6 +66,27 @@ def update_seeking_approval_2(ids):
         count += 1
     print 'Updated Seeking Approval status from DRAFT to APPROVED and Approval Date for {} ePFPs'.format(count)
 
+def print_burnstate_reviewed(ids):
+    count = 0
+    for p in Prescription.objects.filter(burn_id__in=ids).order_by('burn_id'):
+        if p.burnstate.all(): # and not reviewable(p):
+            print p.burn_id, ';', [i.record for i in p.burnstate.all()], ';', reviewable(p)
+
+def delete_burnstate_unreviewed(ids):
+    count = 0
+    for p in Prescription.objects.filter(burn_id__in=ids).order_by('burn_id'):
+        if p.burnstate.all() and not reviewable(p):
+            b = p.burnstate.all()
+            b.delete()
+
+def reviewable(prescription):
+    p = Prescription.objects.filter(
+            id=prescription.id,
+            approval_status=Prescription.APPROVAL_APPROVED,
+            status=Prescription.STATUS_OPEN,
+            ignition_status__in=[Prescription.IGNITION_NOT_STARTED, Prescription.IGNITION_COMMENCED]
+        )
+    return True if p else False
 
 if __name__ == "__main__":
 #    cur_approved_ids = read_ids('pbs/scripts/currently_approved.txt')
@@ -78,6 +99,13 @@ if __name__ == "__main__":
 #    update_season_ids = read_ids('pbs/scripts/update_season.txt')
 #    update_season(update_season_ids)
 
-    seeking_approval_ids = read_ids('pbs/scripts/seeking_approval-2.txt')
-    #print seeking_approval_ids, len(seeking_approval_ids)
-    update_seeking_approval_2(seeking_approval_ids)
+#    seeking_approval_ids = read_ids('pbs/scripts/seeking_approval-2.txt')
+#    #print seeking_approval_ids, len(seeking_approval_ids)
+#    update_seeking_approval_2(seeking_approval_ids)
+
+    ids = read_ids('pbs/scripts/seeking_approval_reviewed.txt')
+    #print_burnstate_reviewed(ids)
+
+    delete_burnstate_unreviewed(ids)
+    #ids = read_ids('pbs/scripts/seeking_approval_reviewed.txt')
+    print_burnstate_reviewed(ids)
