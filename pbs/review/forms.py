@@ -350,7 +350,7 @@ class CsvForm(forms.Form):
 
 class AircraftBurnFilterForm(forms.ModelForm):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
-    approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+    approval_status = forms.ChoiceField(required=False, choices=AircraftBurn.APPROVAL_CHOICES)
 
     class Meta:
         fields = ('region', 'approval_status')
@@ -358,12 +358,27 @@ class AircraftBurnFilterForm(forms.ModelForm):
 
 
 class AircraftBurnForm(forms.ModelForm):
+    region = forms.ModelChoiceField(required=True, queryset=Region.objects.all())
+
     def __init__(self, *args, **kwargs):
         super(AircraftBurnForm, self).__init__(*args, **kwargs)
 
+        self.fields['region'].required = True
+        self.fields['prescription'].required = True
+        self.fields['date'].required = True
+        self.fields['area'].required = True
+        self.fields['est_start'].required = True
+        self.fields['bombing_duration'].required = True
+        now = datetime.now()
+        today = now.date()
+        date_str = today.strftime('%Y-%m-%d')
+        self.fields['date'].widget.attrs.update({'value': date_str})
+
+        self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
+
     class Meta:
         #exlude = ('flight_seq', 'aircraft_rego', 'arrival_time', 'program',)
-        fields = ('prescription', 'date', 'area', 'est_start', 'bombing_duration', 'min_smc', 'max_fdi', 'sdi_per_day', 'aircrew')
+        fields = ('region', 'prescription', 'date', 'area', 'est_start', 'bombing_duration', 'min_smc', 'max_fdi', 'sdi_per_day', 'aircrew')
         model = AircraftBurn
 
 

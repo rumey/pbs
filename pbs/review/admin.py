@@ -4,7 +4,7 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group, User
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement
+from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement, AircraftApproval
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
         PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
         AircraftBurnForm, AircraftBurnEditForm, AircraftBurnFilterForm
@@ -1273,6 +1273,9 @@ class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
             url(r'^bulk_delete/([\w\,]+)/$',
                 wrap(self.bulk_delete),
                 name='bulk_aircraft_delete'),
+            url(r'^aircraft-burn-program/pdf',
+                wrap(self.pdflatex),
+                name='create_aircraftburns_pdf'),
 
         )
         return urlpatterns + super(AircraftBurnAdmin, self).get_urls()
@@ -1357,6 +1360,110 @@ class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
+
+    def pdflatex(self, request):
+        #import ipdb; ipdb.set_trace()
+        if request.GET.has_key('date'):
+            report_date = datetime.strptime(request.GET.get('date'), '%Y-%m-%d').date()
+        else:
+            raise Http404('Could not get Date')
+        aircraft_burns = AircraftBurn.objects.filter(date=report_date).distinct()
+
+        #aircraft_burns = aircraft_burns.filter(approvals__approval_type__in=['SAO'])
+
+#        def approval(aircraft_burns, approval_type):
+#            approvals = AircraftApproval(aircraft_burn__in=aircraft_burns, approval_type=approval_type).distinct()
+#            return ', '.join(set([i.user.get_full_name() for i in approvals]))
+#
+#        approval_records ={
+#            'srm': approval(aircraft_burns, 'SRM'),
+#            'sdo': approval(aircraft_burns, 'SDO'),
+#            'sao': approval(aircraft_burns, 'SAO'),
+#        }
+        obj = Prescription.objects.get(id=620)
+        template = request.GET.get("template", "pfp")
+        response = HttpResponse(content_type='application/pdf')
+        #texname = template + ".tex"
+        #filename = template + ".pdf"
+        texname = template + "_" + request.user.username + ".tex"
+        filename = template + "_" + request.user.username + ".pdf"
+        now = timezone.localtime(timezone.now())
+        timestamp = now.isoformat().rsplit(
+            ".")[0].replace(":", "")
+        downloadname = "daily_burn_program"
+        error_response = HttpResponse(content_type='text/html')
+        errortxt = downloadname.replace(".pdf", ".errors.txt.html")
+        error_response['Content-Disposition'] = (
+            '{0}; filename="{1}"'.format(
+            "inline", errortxt))
+
+        subtitles = {
+            #"daily_burn_program": "Part A - Daily Burn Program",
+            "form301": "FIRE 301 - Daily Aircraft Burn Program",
+        }
+        embed = False if request.GET.get("embed") == "false" else True
+        context = {
+            'user': request.user.get_full_name(),
+            'date': datetime.now().strftime('%d %b %Y'),
+            'time': datetime.now().strftime('%H:%M'),
+            'report_date': report_date.strftime('%d %b %Y'),
+            'state_regional_manager': datetime.now().strftime('%H:%M'),
+            'qs_aircraft_burns': aircraft_burns.order_by('prescription__burn_id'),
+            #'approval_records': approval_records,
+            'current': obj,
+            'prescription': obj,
+            'embed': embed,
+            'headers': request.GET.get("headers", True),
+            'title': request.GET.get("title", "Prescribed Fire Plan"),
+            'subtitle': subtitles.get(template, ""),
+            'timestamp': now,
+            'downloadname': downloadname,
+            'settings': settings,
+            'baseurl': request.build_absolute_uri("/")[:-1]
+        }
+        disposition = "attachment"
+        #disposition = "inline"
+        response['Content-Disposition'] = (
+            '{0}; filename="{1}"'.format(
+                disposition, downloadname))
+
+        directory = os.path.join(settings.MEDIA_ROOT, 'daily-burn-program' + os.sep)
+        if not os.path.exists(directory):
+            logger.debug("Making a new directory: {}".format(directory))
+            os.makedirs(directory)
+
+        logger.debug('Starting  render_to_string step')
+        err_msg = None
+        try:
+            output = render_to_string(
+                "latex/" + template + ".tex", context,
+                context_instance=RequestContext(request))
+        except Exception as e:
+            import traceback
+            err_msg = u"PDF tex template render failed (might be missing attachments):"
+            logger.debug(err_msg + "\n{}".format(e))
+
+            error_response.write(err_msg + "\n\n{0}\n\n{1}".format(e,traceback.format_exc()))
+            return error_response
+
+        with open(directory + texname, "w") as f:
+            f.write(output.encode('utf-8'))
+            logger.debug("Writing to {}".format(directory + texname))
+
+        logger.debug("Starting PDF rendering process ...")
+        cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
+        logger.debug("Running: {0}".format(" ".join(cmd)))
+        subprocess.call(cmd)
+
+        logger.debug("Cleaning up ...")
+        cmd = ['latexmk', '-cd', '-c', directory + texname]
+        logger.debug("Running: {0}".format(" ".join(cmd)))
+        subprocess.call(cmd)
+
+        logger.debug("Reading PDF output from {}".format(filename))
+        response.write(open(directory + filename).read())
+        logger.debug("Finally: returning PDF response.")
+        return response
 
 
 

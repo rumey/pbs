@@ -392,7 +392,7 @@ class PrescribedBurn(Audit):
         )
 
 
-class Acknowledgement(models.Model):
+class AircraftApproval(models.Model):
     aircraft_burn = models.ForeignKey('AircraftBurn', related_name='approvals')
     user = models.ForeignKey(User, help_text="User", null=True, blank=True)
     approval_type = models.CharField(max_length=64, null=True, blank=True)

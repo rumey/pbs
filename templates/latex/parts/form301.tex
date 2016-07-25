@@ -1,0 +1,46 @@
+\fancyhead[R] {
+    {\bfseries FIRE 301} \break
+    \textsc{\Small
+        (09/15) \break
+    }
+  }
+
+\fancyfoot[L]{ \leftmark\newline {{date}} {{time}} \\ \footnotesize Web link to Department of Parks and Wildlife Daily Burn Program: \url{% templatetag openbrace %}http://www.dpaw.wa.gov.au/}}
+\vspace{5mm}
+\noindent Sent by: {{ user }}\hfill DAILY AIRCRAFT BURN PROGRAM\hfill Date: {{report_date}}
+\vspace{5mm}
+
+DDO to submit program through RDO who then notifies FMSB State Duty Officer \& FMSB State Aviation Officer (KENS-440-FMS-State Aviation) by 08:20, Radio Notifications by 10:00
+\footnotesize
+\begin{longtabu} to \linewidth { | X[1.0] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X[0.8] | X | }
+%%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
+\hline
+\textbf{Region} & \textbf{Burn ID} & \textbf{Area} & \textbf{Start Time} & \bfseries\makecell[c]{Bombing \\ Duration \\ (hrs)} &
+\bfseries\makecell[c]{Min \\ SMC} & \bfseries\makecell[c]{Max \\ FDI} & \bfseries\makecell[c]{SDI \\ each \\ DAY} &
+\bfseries\makecell[c]{Flight \\ Sequence} & \bfseries\makecell[c]{Aircraft \\ Rego} & \bfseries\makecell[c]{Arrival \\ Time \\ Over \\ Burn} & \textbf{Program} &
+\bfseries\makecell[c]{Time \& \\ Approval}
+
+\hline
+\endhead
+{% for burn in qs_aircraft_burns %}
+    \textbf{ {{ burn.prescription.region.name|texify|safe  }} } &
+    \textbf{ {{ burn.prescription.burn_id|texify|safe }}} &
+    {{ burn.area|texify|safe }} & 
+    {{ burn.est_start|texify|safe }} & 
+    {{ burn.bombing_duration|texify|safe }} & 
+    {{ burn.min_smc }} & 
+    {{ burn.max_fdi }} & 
+    {{ burn.sdi_per_day }} &
+    {{ burn.flight_seq }} &
+    {{ burn.aircraft_rego }} &
+    {{ burn.arrival_time }} &
+    {{ burn.program }} &
+    {{ burn.approval }} \\
+\hline
+{% empty %}
+\multicolumn{6}{|X|}{No Aircraft Burns Planned for Today} \\
+\hline
+{% endfor %}
+\end{longtabu}
+
+\clearpage
