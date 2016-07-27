@@ -219,7 +219,6 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
     def clean_location(self):
 
-        import ipdb; ipdb.set_trace()
         if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
             # check for integrity constraint - duplicate keys
             prescription = self.cleaned_data['prescription']
