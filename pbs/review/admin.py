@@ -410,21 +410,27 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             if report=='epfp_planned':
                 not_acknowledged = []
                 already_acknowledged = []
+                unset_acknowledged = []
                 for obj in objects:
                     if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
-                        if obj.formA_isDraft:
-                            if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
-                                Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
-                                obj.save()
-                                count += 1
-                                message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                                msg_type = "success"
-                            else:
-                                not_acknowledged.append(obj.fire_idd)
+                        if (obj.planned_area>=0 or obj.planned_distance>=0):
+                            if obj.formA_isDraft:
+                                if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
+                                    Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
+                                    obj.save()
+                                    count += 1
+                                    message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                                    msg_type = "success"
+                                else:
+                                    not_acknowledged.append(obj.fire_idd)
 
-                        elif obj.formA_user_acknowledged:
-                            already_acknowledged.append(obj.fire_idd)
-                            message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                            elif obj.formA_user_acknowledged:
+                                already_acknowledged.append(obj.fire_idd)
+                                message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                                msg_type = "danger"
+                        else:
+                            unset_acknowledged.append(obj.fire_idd)
+                            message = "Cannot acknowledge {}. First set Today's Area/Distance field(s)".format(', '.join(unset_acknowledged))
                             msg_type = "danger"
 
                     else:
@@ -458,7 +464,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                                 msg_type = "danger"
                         else:
                             unset_acknowledged.append(obj.fire_idd)
-                            message = "Cannot acknowledge {}. First set Area/Status field(s)".format(', '.join(unset_acknowledged))
+                            message = "Cannot acknowledge {}. First set Area/Distance / Status field(s)".format(', '.join(unset_acknowledged))
                             msg_type = "danger"
 
                     else:
@@ -972,6 +978,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             try:
                 i.pk = None
                 i.date = tomorrow
+                i.planned_area = None
+                i.planned_distance = None
                 i.area = None
                 i.distance = None
                 i.status = 1
