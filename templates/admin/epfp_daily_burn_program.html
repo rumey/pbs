@@ -434,7 +434,6 @@ select, button{
       <th nowrap colspan="2"><div class="text-center">Burn Status</div></th>
       <th nowrap colspan="3"><div class="text-center">Acknowledgement</div></th>
       <th nowrap rowspan="2"><div class="text-center">Yesterday's area <i class="icon-sort"></i><br>(ha or km)</div></th>
-      <th nowrap rowspan="2"><div class="text-center">Assistance <i class="icon-sort"></i><br>received from</div></th>
     </tr>
     <tr>
         <th nowrap> Active  <i class="icon-sort"></i></th>
@@ -469,7 +468,6 @@ select, button{
       <td>{% if qs.sdo_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
 
       <td>{% if qs.area == None and qs.distance == None%}<div class="text-center"><font color="red">Unset</font></div>{% else %}<div class="text-center">{{ qs.area_str }}</div>{% endif %}</td>
-      <td>{% if qs.had_external_assist %}<div class="text-center" data-toggle="tooltip" title="Click on row to open / close additional details"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       {% if qs.prescription %}
         <td><a data-toggle="tooltip" title="Edit" id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_active_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       {% else %}
@@ -502,10 +500,8 @@ select, button{
                 <td colspan="3">{{ qs.district }}</td>
               </tr>
               <tr>
-                <th>Assistance received from</th>
-                <td>{{ qs.external_assist_str }}</td>
                 <th>Tenure</th>
-                <td colspan="3">{{ qs.tenures_str }}</td>
+                <td colspan="5">{{ qs.tenures_str }}</td>
               </tr>
 
               {% if qs.prescription %}

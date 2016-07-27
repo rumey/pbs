@@ -263,7 +263,7 @@ class FireForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'fire_tenures',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
 
 
 class FireEditForm(forms.ModelForm):
@@ -320,7 +320,7 @@ class FireEditForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'fire_tenures',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
 
 
 class PrescribedBurnFilterForm(forms.ModelForm):
