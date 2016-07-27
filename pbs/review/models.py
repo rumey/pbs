@@ -145,14 +145,14 @@ class PrescribedBurn(Audit):
     external_assist = models.ManyToManyField(ExternalAssist, verbose_name="Assistance received from", blank=True)
 
     planned_area = models.DecimalField(
-        verbose_name="Planned Burn Area (ha)", max_digits=12, decimal_places=1,
+        verbose_name="Today's treatment area (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
     area = models.DecimalField(
         verbose_name="Area Burnt Yesterday (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
 
     planned_distance = models.DecimalField(
-        verbose_name="Planned Burn Distance (km)", max_digits=12, decimal_places=1,
+        verbose_name="Today's treatment distance (km)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
     distance = models.DecimalField(
         verbose_name="Distance Burnt Yesterday (km)", max_digits=12, decimal_places=1,
@@ -457,6 +457,18 @@ class AircraftBurn(Audit):
     aircrew= models.TextField(verbose_name="Aircrew", null=True, blank=True)
 
     rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
+
+    @property
+    def regional_approval(self):
+        return True
+
+    @property
+    def state_duty_approval(self):
+        return True
+
+    @property
+    def state_aviation_approval(self):
+        return True
 
     def __str__(self):
         return self.prescription.burn_id

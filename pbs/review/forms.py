@@ -118,7 +118,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
 
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A, location=location)
             if objects and objects[0] != getattr(self, 'instance', None):
-                raise ValidationError("Burn ID  {}  already exists on this date, with this location".format(objects[0].prescription.burn_id))
+                raise ValidationError("Burn ID  {}  already exists with this date or location".format(objects[0].prescription.burn_id))
             else:
                 return self.cleaned_data['location']
 
@@ -148,6 +148,9 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         self.fields['prescription'].required = True
         self.fields['status'].required = True
 
+        self.fields['location'].required = True
+        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
+
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
 
@@ -159,18 +162,18 @@ class PrescribedBurnActiveForm(forms.ModelForm):
             # check for integrity constraint - duplicate keys
             prescription = self.cleaned_data['prescription']
             dt = self.cleaned_data['date']
-            #location = self.cleaned_data['location']
+            location = self.cleaned_data['location']
 
-            #objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
-            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B)
+            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
+            #objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B)
             if objects:
-                raise ValidationError("Burn ID  {}  already exists on this date".format(objects[0].prescription.burn_id))
+                raise ValidationError("Burn ID  {}  already exists with this date or location".format(objects[0].prescription.burn_id))
             else:
                 return self.cleaned_data
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures',)
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location',)
 
 
 class PrescribedBurnEditActiveForm(forms.ModelForm):
@@ -183,6 +186,9 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         region_idx = [i[0] for i in region.choices if prescribed_burn.get_region_display()==i[1]][0]
         region.choices = [region.choices[region_idx]]
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
+
+        self.fields['location'].required = True
+        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
         prescription = self.fields['prescription']
         self.fields['prescription'].queryset = prescription.queryset.filter(burn_id=prescribed_burn.fire_idd)
@@ -211,26 +217,27 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         else:
             return self.cleaned_data['prescription']
 
-#    def clean_location(self):
-#
-#        if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
-#            # check for integrity constraint - duplicate keys
-#            prescription = self.cleaned_data['prescription']
-#            dt = self.cleaned_data['date']
-#            location = self.cleaned_data['location']
-#
-#            if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to:
-#                raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
-#
-#            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
-#            if objects:
-#                raise ValidationError("Burn ID  {}  already exists on this date, with this location".format(objects[0].prescription.burn_id))
-#            else:
-#                return self.cleaned_data['location']
+    def clean_location(self):
+
+        import ipdb; ipdb.set_trace()
+        if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
+            # check for integrity constraint - duplicate keys
+            prescription = self.cleaned_data['prescription']
+            dt = self.cleaned_data['date']
+            location = self.cleaned_data['location']
+
+            if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to:
+                raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
+
+            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
+            if objects and objects[0] != getattr(self, 'instance', None):
+                raise ValidationError("Burn ID  {}  already exists with this date or location".format(objects[0].prescription.burn_id))
+            else:
+                return self.cleaned_data['location']
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures',)
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location', )
 
 
 class FireForm(forms.ModelForm):

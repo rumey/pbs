@@ -264,7 +264,7 @@ select, button{
       <th rowspan="2">Burn ID <i class="icon-sort"></i></th>
       <th rowspan="2">Name <i class="icon-sort"></i></th>
       <th rowspan="2"><div class="text-left">Location <i class="icon-sort"></i></div></th>
-      <th nowrap rowspan="2"><div class="text-left">Area <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Today's treatment <i class="icon-sort"></i><br>area/km</div></th>
       <th nowrap rowspan="2"><div class="text-center">Est Start <i class="icon-sort"></i><br>WST</div></th>
       <th nowrap colspan="3"><div class="text-center">Approval Status</div></th>
       <th nowrap rowspan="2"><div class="text-center">SDO Special  <i class="icon-sort"></i><br>Conditions</div></th>
@@ -328,7 +328,7 @@ select, button{
                 <th>Block</th>
                 <td>{% if qs.prescription.forest_blocks %}{{ qs.prescription.forest_blocks }}{% else %}None{% endif %}</td>
                 <th>Location</th>
-                <td colspan="3">{{ qs.prescription.location_text }}</td>
+                <td colspan="3">{{ qs.location }}</td>
               </tr>
               <tr>
                 <th>Prohibited Period</th>
@@ -523,7 +523,7 @@ select, button{
                 </tr>
                 <tr>
                     <th>Location</th>
-                    <td colspan="5">{{ qs.prescription.location_text }}</td>
+                    <td colspan="5">{{ qs.location }}</td>
                 </tr>
 
               {% endif %}
@@ -604,12 +604,12 @@ select, button{
     <span>Action</span>
     <select id="actions">
     <option value="0" selected="selected">----</option>
-    <option value="1">District Entered</option>
-    <option value="2">Regional Acknowledgement</option>
-    <option value="3">State Acknowledgement</option>
-    <option value="4">Delete District Entry</option>
-    <option value="5">Delete Regional Acknowledgement</option>
-    <option value="6">Delete State Acknowledgement</option>
+    <option value="1">Regional Approval</option>
+    <option value="2">State Duty Approval</option>
+    <option value="3">State Aviation Approval</option>
+    <option value="4">Delete Regional Approval</option>
+    <option value="5">Delete State Duty Approval</option>
+    <option value="6">Delete State Aviation Approval</option>
     <option value="7">Delete Record</option>
     </select>
     <button id="update-button" class="btn btn-small btn-info" type="button" disabled>Go</button>
@@ -618,31 +618,42 @@ select, button{
 <table id="aircraft-table" class="main-table table table-hover table-compressed">
   <thead>
     <tr>
-      <th></th>
-      <th nowrap rowspan="1"><div class="text-center">Burn ID <i class="icon-sort"></i></div></th>
-      <th nowrap rowspan="1"><div class="text-center">Burn Name <i class="icon-sort"></i></div></th>
-      <th nowrap rowspan="1"><div class="text-center">Area <i class="icon-sort"></i></div></th>
-      <th nowrap rowspan="1"><div class="text-center">Start Time <i class="icon-sort"></i></div></th>
-      <th nowrap rowspan="1"><div class="text-center">Bombing Duration <i class="icon-sort"></i><br>(hrs)</div></th>
-      <th nowrap rowspan="1"><div class="text-center">Min SMC <i class="icon-sort"></i></div></th>
-      <th nowrap rowspan="1"><div class="text-center">Max FDI <i class="icon-sort"></i></div></th>
-      <th nowrap rowspan="1"><div class="text-center">SDI each <i class="icon-sort"></i><br><DAY</div></th>
-      <th nowrap rowspan="1"><div class="text-center">Flight <i class="icon-sort"></i><br>Sequence</div></th>
-      <th nowrap rowspan="1"><div class="text-center">Aircraft <i class="icon-sort"></i><br>Rego</div></th>
-      <th nowrap rowspan="1"><div class="text-center">Arrival Time <i class="icon-sort"></i><br>Over Burn</div></th>
-      <th nowrap rowspan="1"><div class="text-center">Program <i class="icon-sort"></i></div></th>
+      <th rowspan="2"><input type="checkbox" name ="check_all" onClick=toggle(this) /></th>
+      <th nowrap rowspan="2"><div class="text-center">Burn ID <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Burn Name <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Area <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Start Time <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Bombing Duration <i class="icon-sort"></i><br>(hrs)</div></th>
+      <th nowrap colspan="3"><div class="text-center">Approval</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Min SMC <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Max FDI <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">SDI each <i class="icon-sort"></i><br><DAY</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Flight <i class="icon-sort"></i><br>Sequence</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Aircraft <i class="icon-sort"></i><br>Rego</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Arrival Time <i class="icon-sort"></i><br>Over Burn</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Program <i class="icon-sort"></i></div></th>
     </tr>
+    <tr>
+        <th nowrap> Region <i class="icon-sort"></i></th>
+        <th nowrap> State <i class="icon-sort"></i></th>
+        <th nowrap> Aviation  <i class="icon-sort"></i></th>
+    </tr>
+
+
   </thead>
   <tbody>
     {% comment %}{% autopaginate qs_burn 25 %} {% endcomment%}
     {% for qs in qs_aircraft %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
-      <td></td>
+      <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
       <td><a data-toggle="tooltip" title="Click to view prescription" href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
       <td>{{ qs.prescription.name }}</td>
       <td>{{ qs.area }}</td>
       <td>{{ qs.est_start }}</td>
       <td>{{ qs.bombing_duration }}</td>
+      <td>{% if qs.regional_approval %}<div class="text-center" data-toggle="tooltip" title="{{ qs.regional_approval }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
+      <td>{% if qs.state_duty_approval %}<div class="text-center" data-toggle="tooltip" title="{{ qs.state_duty_approval }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
+      <td>{% if qs.state_aviation_approval %}<div class="text-center" data-toggle="tooltip" title="{{ qs.state_aviation_approval }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{{ qs.min_smc }}</td>
       <td>{{ qs.max_fdi }}</td>
       <td>{{ qs.sdi_per_day }}</td>
