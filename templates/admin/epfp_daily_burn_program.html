@@ -293,7 +293,7 @@ select, button{
       <td>{% if qs.sdo_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_a_record  }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td >{% if qs.has_conditions %}<div class="text-center" data-toggle="tooltip" title="Click on row to open / close additional details"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td><a data-toggle="tooltip" title="Edit" id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
-      <td><a data-toggle="tooltip" title="Delete" id="delete-plannedburn" href="{% url 'admin:bulk_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+      <td><a data-toggle="tooltip" title="Delete" id="delete-plannedburn" href="{% url 'admin:bulk_delete' %}?object_ids={{qs.id}}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
     <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
 
@@ -658,7 +658,7 @@ select, button{
       <td>{{ qs.arrival_time }}</td>
       <td>{{ qs.program }}</td>
       <td><a data-toggle="tooltip" title="Edit" id="edit-aircraftburn" href="{% url 'admin:review_aircraftburn_change' qs.id %}?form=edit_aircraft_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
-      <td><a data-toggle="tooltip" title="Delete" id="delete-aircraftburn" href="{% url 'admin:bulk_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+      <td><a data-toggle="tooltip" title="Delete" id="delete-aircraftburn" href="{% url 'admin:bulk_delete' %}?object_ids={{qs.id}}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
     {% endfor %}
 
@@ -671,6 +671,14 @@ select, button{
   <p>
     <span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
     You MUST select a Region.
+
+    <div class="results"></div>
+
+    {% comment %}
+    {% for qs in qs_burn %}
+    <p>{{ qs.fire_idd }} - {{ qs.district  }}</p>
+    {% endfor %}
+    {% endcomment %}
   </p>
 </div>
 
@@ -756,6 +764,29 @@ dialog_msg = function() {
     });
 };
 
+multiple_regions_msg = function(items) {
+
+    //$('.results').html('Hello World!');
+    $('.results').html(items.join(", "));
+
+    $( "#dialog-message" ).dialog({
+    modal: true,
+    buttons: {
+        Ok: function() {
+            $( this ).dialog( "close" );
+            return true;
+        },
+        Cancel: function() {
+            $( this ).dialog( "close" );
+            return false;
+        }
+
+    }
+    });
+};
+
+
+
 
 function toggle(source) {
     checkboxes = document.getElementsByName('chkbox');
@@ -797,47 +828,87 @@ $("#actions").click(function () {
     }
 });
 
+function unique_districts(id_list) {
 
-$('#update-button').click(function(){
+districts = [];
+{% if report == "epfp_planned" %}
+    {% for qs in qs_burn %}
+    if (id_list.indexOf({{qs.id}}) > -1) {
+        if (districts.indexOf('{{qs.district}}') < 0) {
+            districts.push('{{qs.district}}');
+        }
+    }
+    {% endfor %}
+    console.log('Planned ***************  ' + districts);
+{% endif %}
+
+{% if report == "epfp_fireload" %}
+    {% for qs in qs_fireload %}
+    if (id_list.indexOf({{qs.id}}) > -1) {
+        if (districts.indexOf('{{qs.district}}') < 0) {
+            districts.push('{{qs.district}}');
+        }
+    }
+    {% endfor %}
+    console.log('FireLoad ***************  ' + districts);
+{% endif %}
+
+return districts;
+};
+
+function _is_unique(items) {
+    unique = items.length > 1 ? true : false;
+    return unique
+};
+
+function is_unique() {
     checkboxes = document.getElementsByName('chkbox');
     checked_list = []
+    districts = []
     for(var i=0, n=checkboxes.length;i<n;i++) {
         if (checkboxes[i].checked) {
             checked_list.push(parseInt(checkboxes[i].value))
         }
     }
+
+    district_list = unique_districts(checked_list);
+    if (district_list.length > 1) {
+        return multiple_regions_msg(district_list);
+    }
+
+    return false;
+};
+
+$('#update-button').click(function(){
+    checkboxes = document.getElementsByName('chkbox');
+    checked_list = []
+    districts = []
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        if (checkboxes[i].checked) {
+            checked_list.push(parseInt(checkboxes[i].value))
+        }
+    }
+
+    var action = $("#actions :selected").text();
     console.log("Actions " + $("#actions").val());
 
-    if ($("#actions :selected").text() == "Delete Record"){
+    if (action == "Delete Record"){
         //console.log("Delete Selected ************ " + checked_list.toString());
-        //window.location.href = "{% url 'admin:bulk_delete' 1 %}";
-        if (checked_list.toString() == '') {
-            $.growl('No records selected', {
-                type: 'danger',
-                delay: 10000,
-                allow_dismiss: true,
-                animate: {
-                    enter: 'animated bounceIn',
-                    exit: 'animated bounceOut'
-                },
-                offset: {
-                    x: 100,
-                    y: 20
-                }
-            });
-        } else {
-            window.location.href = "/review/prescribedburn/bulk_delete/" + checked_list.toString();
-        }
+        window.location.href = "{% url 'admin:bulk_delete' %}" + '?object_ids=' + checked_list.toString()
+
+    } else if (action.indexOf('District') > -1){
+        window.location.href = "{% url 'admin:district_action_view' %}" + '?object_ids=' + checked_list.toString() + '&date={{date}}' + '&action=' + action + '&report={{report}}';
+
+    } else if (action.indexOf('Region') > -1){
+        window.location.href = "{% url 'admin:region_action_view' %}" + '?object_ids=' + checked_list.toString() + '&date={{date}}' + '&action=' + action + '&report={{report}}';
+
 
     } else {
-        var urll;
-        urll = "{% url 'admin:action_view' %}";
         $.ajax({
             type: 'POST',
-            //url: "{% url 'admin:action_view' %}",
-            url: urll,
+            url: "{% url 'admin:action_view' %}",
             data: {
-                "action": $("#actions :selected").text(),
+                "action": action, //$("#actions :selected").text(),
                 "data": checked_list.toString(),
                 "date": "{{date}}",
                 "report": "{{report}}",
