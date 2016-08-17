@@ -427,7 +427,7 @@ class BurnProgramLink(models.Model):
         # Links prescriptions to burn program records imported using ogr2ogr
         import subprocess
         subprocess.check_call(['ogr2ogr', '-overwrite', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]), 
-            settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', 'annualindicativeburnprogram', '-t_srs', 'EPSG:4326'])
+            settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', 'annual_indicative_burn_program', '-t_srs', 'EPSG:4326'])
         for p in AnnualIndicativeBurnProgram.objects.all():
             for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.finan_yr.replace("/", "/20")):
                 if cls.objects.filter(prescription=prescription).exists():
@@ -453,6 +453,6 @@ class BurnProgramLink(models.Model):
                 WHERE 
                 ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) 
                 OR ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1);
-            create or replace view review_v_todaysburns as select * from dailyburns where date = current_date;
+            create or replace view review_v_todaysburns as select * from review_v_dailyburns where date = current_date;
         ''')
 
