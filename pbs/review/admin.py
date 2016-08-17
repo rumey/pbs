@@ -1189,7 +1189,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             else:
                 fire_id = pb.fire_id
                 name = pb.fire_name
-                region = str(pb.region)
+                region = str(Region.objects.get(id=int(pb.region)).name)
                 district = str(pb.district)
 
             form_name = pb.get_form_name_display().strip('Form ')

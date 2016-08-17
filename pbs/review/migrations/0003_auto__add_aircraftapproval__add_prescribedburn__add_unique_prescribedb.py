@@ -8,6 +8,72 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Adding model 'AircraftApproval'
+        db.create_table(u'review_aircraftapproval', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('aircraft_burn', self.gf('django.db.models.fields.related.ForeignKey')(related_name='approvals', to=orm['review.AircraftBurn'])),
+            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, blank=True)),
+            ('approval_type', self.gf('django.db.models.fields.CharField')(max_length=64, null=True, blank=True)),
+            ('approval_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
+        ))
+        db.send_create_signal(u'review', ['AircraftApproval'])
+
+        # Adding model 'PrescribedBurn'
+        db.create_table(u'review_prescribedburn', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('creator', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'review_prescribedburn_created', to=orm['auth.User'])),
+            ('modifier', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'review_prescribedburn_modified', to=orm['auth.User'])),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
+            ('modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
+            ('prescription', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='prescribed_burn', null=True, to=orm['prescription.Prescription'])),
+            ('fire_id', self.gf('django.db.models.fields.CharField')(max_length=8, null=True, blank=True)),
+            ('fire_name', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('region', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
+            ('district', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['prescription.District'], null=True, blank=True)),
+            ('date', self.gf('django.db.models.fields.DateField')()),
+            ('form_name', self.gf('django.db.models.fields.PositiveSmallIntegerField')()),
+            ('status', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
+            ('ignition_status', self.gf('django.db.models.fields.PositiveSmallIntegerField')(null=True, blank=True)),
+            ('planned_area', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
+            ('area', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
+            ('planned_distance', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
+            ('distance', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=12, decimal_places=1, blank=True)),
+            ('tenures', self.gf('django.db.models.fields.TextField')()),
+            ('location', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('est_start', self.gf('django.db.models.fields.TimeField')(null=True, blank=True)),
+            ('conditions', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('rolled', self.gf('django.db.models.fields.BooleanField')(default=False)),
+        ))
+        db.send_create_signal(u'review', ['PrescribedBurn'])
+
+        # Adding M2M table for field fire_tenures on 'PrescribedBurn'
+        m2m_table_name = db.shorten_name(u'review_prescribedburn_fire_tenures')
+        db.create_table(m2m_table_name, (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('prescribedburn', models.ForeignKey(orm[u'review.prescribedburn'], null=False)),
+            ('firetenure', models.ForeignKey(orm[u'review.firetenure'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['prescribedburn_id', 'firetenure_id'])
+
+        # Adding M2M table for field external_assist on 'PrescribedBurn'
+        m2m_table_name = db.shorten_name(u'review_prescribedburn_external_assist')
+        db.create_table(m2m_table_name, (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('prescribedburn', models.ForeignKey(orm[u'review.prescribedburn'], null=False)),
+            ('externalassist', models.ForeignKey(orm[u'review.externalassist'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['prescribedburn_id', 'externalassist_id'])
+
+        # Adding unique constraint on 'PrescribedBurn', fields ['prescription', 'date', 'form_name', 'location']
+        db.create_unique(u'review_prescribedburn', ['prescription_id', 'date', 'form_name', 'location'])
+
+        # Adding model 'ExternalAssist'
+        db.create_table(u'review_externalassist', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=25)),
+        ))
+        db.send_create_signal(u'review', ['ExternalAssist'])
+
         # Adding model 'AircraftBurn'
         db.create_table(u'review_aircraftburn', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -35,20 +101,55 @@ class Migration(SchemaMigration):
         # Adding unique constraint on 'AircraftBurn', fields ['prescription', 'date']
         db.create_unique(u'review_aircraftburn', ['prescription_id', 'date'])
 
+        # Adding model 'FireTenure'
+        db.create_table(u'review_firetenure', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=50)),
+        ))
+        db.send_create_signal(u'review', ['FireTenure'])
 
-        # Changing field 'PrescribedBurn.fire_id'
-        db.alter_column(u'review_prescribedburn', 'fire_id', self.gf('django.db.models.fields.CharField')(max_length=8, null=True))
+        # Adding model 'Acknowledgement'
+        db.create_table(u'review_acknowledgement', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('burn', self.gf('django.db.models.fields.related.ForeignKey')(related_name='acknowledgements', to=orm['review.PrescribedBurn'])),
+            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, blank=True)),
+            ('acknow_type', self.gf('django.db.models.fields.CharField')(max_length=64, null=True, blank=True)),
+            ('acknow_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
+        ))
+        db.send_create_signal(u'review', ['Acknowledgement'])
+
 
     def backwards(self, orm):
         # Removing unique constraint on 'AircraftBurn', fields ['prescription', 'date']
         db.delete_unique(u'review_aircraftburn', ['prescription_id', 'date'])
 
+        # Removing unique constraint on 'PrescribedBurn', fields ['prescription', 'date', 'form_name', 'location']
+        db.delete_unique(u'review_prescribedburn', ['prescription_id', 'date', 'form_name', 'location'])
+
+        # Deleting model 'AircraftApproval'
+        db.delete_table(u'review_aircraftapproval')
+
+        # Deleting model 'PrescribedBurn'
+        db.delete_table(u'review_prescribedburn')
+
+        # Removing M2M table for field fire_tenures on 'PrescribedBurn'
+        db.delete_table(db.shorten_name(u'review_prescribedburn_fire_tenures'))
+
+        # Removing M2M table for field external_assist on 'PrescribedBurn'
+        db.delete_table(db.shorten_name(u'review_prescribedburn_external_assist'))
+
+        # Deleting model 'ExternalAssist'
+        db.delete_table(u'review_externalassist')
+
         # Deleting model 'AircraftBurn'
         db.delete_table(u'review_aircraftburn')
 
+        # Deleting model 'FireTenure'
+        db.delete_table(u'review_firetenure')
 
-        # Changing field 'PrescribedBurn.fire_id'
-        db.alter_column(u'review_prescribedburn', 'fire_id', self.gf('django.db.models.fields.CharField')(max_length=7, null=True))
+        # Deleting model 'Acknowledgement'
+        db.delete_table(u'review_acknowledgement')
+
 
     models = {
         u'auth.group': {
@@ -208,6 +309,14 @@ class Migration(SchemaMigration):
             'acknow_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'null': 'True', 'blank': 'True'}),
             'acknow_type': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'burn': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'acknowledgements'", 'to': u"orm['review.PrescribedBurn']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'})
+        },
+        u'review.aircraftapproval': {
+            'Meta': {'object_name': 'AircraftApproval'},
+            'aircraft_burn': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'approvals'", 'to': u"orm['review.AircraftBurn']"}),
+            'approval_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'null': 'True', 'blank': 'True'}),
+            'approval_type': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'})
         },

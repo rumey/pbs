@@ -271,16 +271,6 @@
     "permissions": [
     ]
   }
-},
-{
-  "pk": 9,
-  "model": "auth.group",
-  "fields": {
-    "name": "State Aviation Officer",
-    "permissions": [
-    ]
-  }
 }
-
 
 ]
