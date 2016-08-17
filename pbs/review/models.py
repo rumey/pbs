@@ -392,3 +392,41 @@ class PrescribedBurn(Audit):
         )
 
 
+class AnnualIndicativeBurnProgram(models.Model):
+    ogc_fid = models.IntegerField(primary_key=True)
+    wkb_geometry = models.MultiPolygonField(srid=4283, blank=True, null=True)
+    region = models.CharField(max_length=35, blank=True)
+    district = models.CharField(max_length=35, blank=True)
+    burnid = models.CharField(max_length=30, blank=True)
+    finan_yr = models.CharField(max_length=50, blank=True)
+    location = models.CharField(max_length=254, blank=True)
+    status = models.CharField(max_length=254, blank=True)
+    priority = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
+    content = models.CharField(max_length=254, blank=True)
+    issues = models.CharField(max_length=254, blank=True)
+    treatment = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
+    purpose_1 = models.CharField(max_length=254, blank=True)
+    program = models.CharField(max_length=254, blank=True)
+    acb = models.CharField(max_length=254, blank=True)
+    trtd_area = models.CharField(max_length=254, blank=True)
+    yslb = models.CharField(max_length=254, blank=True)
+    area_ha = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
+    perim_km = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
+    longitude = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
+    latitude = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
+    objects = models.GeoManager()
+
+    class Meta:
+        managed = False
+        db_table = 'annual_indicative_burn_program'
+
+
+class BurnProgramLink(models.Model):
+    program_record = models.ForeignKey(AnnualIndicativeBurnProgram)
+    prescription = models.ForeignKey(Prescription)
+
+    @classmethod
+    def link_records(cls):
+        # TODO
+        pass
+
