@@ -163,6 +163,7 @@ class PrescribedBurn(Audit):
     est_start = models.TimeField('Estimated Start Time', null=True, blank=True)
     conditions = models.TextField(verbose_name='SDO Special Conditions', null=True, blank=True)
     rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
+    #aircraft_burn = models.BooleanField(verbose_name="Aircraft Burn", default=False)
 
     def clean(self):
         if not self.form_name:
@@ -457,6 +458,7 @@ class AircraftBurn(Audit):
     aircrew= models.TextField(verbose_name="Aircrew", null=True, blank=True)
 
     rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
+    #location= models.TextField(verbose_name="Location", null=True, blank=True)
 
     @property
     def regional_approval(self):

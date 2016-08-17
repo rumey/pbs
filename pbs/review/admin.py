@@ -464,10 +464,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         message = "Burn is not Corporate Approved {}".format(obj.fire_idd)
                         msg_type = messages.ERROR #"danger"
 
-                if not_acknowledged:
-                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
-                    self.message_user(request, message, level=messages.ERROR)
-                    return HttpResponseRedirect(referrer_url)
+#                if not_acknowledged:
+#                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
+#                    self.message_user(request, message, level=messages.ERROR)
+#                    return HttpResponseRedirect(referrer_url)
 
             elif report=='epfp_fireload':
                 not_acknowledged = []
@@ -500,10 +500,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         message = "Burn is not Corporate Approved {}".format(obj.fire_idd)
                         msg_type = messages.ERROR #"danger"
 
-                if not_acknowledged:
-                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
-                    self.message_user(request, message, level=messages.ERROR)
-                    return HttpResponseRedirect(referrer_url)
+#                if not_acknowledged:
+#                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
+#                    self.message_user(request, message, level=messages.ERROR)
+#                    return HttpResponseRedirect(referrer_url)
 
         elif action == "Delete District Entry" or action == "Delete District Submit":
             can_delete = True
@@ -628,15 +628,15 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         message = "record must first be submitted by district"
                         msg_type = messages.ERROR
 
-                    elif obj.formA_srm_acknowledged:
-                        already_acknowledged.append(obj.fire_idd)
-                        message = "record already approved {}".format(', '.join(already_acknowledged))
-                        msg_type = messages.ERROR
+#                    elif obj.formA_srm_acknowledged:
+#                        already_acknowledged.append(obj.fire_idd)
+#                        message = "record already approved {}".format(', '.join(already_acknowledged))
+#                        msg_type = messages.ERROR
 
-                if not_acknowledged:
-                    message = "record already approved {}".format(', '.join(not_acknowledged))
-                    self.message_user(request, message, level=messages.ERROR)
-                    return HttpResponseRedirect(referrer_url)
+#                if not_acknowledged:
+#                    message = "record already approved {}".format(', '.join(not_acknowledged))
+#                    self.message_user(request, message, level=messages.ERROR)
+#                    return HttpResponseRedirect(referrer_url)
 
             elif report=='epfp_fireload':
                 not_acknowledged = []
@@ -661,10 +661,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         message = "record already acknowledged {}".format(', '.join(already_acknowledged))
                         msg_type = messages.ERROR
 
-                if not_acknowledged:
-                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
-                    self.message_user(request, message, level=messages.ERROR)
-                    return HttpResponseRedirect(referrer_url)
+#                if not_acknowledged:
+#                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
+#                    self.message_user(request, message, level=messages.ERROR)
+#                    return HttpResponseRedirect(referrer_url)
 
         elif action == "Delete Regional Acknowledgement" or action == "Delete Regional Endorsement":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):

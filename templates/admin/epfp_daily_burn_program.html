@@ -152,7 +152,11 @@ select, button{
                 {{ form.district }}
 
                 <input class="hidden" style="float: right;" name="report" value="epfp_summary">
+                <button type="submit" class="btn btn-primary">Update</button>
+                <br>
+                <br>
 
+            {% comment %}
             {% elif report == "epfp_aircraft" %}
                 <label for="id_date" class="control-label">Date</label>
                 <input type="text" id="id_date" value="{{date}}" name="date"/>
@@ -167,6 +171,7 @@ select, button{
                 <button type="submit" class="btn btn-primary">Update</button>
                 <br>
                 <br>
+            {% endcomment %}
 
             {% endif %}
             </div>
@@ -195,12 +200,15 @@ select, button{
             Approved Burns (268c)
         </a>
     </li>
+
+    {% comment %}
     <li id="aircraft-tab"  "{% if report == "epfp_aircraft" %} class="active"{% endif %}>
         <a href="{% url 'admin:aircraft_burn_program' %}?date={{date}}">
             <i class="icon-plane"></i>
             Aircraft Burns (301)
         </a>
     </li>
+    {% endcomment %}
 
 <div class="dropdown btn btn-medium" style="float: right">
   <a id="dropdown_btn" data-target="#" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -589,11 +597,9 @@ select, button{
 {% endif %}
 {% comment %}{% paginate %} {% endcomment %}
 
+{% comment %}
 {% if report == "epfp_aircraft" %}
 <div>
-    {% comment %}
-    <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:addfire_view' %}"><i class="icon-plus icon-white"></i> Add Bushfire</a>
-    {% endcomment %}
     <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_aircraft_view' %}?report=epfp_aircraft"><i class="icon-info"></i> Help</a>
     <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_aircraftburn_add' %}?form=add_aircraft_burn"><i class="icon-plus icon-white"></i> Add Aircraft</a>
 
@@ -638,7 +644,6 @@ select, button{
 
   </thead>
   <tbody>
-    {% comment %}{% autopaginate qs_burn 25 %} {% endcomment%}
     {% for qs in qs_aircraft %}
     <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
       <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
@@ -665,6 +670,7 @@ select, button{
   </tbody>
 </table>
 {% endif %}
+{% endcomment %}
 
 
 <div id="dialog-message" title="Region Error" style="display: none;">
