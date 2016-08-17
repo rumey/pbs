@@ -423,10 +423,14 @@ class AnnualIndicativeBurnProgram(models.Model):
 
 class BurnProgramLink(models.Model):
     program_record = models.ForeignKey(AnnualIndicativeBurnProgram)
-    prescription = models.ForeignKey(Prescription)
+    prescription = models.ForeignKey(Prescription, unique=True)
 
     @classmethod
     def link_records(cls):
-        # TODO
-        pass
+        # Links prescriptions to burn program records imported using ogr2ogr
+        # example import: ogr2ogr -overwrite -gt 20000 -preserve_fid -skipfeatures --config PG_USE_COPY YES -f PostgreSQL "PG:dbname='???' host='???' port='???' user='???' password=???" "?shapefile?" -nln annual_indicative_burn_program -nlt PROMOTE_TO_MULTI annual_indicative_burn_program -t_srs EPSG:4283
+        for p in AnnualIndicativeBurnProgram.objects.all():
+            for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.finan_yr.replace("/", "/20")):
+                cls.objects.filter(prescription=prescription).delete()
+                cls(prescription=prescription, program_record=p).save()
 
