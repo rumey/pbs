@@ -10,6 +10,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.forms import ValidationError
+from django.conf import settings
 
 
 class BurnState(models.Model):
@@ -416,10 +417,6 @@ class AnnualIndicativeBurnProgram(models.Model):
     latitude = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
     objects = models.GeoManager()
 
-    class Meta:
-        managed = False
-        db_table = 'annual_indicative_burn_program'
-
 
 class BurnProgramLink(models.Model):
     program_record = models.ForeignKey(AnnualIndicativeBurnProgram)
@@ -428,7 +425,9 @@ class BurnProgramLink(models.Model):
     @classmethod
     def link_records(cls):
         # Links prescriptions to burn program records imported using ogr2ogr
-        # example import: ogr2ogr -overwrite -gt 20000 -preserve_fid -skipfeatures --config PG_USE_COPY YES -f PostgreSQL "PG:dbname='???' host='???' port='???' user='???' password=???" "?shapefile?" -nln annual_indicative_burn_program -nlt PROMOTE_TO_MULTI annual_indicative_burn_program -t_srs EPSG:4283
+        import subprocess
+        subprocess.check_call(['ogr2ogr', '-overwrite', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]), 
+            settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', 'annualindicativeburnprogram', '-t_srs', 'EPSG:4326'])
         for p in AnnualIndicativeBurnProgram.objects.all():
             for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.finan_yr.replace("/", "/20")):
                 if cls.objects.filter(prescription=prescription).exists():
@@ -440,20 +439,20 @@ class BurnProgramLink(models.Model):
         from django.db import connection
         cursor = connection.cursor()
         cursor.execute('''
-        create or replace view review_v_dailyburns as SELECT 
-          ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) as "planned", 
-            ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1) as "active",
-            "prescription_prescription"."burn_id", "prescription_prescription"."location", "prescription_prescription"."forest_blocks", 
-            "annual_indicative_burn_program"."area_ha", "prescription_prescription"."area", "review_prescribedburn"."date", "review_prescribedburn"."est_start", 
-            "annual_indicative_burn_program"."longitude", "annual_indicative_burn_program"."latitude", "annual_indicative_burn_program"."wkb_geometry" 
-            FROM "prescription_prescription" 
-            LEFT OUTER JOIN "review_prescribedburn" ON ( "prescription_prescription"."id" = "review_prescribedburn"."prescription_id" ) 
-            LEFT OUTER JOIN "review_acknowledgement" ON ( "review_prescribedburn"."id" = "review_acknowledgement"."burn_id" ) 
-            LEFT OUTER JOIN "review_burnprogramlink" ON ( "prescription_prescription"."id" = "review_burnprogramlink"."prescription_id" ) 
-            LEFT OUTER JOIN "annual_indicative_burn_program" ON ( "review_burnprogramlink"."program_record_id" = "annual_indicative_burn_program"."ogc_fid" )
-            WHERE 
-            ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) 
-            OR ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1);
-        create or replace view review_v_todaysburns as select * from dailyburns where date = current_date;
+            create or replace view review_v_dailyburns as SELECT 
+              ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) as "planned", 
+                ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1) as "active",
+                "prescription_prescription"."burn_id", "prescription_prescription"."location", "prescription_prescription"."forest_blocks", 
+                "review_annualindicativeburnprogram"."area_ha", "prescription_prescription"."area", "review_prescribedburn"."date", "review_prescribedburn"."est_start", 
+                "review_annualindicativeburnprogram"."longitude", "review_annualindicativeburnprogram"."latitude", "review_annualindicativeburnprogram"."wkb_geometry" 
+                FROM "prescription_prescription" 
+                LEFT OUTER JOIN "review_prescribedburn" ON ( "prescription_prescription"."id" = "review_prescribedburn"."prescription_id" ) 
+                LEFT OUTER JOIN "review_acknowledgement" ON ( "review_prescribedburn"."id" = "review_acknowledgement"."burn_id" ) 
+                LEFT OUTER JOIN "review_burnprogramlink" ON ( "prescription_prescription"."id" = "review_burnprogramlink"."prescription_id" ) 
+                LEFT OUTER JOIN "review_annualindicativeburnprogram" ON ( "review_burnprogramlink"."program_record_id" = "review_annualindicativeburnprogram"."ogc_fid" )
+                WHERE 
+                ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) 
+                OR ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1);
+            create or replace view review_v_todaysburns as select * from dailyburns where date = current_date;
         ''')
 
