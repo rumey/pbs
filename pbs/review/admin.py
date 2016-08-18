@@ -4,7 +4,7 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group, User
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement, AircraftApproval
+from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement, AircraftApproval, BurnProgramLink
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
         PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
         AircraftBurnForm, AircraftBurnEditForm, AircraftBurnFilterForm
@@ -783,6 +783,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
                 self.copy_planned_approved_records(dt)
+                BurnProgramLink.link_records() # update the BurnProgramLink links
 
             elif report=='epfp_fireload':
                 self.copy_ongoing_records(dt) # copy yesterdays ongoing active records to today
@@ -1009,8 +1010,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'username': request.user.username,
             'date': dt.strftime('%Y-%m-%d'),
             'fire_type': fire_type,
-
             'active_records': self.active_records(dt),
+            'kmi_download_url': settings.KMI_DOWNLOAD_URL,
+            'csv_download_url': settings.CSV_DOWNLOAD_URL,
+            'shp_download_url': settings.SHP_DOWNLOAD_URL,
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)

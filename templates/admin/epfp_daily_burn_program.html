@@ -229,6 +229,9 @@ select, button{
     <li><a value="form268b_rdo" href="javascript: pdf_url('form268b_rdo');">Form 268b (RDO)</a></li>
     <li><a value="export_csv" href="{% url 'admin:daily_burn_program_exportcsv' %}?date={{date}}&Export_CSV=export_csv">Export CSV</a></li>
     <li><a value="export_csv" href="{% url 'admin:csv_view' %}">FMSB Report</a></li>
+    <li><a value="kmi_download_url" href="{{kmi_download_url}}">KML - Download Today's Burns</a></li>
+    <li><a value="csv_download_url" href="{{csv_download_url}}">CSV - Download Today's Burns</a></li>
+    <li><a value="shp_download_url" href="{{shp_download_url}}">SHP - Download Today's Burns</a></li>
   </ul>
 </div>
 
