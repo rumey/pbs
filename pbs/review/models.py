@@ -10,6 +10,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.forms import ValidationError
+from django.conf import settings
 
 
 class BurnState(models.Model):
@@ -486,4 +487,66 @@ class AircraftBurn(Audit):
             ("can_approve", "Can approve burns"),
         )
 
+class AnnualIndicativeBurnProgram(models.Model):
+    ogc_fid = models.IntegerField(primary_key=True)
+    wkb_geometry = models.MultiPolygonField(srid=4283, blank=True, null=True)
+    region = models.CharField(max_length=35, blank=True)
+    district = models.CharField(max_length=35, blank=True)
+    burnid = models.CharField(max_length=30, blank=True)
+    finan_yr = models.CharField(max_length=50, blank=True)
+    location = models.CharField(max_length=254, blank=True)
+    status = models.CharField(max_length=254, blank=True)
+    priority = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
+    content = models.CharField(max_length=254, blank=True)
+    issues = models.CharField(max_length=254, blank=True)
+    treatment = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
+    purpose_1 = models.CharField(max_length=254, blank=True)
+    program = models.CharField(max_length=254, blank=True)
+    acb = models.CharField(max_length=254, blank=True)
+    trtd_area = models.CharField(max_length=254, blank=True)
+    yslb = models.CharField(max_length=254, blank=True)
+    area_ha = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
+    perim_km = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
+    longitude = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
+    latitude = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
+    objects = models.GeoManager()
+
+
+class BurnProgramLink(models.Model):
+    program_record = models.ForeignKey(AnnualIndicativeBurnProgram)
+    prescription = models.ForeignKey(Prescription, unique=True)
+
+    @classmethod
+    def link_records(cls):
+        # Links prescriptions to burn program records imported using ogr2ogr
+        import subprocess
+        subprocess.check_call(['ogr2ogr', '-overwrite', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]),
+            settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', 'annual_indicative_burn_program', '-t_srs', 'EPSG:4326'])
+        for p in AnnualIndicativeBurnProgram.objects.all():
+            for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.finan_yr.replace("/", "/20")):
+                if cls.objects.filter(prescription=prescription).exists():
+                    obj = cls.objects.get(prescription=prescription)
+                    obj.program_record = p
+                    obj.save()
+                else:
+                    cls(prescription=prescription, program_record=p).save()
+        from django.db import connection
+        cursor = connection.cursor()
+        cursor.execute('''
+            create or replace view review_v_dailyburns as SELECT
+              ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) as "planned",
+                ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1) as "active",
+                "prescription_prescription"."burn_id", "prescription_prescription"."location", "prescription_prescription"."forest_blocks",
+                "review_annualindicativeburnprogram"."area_ha", "prescription_prescription"."area", "review_prescribedburn"."date", "review_prescribedburn"."est_start",
+                "review_annualindicativeburnprogram"."longitude", "review_annualindicativeburnprogram"."latitude", "review_annualindicativeburnprogram"."wkb_geometry"
+                FROM "prescription_prescription"
+                LEFT OUTER JOIN "review_prescribedburn" ON ( "prescription_prescription"."id" = "review_prescribedburn"."prescription_id" )
+                LEFT OUTER JOIN "review_acknowledgement" ON ( "review_prescribedburn"."id" = "review_acknowledgement"."burn_id" )
+                LEFT OUTER JOIN "review_burnprogramlink" ON ( "prescription_prescription"."id" = "review_burnprogramlink"."prescription_id" )
+                LEFT OUTER JOIN "review_annualindicativeburnprogram" ON ( "review_burnprogramlink"."program_record_id" = "review_annualindicativeburnprogram"."ogc_fid" )
+                WHERE
+                ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1)
+                OR ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1);
+            create or replace view review_v_todaysburns as select * from review_v_dailyburns where date = current_date;
+        ''')
 
