@@ -425,8 +425,9 @@ class BurnProgramLink(models.Model):
     @classmethod
     def link_records(cls):
         # Links prescriptions to burn program records imported using ogr2ogr
+        AnnualIndicativeBurnProgram.objects.all().delete()
         import subprocess
-        subprocess.check_call(['ogr2ogr', '-overwrite', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]), 
+        subprocess.check_call(['ogr2ogr', '-append', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]),
             settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', 'annual_indicative_burn_program', '-t_srs', 'EPSG:4326'])
         for p in AnnualIndicativeBurnProgram.objects.all():
             for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.finan_yr.replace("/", "/20")):
@@ -435,24 +436,24 @@ class BurnProgramLink(models.Model):
                     obj.program_record = p
                     obj.save()
                 else:
-                    cls(prescription=prescription, program_record=p).save()
+                    cls(prescription=prescription, program_record=p).save()            
         from django.db import connection
         cursor = connection.cursor()
-        cursor.execute('''
-            create or replace view review_v_dailyburns as SELECT 
-              ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) as "planned", 
+        try:
+            cursor.execute('''create materialized view review_mv_dailyburns as SELECT
+              ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) as "planned",
                 ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1) as "active",
-                "prescription_prescription"."burn_id", "prescription_prescription"."location", "prescription_prescription"."forest_blocks", 
-                "review_annualindicativeburnprogram"."area_ha", "prescription_prescription"."area", "review_prescribedburn"."date", "review_prescribedburn"."est_start", 
-                "review_annualindicativeburnprogram"."longitude", "review_annualindicativeburnprogram"."latitude", "review_annualindicativeburnprogram"."wkb_geometry" 
-                FROM "prescription_prescription" 
-                LEFT OUTER JOIN "review_prescribedburn" ON ( "prescription_prescription"."id" = "review_prescribedburn"."prescription_id" ) 
-                LEFT OUTER JOIN "review_acknowledgement" ON ( "review_prescribedburn"."id" = "review_acknowledgement"."burn_id" ) 
-                LEFT OUTER JOIN "review_burnprogramlink" ON ( "prescription_prescription"."id" = "review_burnprogramlink"."prescription_id" ) 
+                "prescription_prescription"."burn_id", "prescription_prescription"."location", "prescription_prescription"."forest_blocks",
+                "review_annualindicativeburnprogram"."area_ha", "prescription_prescription"."area", "review_prescribedburn"."date", "review_prescribedburn"."est_start",
+                "review_annualindicativeburnprogram"."longitude", "review_annualindicativeburnprogram"."latitude", "review_annualindicativeburnprogram"."wkb_geometry"
+                FROM "prescription_prescription"
+                LEFT OUTER JOIN "review_prescribedburn" ON ( "prescription_prescription"."id" = "review_prescribedburn"."prescription_id" )
+                LEFT OUTER JOIN "review_acknowledgement" ON ( "review_prescribedburn"."id" = "review_acknowledgement"."burn_id" )
+                LEFT OUTER JOIN "review_burnprogramlink" ON ( "prescription_prescription"."id" = "review_burnprogramlink"."prescription_id" )
                 LEFT OUTER JOIN "review_annualindicativeburnprogram" ON ( "review_burnprogramlink"."program_record_id" = "review_annualindicativeburnprogram"."ogc_fid" )
-                WHERE 
-                ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) 
+                WHERE
+                ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1)
                 OR ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1);
-            create or replace view review_v_todaysburns as select * from review_v_dailyburns where date = current_date;
-        ''')
-
+                create materialized view review_mv_todaysburns as select * from review_mv_dailyburns where date = current_date;''')
+        except:
+            cursor.execute('''refresh materialized view review_mv_dailyburns; refresh materialized view review_mv_todaysburns;''')
