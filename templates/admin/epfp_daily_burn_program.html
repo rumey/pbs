@@ -68,12 +68,12 @@ select, button{
 {% endcomment %}
 
 <div style="width: 50%; margin-left:25%; margin-right:25%; float: left">
-        <table id="active-burn-table" class="table table-striped table-hover table-compressed" style="width:100%" border="2">
+        <table id="active-burn-table" class="table table-hover table-compressed" style="width:100%" border="2">
         <thead>
             <tr>
-                <th id="name"></th>
-                <th id="active_burns">Active Burns</th>
-                <th id="active_fires">Active Bushfires</th>
+                <th nowrap id="name">Date: {{ date }}</th>
+                <th nowrap id="active_burns">Active Burns</th>
+                <th nowrap id="active_fires">Active Bushfires</th>
             </tr>
         </thead>
 
@@ -153,6 +153,25 @@ select, button{
 
                 <input class="hidden" style="float: right;" name="report" value="epfp_summary">
                 <button type="submit" class="btn btn-primary">Update</button>
+                <br>
+                <br>
+
+            {% comment %}
+            {% elif report == "epfp_aircraft" %}
+                <label for="id_date" class="control-label">Date</label>
+                <input type="text" id="id_date" value="{{date}}" name="date"/>
+
+                <label for="id_region" class="control-label">Region</label>
+                {{ form.region }}
+
+                <label for="id_approval_status" class="control-label">Status</label>
+                {{ form.approval_status }}
+
+                <input class="hidden" style="float: right;" name="report" value="epfp_aircraft">
+                <button type="submit" class="btn btn-primary">Update</button>
+                <br>
+                <br>
+            {% endcomment %}
 
             {% endif %}
             </div>
@@ -181,6 +200,16 @@ select, button{
             Approved Burns (268c)
         </a>
     </li>
+
+    {% comment %}
+    <li id="aircraft-tab"  "{% if report == "epfp_aircraft" %} class="active"{% endif %}>
+        <a href="{% url 'admin:aircraft_burn_program' %}?date={{date}}">
+            <i class="icon-plane"></i>
+            Aircraft Burns (301)
+        </a>
+    </li>
+    {% endcomment %}
+
 <div class="dropdown btn btn-medium" style="float: right">
   <a id="dropdown_btn" data-target="#" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
     Create PDF / Report
@@ -195,10 +224,14 @@ select, button{
     <li><a value="form268a" href="javascript: pdf_url('form268a');">Form 268a</a></li>
     <li><a value="form268b" href="javascript: pdf_url('form268b');">Form 268b</a></li>
     <li><a value="form268c" href="javascript: pdf_url('form268c');">Form 268c</a></li>
+    <li><a value="form301" href="{% url 'admin:create_aircraftburns_pdf' %}?date={{date}}&template=form301">Form 301</a></li>
     <li><a value="form268a_rdo" href="javascript: pdf_url('form268a_rdo');">Form 268a (RDO)</a></li>
     <li><a value="form268b_rdo" href="javascript: pdf_url('form268b_rdo');">Form 268b (RDO)</a></li>
     <li><a value="export_csv" href="{% url 'admin:daily_burn_program_exportcsv' %}?date={{date}}&Export_CSV=export_csv">Export CSV</a></li>
     <li><a value="export_csv" href="{% url 'admin:csv_view' %}">FMSB Report</a></li>
+    <li><a value="kmi_download_url" href="{{kmi_download_url}}">KML - Download Today's Burns</a></li>
+    <li><a value="csv_download_url" href="{{csv_download_url}}">CSV - Download Today's Burns</a></li>
+    <li><a value="shp_download_url" href="{{shp_download_url}}">SHP - Download Today's Burns</a></li>
   </ul>
 </div>
 
@@ -242,7 +275,7 @@ select, button{
       <th rowspan="2">Burn ID <i class="icon-sort"></i></th>
       <th rowspan="2">Name <i class="icon-sort"></i></th>
       <th rowspan="2"><div class="text-left">Location <i class="icon-sort"></i></div></th>
-      <th nowrap rowspan="2"><div class="text-left">Area <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Today's treatment <i class="icon-sort"></i><br>area/km</div></th>
       <th nowrap rowspan="2"><div class="text-center">Est Start <i class="icon-sort"></i><br>WST</div></th>
       <th nowrap colspan="3"><div class="text-center">Approval Status</div></th>
       <th nowrap rowspan="2"><div class="text-center">SDO Special  <i class="icon-sort"></i><br>Conditions</div></th>
@@ -264,14 +297,14 @@ select, button{
       <td nowrap><a data-toggle="tooltip" title="Click to view prescription" href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a>{% if qs.rolled %}<font color="red"> (r)</font>{% endif %}</td>
       <td><div data-toggle="tooltip" title="Click on row to open / close additional details">{{ qs.prescription.name }}</div></td>
       <td>{{ qs.location }}</td>
-      <td>{{ qs.planned_area_str }}</div></td>
+      <td>{% if qs.planned_area == None and qs.planned_distance == None%}<div class="text-center"><font color="red">Unset</font></div>{% else %}<div class="text-center">{{ qs.planned_area_str }}</div>{% endif %}</td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
       <td>{% if qs.user_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.user_a_record }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{% if qs.srm_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_a_record  }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{% if qs.sdo_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_a_record  }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td >{% if qs.has_conditions %}<div class="text-center" data-toggle="tooltip" title="Click on row to open / close additional details"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td><a data-toggle="tooltip" title="Edit" id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
-      <td><a data-toggle="tooltip" title="Delete" id="delete-plannedburn" href="{% url 'admin:bulk_delete' qs.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+      <td><a data-toggle="tooltip" title="Delete" id="delete-plannedburn" href="{% url 'admin:bulk_delete' %}?object_ids={{qs.id}}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
     </tr>
     <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
 
@@ -306,7 +339,7 @@ select, button{
                 <th>Block</th>
                 <td>{% if qs.prescription.forest_blocks %}{{ qs.prescription.forest_blocks }}{% else %}None{% endif %}</td>
                 <th>Location</th>
-                <td colspan="3">{{ qs.prescription.location_text }}</td>
+                <td colspan="3">{{ qs.location }}</td>
               </tr>
               <tr>
                 <th>Prohibited Period</th>
@@ -346,7 +379,12 @@ select, button{
                 <th>Last Ignition</th>
                 <td colspan="5">{{ qs.last_ignition }}</td>
               </tr>
-
+              <tr>
+                <th>Latitude</th>
+                <td>{{ qs.latitude }}</td>
+                <th>Longitude</th>
+                <td colspan="3">{{ qs.longitude }}</td>
+              </tr>
               <tr>
                 <th>Submit</th>
                 <td>{{ qs.user_a_record  }}</td>
@@ -361,10 +399,6 @@ select, button{
                 <th>Prescribing Officer</th>
                 <td colspan="3">{{ qs.prescription.prescribing_officer.get_full_name }}</td>
               </tr>
-
-
-
-
 
             </tbody>
           </table>
@@ -412,7 +446,6 @@ select, button{
       <th nowrap colspan="2"><div class="text-center">Burn Status</div></th>
       <th nowrap colspan="3"><div class="text-center">Acknowledgement</div></th>
       <th nowrap rowspan="2"><div class="text-center">Yesterday's area <i class="icon-sort"></i><br>(ha or km)</div></th>
-      <th nowrap rowspan="2"><div class="text-center">Assistance <i class="icon-sort"></i><br>received from</div></th>
     </tr>
     <tr>
         <th nowrap> Active  <i class="icon-sort"></i></th>
@@ -439,7 +472,7 @@ select, button{
       <td><div data-toggle="tooltip" title="Click on row to open / close additional details">{{ qs.name }}</div></td>
       <td>{{ qs.fire_type }}</td>
 
-      <td>{% if qs.active %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% elif qs.active == None %}<span style="display:none">1</span><font color="red">Unset</font>{% else %}<span style="display:none">0</span>{% endif %}</td>
+      <td>{% if qs.active %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% elif qs.active == None %}<span style="display:none">1</span><font color="red">Unset</font>{% else %}<div class="text-center"><span style="display:none">0</span><i class="icon-remove text-error"></i></div>{% endif %}</td>
       <td>{% if qs.further_ignitions_req %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
 
       <td>{% if qs.user_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.user_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
@@ -447,7 +480,6 @@ select, button{
       <td>{% if qs.sdo_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
 
       <td>{% if qs.area == None and qs.distance == None%}<div class="text-center"><font color="red">Unset</font></div>{% else %}<div class="text-center">{{ qs.area_str }}</div>{% endif %}</td>
-      <td>{% if qs.had_external_assist %}<div class="text-center" data-toggle="tooltip" title="Click on row to open / close additional details"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       {% if qs.prescription %}
         <td><a data-toggle="tooltip" title="Edit" id="edit-burn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_active_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
       {% else %}
@@ -480,10 +512,8 @@ select, button{
                 <td colspan="3">{{ qs.district }}</td>
               </tr>
               <tr>
-                <th>Assistance received from</th>
-                <td>{{ qs.external_assist_str }}</td>
                 <th>Tenure</th>
-                <td colspan="3">{{ qs.tenures_str }}</td>
+                <td colspan="5">{{ qs.tenures_str }}</td>
               </tr>
 
               {% if qs.prescription %}
@@ -501,7 +531,13 @@ select, button{
                 </tr>
                 <tr>
                     <th>Location</th>
-                    <td colspan="5">{{ qs.prescription.location_text }}</td>
+                    <td colspan="5">{{ qs.location }}</td>
+                </tr>
+                <tr>
+                    <th>Latitude</th>
+                    <td>{{ qs.latitude }}</td>
+                    <th>Longitude</th>
+                    <td colspan="3">{{ qs.longitude }}</td>
                 </tr>
 
               {% endif %}
@@ -571,11 +607,94 @@ select, button{
 {% endif %}
 {% comment %}{% paginate %} {% endcomment %}
 
+{% comment %}
+{% if report == "epfp_aircraft" %}
+<div>
+    <a class="btn btn-small btn-help" style="float: right" href="{% url 'admin:help_aircraft_view' %}?report=epfp_aircraft"><i class="icon-info"></i> Help</a>
+    <a class="btn btn-small btn-info" style="float: right" href="{% url 'admin:review_aircraftburn_add' %}?form=add_aircraft_burn"><i class="icon-plus icon-white"></i> Add Aircraft</a>
+
+    <span>Action</span>
+    <select id="actions">
+    <option value="0" selected="selected">----</option>
+    <option value="1">Regional Approval</option>
+    <option value="2">State Duty Approval</option>
+    <option value="3">State Aviation Approval</option>
+    <option value="4">Delete Regional Approval</option>
+    <option value="5">Delete State Duty Approval</option>
+    <option value="6">Delete State Aviation Approval</option>
+    <option value="7">Delete Record</option>
+    </select>
+    <button id="update-button" class="btn btn-small btn-info" type="button" disabled>Go</button>
+</div>
+
+<table id="aircraft-table" class="main-table table table-hover table-compressed">
+  <thead>
+    <tr>
+      <th rowspan="2"><input type="checkbox" name ="check_all" onClick=toggle(this) /></th>
+      <th nowrap rowspan="2"><div class="text-center">Burn ID <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Burn Name <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Area <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Start Time <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Bombing Duration <i class="icon-sort"></i><br>(hrs)</div></th>
+      <th nowrap colspan="3"><div class="text-center">Approval</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Min SMC <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">Max FDI <i class="icon-sort"></i></div></th>
+      <th nowrap rowspan="2"><div class="text-center">SDI each <i class="icon-sort"></i><br><DAY</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Flight <i class="icon-sort"></i><br>Sequence</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Aircraft <i class="icon-sort"></i><br>Rego</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Arrival Time <i class="icon-sort"></i><br>Over Burn</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Program <i class="icon-sort"></i></div></th>
+    </tr>
+    <tr>
+        <th nowrap> Region <i class="icon-sort"></i></th>
+        <th nowrap> State <i class="icon-sort"></i></th>
+        <th nowrap> Aviation  <i class="icon-sort"></i></th>
+    </tr>
+
+
+  </thead>
+  <tbody>
+    {% for qs in qs_aircraft %}
+    <tr class="row-vm" data-toggle="myCollapse" data-target="#{{qs.id}}">
+      <td><input type="checkbox" name="chkbox" value={{ qs.id  }}  /></td>
+      <td><a data-toggle="tooltip" title="Click to view prescription" href="{% url 'admin:prescription_prescription_detail' qs.prescription.id %}">{{ qs.prescription.burn_id }}</a></td>
+      <td>{{ qs.prescription.name }}</td>
+      <td>{{ qs.area }}</td>
+      <td>{{ qs.est_start }}</td>
+      <td>{{ qs.bombing_duration }}</td>
+      <td>{% if qs.regional_approval %}<div class="text-center" data-toggle="tooltip" title="{{ qs.regional_approval }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
+      <td>{% if qs.state_duty_approval %}<div class="text-center" data-toggle="tooltip" title="{{ qs.state_duty_approval }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
+      <td>{% if qs.state_aviation_approval %}<div class="text-center" data-toggle="tooltip" title="{{ qs.state_aviation_approval }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
+      <td>{{ qs.min_smc }}</td>
+      <td>{{ qs.max_fdi }}</td>
+      <td>{{ qs.sdi_per_day }}</td>
+      <td>{{ qs.flight_seq }}</td>
+      <td>{{ qs.aircraft_rego }}</td>
+      <td>{{ qs.arrival_time }}</td>
+      <td>{{ qs.program }}</td>
+      <td><a data-toggle="tooltip" title="Edit" id="edit-aircraftburn" href="{% url 'admin:review_aircraftburn_change' qs.id %}?form=edit_aircraft_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
+      <td><a data-toggle="tooltip" title="Delete" id="delete-aircraftburn" href="{% url 'admin:bulk_delete' %}?object_ids={{qs.id}}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+    </tr>
+    {% endfor %}
+
+  </tbody>
+</table>
+{% endif %}
+{% endcomment %}
+
 
 <div id="dialog-message" title="Region Error" style="display: none;">
   <p>
     <span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
     You MUST select a Region.
+
+    <div class="results"></div>
+
+    {% comment %}
+    {% for qs in qs_burn %}
+    <p>{{ qs.fire_idd }} - {{ qs.district  }}</p>
+    {% endfor %}
+    {% endcomment %}
   </p>
 </div>
 
@@ -601,6 +720,9 @@ $(function(){
 
      $("#summary-table td a").on('click', function (e) { e.stopPropagation(); });
      $("#summary-table td input").on('click', function (e) { e.stopPropagation(); });
+
+     $("#aircraft-table td a").on('click', function (e) { e.stopPropagation(); });
+     $("#aircraft-table td input").on('click', function (e) { e.stopPropagation(); });
 
      $(".main-table").tablesorter({
         headers: {0: {sorter: false}}
@@ -658,6 +780,29 @@ dialog_msg = function() {
     });
 };
 
+multiple_regions_msg = function(items) {
+
+    //$('.results').html('Hello World!');
+    $('.results').html(items.join(", "));
+
+    $( "#dialog-message" ).dialog({
+    modal: true,
+    buttons: {
+        Ok: function() {
+            $( this ).dialog( "close" );
+            return true;
+        },
+        Cancel: function() {
+            $( this ).dialog( "close" );
+            return false;
+        }
+
+    }
+    });
+};
+
+
+
 
 function toggle(source) {
     checkboxes = document.getElementsByName('chkbox');
@@ -699,47 +844,87 @@ $("#actions").click(function () {
     }
 });
 
+function unique_districts(id_list) {
 
-$('#update-button').click(function(){
+districts = [];
+{% if report == "epfp_planned" %}
+    {% for qs in qs_burn %}
+    if (id_list.indexOf({{qs.id}}) > -1) {
+        if (districts.indexOf('{{qs.district}}') < 0) {
+            districts.push('{{qs.district}}');
+        }
+    }
+    {% endfor %}
+    console.log('Planned ***************  ' + districts);
+{% endif %}
+
+{% if report == "epfp_fireload" %}
+    {% for qs in qs_fireload %}
+    if (id_list.indexOf({{qs.id}}) > -1) {
+        if (districts.indexOf('{{qs.district}}') < 0) {
+            districts.push('{{qs.district}}');
+        }
+    }
+    {% endfor %}
+    console.log('FireLoad ***************  ' + districts);
+{% endif %}
+
+return districts;
+};
+
+function _is_unique(items) {
+    unique = items.length > 1 ? true : false;
+    return unique
+};
+
+function is_unique() {
     checkboxes = document.getElementsByName('chkbox');
     checked_list = []
+    districts = []
     for(var i=0, n=checkboxes.length;i<n;i++) {
         if (checkboxes[i].checked) {
             checked_list.push(parseInt(checkboxes[i].value))
         }
     }
+
+    district_list = unique_districts(checked_list);
+    if (district_list.length > 1) {
+        return multiple_regions_msg(district_list);
+    }
+
+    return false;
+};
+
+$('#update-button').click(function(){
+    checkboxes = document.getElementsByName('chkbox');
+    checked_list = []
+    districts = []
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        if (checkboxes[i].checked) {
+            checked_list.push(parseInt(checkboxes[i].value))
+        }
+    }
+
+    var action = $("#actions :selected").text();
     console.log("Actions " + $("#actions").val());
 
-    if ($("#actions :selected").text() == "Delete Record"){
+    if (action == "Delete Record"){
         //console.log("Delete Selected ************ " + checked_list.toString());
-        //window.location.href = "{% url 'admin:bulk_delete' 1 %}";
-        if (checked_list.toString() == '') {
-            $.growl('No records selected', {
-                type: 'danger',
-                delay: 10000,
-                allow_dismiss: true,
-                animate: {
-                    enter: 'animated bounceIn',
-                    exit: 'animated bounceOut'
-                },
-                offset: {
-                    x: 100,
-                    y: 20
-                }
-            });
-        } else {
-            window.location.href = "/review/prescribedburn/bulk_delete/" + checked_list.toString();
-        }
+        window.location.href = "{% url 'admin:bulk_delete' %}" + '?object_ids=' + checked_list.toString()
+
+    } else if (action.indexOf('District') > -1){
+        window.location.href = "{% url 'admin:district_action_view' %}" + '?object_ids=' + checked_list.toString() + '&date={{date}}' + '&action=' + action + '&report={{report}}';
+
+    } else if (action.indexOf('Region') > -1){
+        window.location.href = "{% url 'admin:region_action_view' %}" + '?object_ids=' + checked_list.toString() + '&date={{date}}' + '&action=' + action + '&report={{report}}';
+
 
     } else {
-        var urll;
-        urll = "{% url 'admin:action_view' %}";
         $.ajax({
             type: 'POST',
-            //url: "{% url 'admin:action_view' %}",
-            url: urll,
+            url: "{% url 'admin:action_view' %}",
             data: {
-                "action": $("#actions :selected").text(),
+                "action": action, //$("#actions :selected").text(),
                 "data": checked_list.toString(),
                 "date": "{{date}}",
                 "report": "{{report}}",

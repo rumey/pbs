@@ -4,9 +4,10 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group, User
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PrescribedBurn, Acknowledgement
+from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement, AircraftApproval, BurnProgramLink
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
-        PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm
+        PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
+        AircraftBurnForm, AircraftBurnEditForm, AircraftBurnFilterForm
     )
 from pbs.prescription.models import Prescription, Approval, Region, District
 from datetime import datetime, date, timedelta
@@ -236,6 +237,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             url(r'^daily-burn-program/$',
                 wrap(self.daily_burn_program),
                 name='daily_burn_program'),
+            #url(r'^district_action/([\w\,]+)/$',
+            url(r'^district_action/$',
+                wrap(self.district_action_view),
+                name='district_action_view'),
+            #url(r'^region_action/([\w\,]+)/$',
+            url(r'^region_action/$',
+                wrap(self.region_action_view),
+                name='region_action_view'),
             url(r'^daily-burn-program/fire_action',
                 wrap(self.action_view),
                 name='action_view'),
@@ -251,7 +260,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             url(r'^csv',
                 wrap(self.csv_view),
                 name='csv_view'),
-            url(r'^bulk_delete/([\w\,]+)/$',
+            #url(r'^bulk_delete/([\w\,]+)/$',
+            url(r'^bulk_delete/$',
                 wrap(self.bulk_delete),
                 name='bulk_delete'),
             url(r'^help',
@@ -373,6 +383,336 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         return HttpResponse(json.dumps({"location": None, "tenures": None, 'bushfire_id': None, 'burn_ids': burn_ids}))
 
+    def district_action_view(self, request, extra_context=None):
+        """
+        Separated into own method to allow further validation at specifically - District level
+        """
+        if request.REQUEST.has_key('report'):
+            report = request.REQUEST.get('report', None)
+
+        if request.REQUEST.has_key('action'):
+            action = request.REQUEST.get('action', None)
+
+        if request.REQUEST.has_key('date'):
+            dt = datetime.strptime(request.REQUEST.get('date'), '%Y-%m-%d').date()
+        else:
+            raise Http404('Could not get Date')
+
+        referrer_url = request.META.get('HTTP_REFERER')
+        if request.REQUEST.has_key('object_ids'):
+            object_ids = request.REQUEST.get('object_ids', None)
+            if not object_ids:
+                message = "No rows were selected"
+                self.message_user(request, message, level=messages.ERROR)
+                return HttpResponseRedirect(referrer_url)
+            object_ids = map(int, object_ids.split(','))
+        else:
+            message = "No rows were selected"
+            self.message_user(request, message, level=messages.ERROR)
+            return HttpResponseRedirect(referrer_url)
+
+        objects = PrescribedBurn.objects.filter(id__in=object_ids)
+
+        if not request.POST.has_key('multiple_approval'):
+            # if key not present, request is not from multiple_confirm.html template, then
+            # we must check if we have distinct districts > 1, and get confirmation to proceed
+            distinct = objects.distinct('district')
+            if len(distinct) > 1:
+                template = 'admin/review/prescribedburn/multiple_confirmation.html'
+                context = {
+                    'objects': distinct,
+                    'type': 'Districts',
+                    'action': action,
+                }
+                return TemplateResponse(request, template, context)
+
+        url = reverse('admin:daily_burn_program') + '?date=' + str(dt) + '&report=' + report
+        today = date.today()
+        now = timezone.now()
+        #today = date(2016,4,12)
+        tomorrow = today + timedelta(days=1)
+        yesterday = today - timedelta(days=1)
+        if action == "District Entered" or action == "District Submit":
+            count = 0
+            if report=='epfp_planned':
+                not_acknowledged = []
+                already_acknowledged = []
+                unset_acknowledged = []
+                for obj in objects:
+                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
+                        if (obj.planned_area>=0 or obj.planned_distance>=0):
+                            if obj.formA_isDraft:
+                                if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
+                                    Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
+                                    obj.save()
+                                    count += 1
+                                    message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                                    msg_type = messages.SUCCESS #"success"
+                                else:
+                                    not_acknowledged.append(obj.fire_idd)
+
+                            elif obj.formA_user_acknowledged:
+                                already_acknowledged.append(obj.fire_idd)
+                                message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                                msg_type = messages.ERROR #"danger"
+                        else:
+                            unset_acknowledged.append(obj.fire_idd)
+                            message = "Cannot acknowledge {}. First set Today's Area/Distance field(s)".format(', '.join(unset_acknowledged))
+                            msg_type = messages.ERROR #"danger"
+
+                    else:
+                        message = "Burn is not Corporate Approved {}".format(obj.fire_idd)
+                        msg_type = messages.ERROR #"danger"
+
+#                if not_acknowledged:
+#                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
+#                    self.message_user(request, message, level=messages.ERROR)
+#                    return HttpResponseRedirect(referrer_url)
+
+            elif report=='epfp_fireload':
+                not_acknowledged = []
+                already_acknowledged = []
+                unset_acknowledged = []
+                for obj in objects:
+                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
+                        if (obj.area>=0 or obj.distance>=0) and obj.status:
+                            if obj.formB_isDraft:
+                                if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
+                                    Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
+                                    obj.save()
+                                    count += 1
+                                    message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                                    msg_type = "success"
+                                    msg_type = messages.SUCCESS #"success"
+                                else:
+                                    not_acknowledged.append(obj.fire_idd)
+
+                            elif obj.formB_user_acknowledged:
+                                already_acknowledged.append(obj.fire_idd)
+                                message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                                msg_type = messages.ERROR #"danger"
+                        else:
+                            unset_acknowledged.append(obj.fire_idd)
+                            message = "Cannot acknowledge {}. First set Area/Distance / Status field(s)".format(', '.join(unset_acknowledged))
+                            msg_type = messages.ERROR #"danger"
+
+                    else:
+                        message = "Burn is not Corporate Approved {}".format(obj.fire_idd)
+                        msg_type = messages.ERROR #"danger"
+
+#                if not_acknowledged:
+#                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
+#                    self.message_user(request, message, level=messages.ERROR)
+#                    return HttpResponseRedirect(referrer_url)
+
+        elif action == "Delete District Entry" or action == "Delete District Submit":
+            can_delete = True
+            count = 0
+            for obj in objects:
+                if report=='epfp_planned':
+                    if not obj.formA_srm_acknowledged:
+                        if obj.formA_user_acknowledged:
+                            ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A')
+                            if ack:
+                                ack[0].delete()
+                                obj.save()
+                                count += 1
+                                message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
+                                msg_type = messages.SUCCESS #"success"
+                    else:
+                        can_delete = False
+                        message = "Cannot Delete District Approvals for Regionally Approved burns. First Delete the Region Approval"
+                        msg_type = messages.ERROR #"danger"
+
+                else:
+                    if not obj.formB_srm_acknowledged:
+                        if obj.formB_user_acknowledged:
+                            ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B')
+                            if ack:
+                                ack[0].delete()
+                                obj.save()
+                                count += 1
+                                message = "Successfully deleted {0} submitted burn{1}/bushfire{1}".format(count, "s" if count>1 else "")
+                                msg_type = messages.SUCCESS #"success"
+                    else:
+                        can_delete = False
+                        message = "Cannot Delete District acknowledgements for Regionally acknowledged burns. First Delete the Region Acknowledgement"
+                        msg_type = messages.ERROR #"danger"
+
+            if count == 0 and can_delete:
+                message = "No records 'Submitted' status removed"
+                msg_type = messages.INFO #"info"
+
+        self.message_user(request, message, level=msg_type)
+        return HttpResponseRedirect(url)
+
+    def region_action_view(self, request, extra_context=None):
+        """
+        Separated into own method to allow further validation at Region level
+        """
+        if request.REQUEST.has_key('report'):
+            report = request.REQUEST.get('report', None)
+
+        if request.REQUEST.has_key('action'):
+            action = request.REQUEST.get('action', None)
+
+        if request.REQUEST.has_key('date'):
+            dt = datetime.strptime(request.REQUEST.get('date'), '%Y-%m-%d').date()
+        else:
+            raise Http404('Could not get Date')
+
+        referrer_url = request.META.get('HTTP_REFERER')
+        if request.REQUEST.has_key('object_ids'):
+            object_ids = request.REQUEST.get('object_ids', None)
+            if not object_ids:
+                message = "No rows were selected"
+                self.message_user(request, message, level=messages.ERROR)
+                return HttpResponseRedirect(referrer_url)
+            object_ids = map(int, object_ids.split(','))
+        else:
+            message = "No rows were selected"
+            self.message_user(request, message, level=messages.ERROR)
+            return HttpResponseRedirect(referrer_url)
+
+        objects = PrescribedBurn.objects.filter(id__in=object_ids)
+
+        if not request.POST.has_key('multiple_approval'):
+            # if key not present, request is not from multiple_confirm.html template, then
+            # we must check if we have distinct regions > 1, and get confirmation to proceed
+            distinct = objects.distinct('region')
+            if len(distinct) > 1:
+                template = 'admin/review/prescribedburn/multiple_confirmation.html'
+                context = {
+                    'objects': distinct,
+                    'type': 'Regions',
+                    'action': action,
+                }
+                return TemplateResponse(request, template, context)
+
+
+        url = reverse('admin:daily_burn_program') + '?date=' + str(dt) + '&report=' + report
+        today = date.today()
+        now = timezone.now()
+        #today = date(2016,4,12)
+        tomorrow = today + timedelta(days=1)
+        yesterday = today - timedelta(days=1)
+        if action == "Regional Acknowledgement" or action == "Regional Endorsement":
+            if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
+                message = "Only regional and state levels can acknowledge burns"
+                self.message_user(request, message, level=messages.ERROR)
+                return HttpResponseRedirect(referrer_url)
+
+            # TODO can approve records for today or tomorrow only?
+            if not (dt == today or dt == tomorrow):
+                message = "Can only acknowledge burns for today {}, or tomorrow {}.".format(today, tomorrow)
+                self.message_user(request, message, level=messages.ERROR)
+                return HttpResponseRedirect(referrer_url)
+
+            # Only Submitted plans can be endorsed
+            count = 0
+            if report=='epfp_planned':
+                not_acknowledged = []
+                already_acknowledged = []
+                for obj in objects:
+                    if obj.formA_user_acknowledged:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_A').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_A', acknow_date=now)
+                            obj.save()
+                            count += 1
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = messages.SUCCESS
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
+
+                    elif not obj.formA_user_acknowledged:
+                        message = "record must first be submitted by district"
+                        msg_type = messages.ERROR
+
+#                    elif obj.formA_srm_acknowledged:
+#                        already_acknowledged.append(obj.fire_idd)
+#                        message = "record already approved {}".format(', '.join(already_acknowledged))
+#                        msg_type = messages.ERROR
+
+#                if not_acknowledged:
+#                    message = "record already approved {}".format(', '.join(not_acknowledged))
+#                    self.message_user(request, message, level=messages.ERROR)
+#                    return HttpResponseRedirect(referrer_url)
+
+            elif report=='epfp_fireload':
+                not_acknowledged = []
+                already_acknowledged = []
+                for obj in objects:
+                    if obj.formB_user_acknowledged:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
+                            obj.save()
+                            count += 1
+                            message = "Successfully approved {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = messages.SUCCESS
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
+
+                    elif not obj.formB_user_acknowledged:
+                        message = "record must first be submitted by district"
+                        msg_type = messages.ERROR
+
+                    elif obj.formB_srm_acknowledged:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
+                        msg_type = messages.ERROR
+
+#                if not_acknowledged:
+#                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
+#                    self.message_user(request, message, level=messages.ERROR)
+#                    return HttpResponseRedirect(referrer_url)
+
+        elif action == "Delete Regional Acknowledgement" or action == "Delete Regional Endorsement":
+            if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
+                message = "Only regional and state levels can delete regional acknowledgements"
+                self.message_user(request, message, level=messages.ERROR)
+                return HttpResponseRedirect(referrer_url)
+
+            count = 0
+            can_delete = True
+            for obj in objects:
+                if report=='epfp_planned':
+                    if not obj.formA_sdo_acknowledged:
+                        if obj.formA_srm_acknowledged:
+                            ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_A')
+                            if ack:
+                                ack[0].delete()
+                                obj.save()
+                                count += 1
+                                message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
+                                msg_type = messages.SUCCESS
+                    else:
+                        can_delete = False
+                        message = "Cannot Delete Regional Approvals for State Approved burns. First Delete the State Approval"
+                        msg_type = messages.ERROR #"danger"
+
+                else:
+                    if not obj.formB_sdo_acknowledged:
+                        if obj.formB_srm_acknowledged:
+                            ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B')
+                            if ack:
+                                ack[0].delete()
+                                obj.save()
+                                count += 1
+                                message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
+                                msg_type = messages.SUCCESS
+                    else:
+                        can_delete = False
+                        message = "Cannot Delete Regional Acknowledgements for State Acknowledged burns. First Delete the State Acknowledgement"
+                        msg_type = messages.ERROR #"danger"
+
+            if count == 0 and can_delete:
+                message = "No 'Endorsed' records were removed"
+                msg_type = messages.INFO
+
+        self.message_user(request, message, level=msg_type)
+        return HttpResponseRedirect(url)
+
+
     def action_view(self, request, extra_context=None):
         if request.REQUEST.has_key('report'):
             report = request.REQUEST.get('report', None)
@@ -404,138 +744,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #today = date(2016,4,12)
         tomorrow = today + timedelta(days=1)
         yesterday = today - timedelta(days=1)
-        if action == "District Entered" or action == "District Submit":
-            count = 0
-            if report=='epfp_planned':
-                not_acknowledged = []
-                already_acknowledged = []
-                for obj in objects:
-                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
-                        if obj.formA_isDraft:
-                            if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A').count() == 0:
-                                Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_A', acknow_date=now)
-                                obj.save()
-                                count += 1
-                                message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                                msg_type = "success"
-                            else:
-                                not_acknowledged.append(obj.fire_idd)
-
-                        elif obj.formA_user_acknowledged:
-                            already_acknowledged.append(obj.fire_idd)
-                            message = "record already acknowledged {}".format(', '.join(already_acknowledged))
-                            msg_type = "danger"
-
-                    else:
-                        message = "Burn is not Corporate Approved {}".format(obj.fire_idd)
-                        msg_type = "danger"
-
-                if not_acknowledged:
-                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-            elif report=='epfp_fireload':
-                not_acknowledged = []
-                already_acknowledged = []
-                unset_acknowledged = []
-                for obj in objects:
-                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
-                        if (obj.area>=0 or obj.distance>=0) and obj.status:
-                            if obj.formB_isDraft:
-                                if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
-                                    Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='USER_B', acknow_date=now)
-                                    obj.save()
-                                    count += 1
-                                    message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                                    msg_type = "success"
-                                else:
-                                    not_acknowledged.append(obj.fire_idd)
-
-                            elif obj.formB_user_acknowledged:
-                                already_acknowledged.append(obj.fire_idd)
-                                message = "record already acknowledged {}".format(', '.join(already_acknowledged))
-                                msg_type = "danger"
-                        else:
-                            unset_acknowledged.append(obj.fire_idd)
-                            message = "Cannot acknowledge {}. First set Area/Status field(s)".format(', '.join(unset_acknowledged))
-                            msg_type = "danger"
-
-                    else:
-                        message = "Burn is not Corporate Approved {}".format(obj.fire_idd)
-                        msg_type = "danger"
-
-                if not_acknowledged:
-                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-        elif action == "Regional Acknowledgement" or action == "Regional Endorsement":
-            if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
-                message = "Only regional and state levels can acknowledge burns"
-                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-            # TODO can approve records for today or tomorrow only?
-            if not (dt == today or dt == tomorrow):
-                message = "Can only acknowledge burns for today {}, or tomorrow {}.".format(today, tomorrow)
-                msg_type = "danger"
-                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
-
-            # Only Submitted plans can be endorsed
-            count = 0
-            if report=='epfp_planned':
-                not_acknowledged = []
-                already_acknowledged = []
-                for obj in objects:
-                    if obj.formA_user_acknowledged:
-                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_A').count() == 0:
-                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_A', acknow_date=now)
-                            obj.save()
-                            count += 1
-                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
-                            msg_type = "success"
-                        else:
-                            not_acknowledged.append(obj.fire_idd)
-
-                    elif not obj.formA_user_acknowledged:
-                        message = "record must first be submitted by district"
-                        msg_type = "danger"
-
-                    elif obj.formA_srm_acknowledged:
-                        already_acknowledged.append(obj.fire_idd)
-                        message = "record already approved {}".format(', '.join(already_acknowledged))
-                        msg_type = "danger"
-
-                if not_acknowledged:
-                    message = "record already approved {}".format(', '.join(not_acknowledged))
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-            elif report=='epfp_fireload':
-                not_acknowledged = []
-                already_acknowledged = []
-                for obj in objects:
-                    if obj.formB_user_acknowledged:
-                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B').count() == 0:
-                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SRM_B', acknow_date=now)
-                            obj.save()
-                            count += 1
-                            message = "Successfully approved {} record{}".format(count, "s" if count>1 else "")
-                            msg_type = "success"
-                        else:
-                            not_acknowledged.append(obj.fire_idd)
-
-                    elif not obj.formB_user_acknowledged:
-                        message = "record must first be submitted by district"
-                        msg_type = "danger"
-
-                    elif obj.formB_srm_acknowledged:
-                        already_acknowledged.append(obj.fire_idd)
-                        message = "record already acknowledged {}".format(', '.join(already_acknowledged))
-                        msg_type = "danger"
-
-                if not_acknowledged:
-                    message = "record already acknowledged {}".format(', '.join(not_acknowledged))
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-        elif action == "State Acknowledgement" or action == "State Approval":
+        if action == "State Acknowledgement" or action == "State Approval":
             burn_desc = "burns/bushfires" if action == "State Acknowledgement" else "burns"
             if self.sdo_group not in request.user.groups.all():
                 message = "Only regional and state levels can acknowledge {}".format(burn_desc)
@@ -574,6 +783,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
                 self.copy_planned_approved_records(dt)
+                BurnProgramLink.link_records() # update the BurnProgramLink links
 
             elif report=='epfp_fireload':
                 self.copy_ongoing_records(dt) # copy yesterdays ongoing active records to today
@@ -639,65 +849,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "No 'Approved' records were removed"
                 msg_type = "info"
 
-        elif action == "Delete Regional Acknowledgement" or action == "Delete Regional Endorsement":
-            if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
-                message = "Only regional and state levels can delete regional acknowledgements"
-                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-            count = 0
-            for obj in objects:
-                if report=='epfp_planned':
-                    if obj.formA_srm_acknowledged:
-                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_A')
-                        if ack:
-                            ack[0].delete()
-                            obj.save()
-                            count += 1
-                            message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
-                            msg_type = "success"
-                else:
-                    if obj.formB_srm_acknowledged:
-                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B')
-                        if ack:
-                            ack[0].delete()
-                            obj.save()
-                            count += 1
-                            message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
-                            msg_type = "success"
-
-            if count == 0:
-                message = "No 'Endorsed' records were removed"
-                msg_type = "info"
-
-        elif action == "Delete District Entry" or action == "Delete District Submit":
-            count = 0
-            for obj in objects:
-                if report=='epfp_planned':
-                    if obj.formA_user_acknowledged:
-                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A')
-                        if ack:
-                            ack[0].delete()
-                            obj.save()
-                            count += 1
-                            message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
-                            msg_type = "success"
-                else:
-                    if obj.formB_user_acknowledged:
-                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B')
-                        if ack:
-                            ack[0].delete()
-                            obj.save()
-                            count += 1
-                            message = "Successfully deleted {0} submitted burn{1}/bushfire{1}".format(count, "s" if count>1 else "")
-                            msg_type = "success"
-
-            if count == 0:
-                message = "No records 'Submitted' status removed"
-                msg_type = "info"
-
-        elif action == "Delete Record":
-            """ This function now dealt with by javascript --> which calls bulk_delete()"""
-            pass
+        #elif action == "Delete Record":
+        #    """ This function now dealt with by javascript --> which calls bulk_delete()"""
+        #    pass
 
         elif action == "Copy Record to Tomorrow":
             if not (dt >= yesterday or dt <= tomorrow):
@@ -723,20 +877,31 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
 
-    def bulk_delete(self, request, object_ids, extra_context=None):
+    def bulk_delete(self, request, extra_context=None):
         """
         View to bulk delete prescribed burns/fires
         """
-        burn_desc = "burns/bushfires" if 'epfp_fireload' in request.META.get('HTTP_REFERER') else "burns"
-        object_ids = map(int, object_ids.split(','))
-        #objects = PrescribedBurn.objects.filter(id__in=object_ids)
+        referrer_url = request.META.get('HTTP_REFERER')
+        if request.REQUEST.has_key('object_ids'):
+            object_ids = request.REQUEST.get('object_ids', None)
+            if not object_ids:
+                message = "No rows were selected"
+                self.message_user(request, message, level=messages.ERROR)
+                return HttpResponseRedirect(referrer_url)
+            object_ids = map(int, object_ids.split(','))
+        else:
+            message = "No rows were selected"
+            self.message_user(request, message, level=messages.ERROR)
+            return HttpResponseRedirect(referrer_url)
+
+        burn_desc = "burns/bushfires" if 'epfp_fireload' in referrer_url else "burns"
         objects = PrescribedBurn.objects.filter(Q(id__in=object_ids), ~Q(Q(status__isnull=True) & Q(area__isnull=True) & Q(form_name=PrescribedBurn.FORM_268B)))
         non_deletable_objects = PrescribedBurn.objects.filter(id__in=object_ids, status__isnull=True, area__isnull=True, form_name=PrescribedBurn.FORM_268B)
         for obj in objects:
             if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
                 if self.sdo_group not in request.user.groups.all():
                     self.message_user(request, "Only state levels can delete a state acknowledged {}".format(burn_desc))
-                    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+                    return HttpResponseRedirect(referrer_url)
 
         if request.method == 'POST':
             if objects:
@@ -744,7 +909,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 return HttpResponseRedirect(reverse('admin:daily_burn_program'))
             else:
                 self.message_user(request, "Cannot delete rolled records (records that were active or planned yesterday)", level=messages.ERROR)
-                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+                return HttpResponseRedirect(referrer_url)
 
         context = {
             'deletable_objects': objects,
@@ -845,14 +1010,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'username': request.user.username,
             'date': dt.strftime('%Y-%m-%d'),
             'fire_type': fire_type,
-
             'active_records': self.active_records(dt),
+            'kmi_download_url': settings.KMI_DOWNLOAD_URL,
+            'csv_download_url': settings.CSV_DOWNLOAD_URL,
+            'shp_download_url': settings.SHP_DOWNLOAD_URL,
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
 
     def active_records(self, dt, region=None):
-        qs_active = PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, form_name=PrescribedBurn.FORM_268B, date=dt)
+        qs_active = PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, form_name=PrescribedBurn.FORM_268B, date=dt).distinct('prescription', 'fire_id')
 
         active_burns_statewide = qs_active.exclude(prescription__isnull=True)
         active_fires_statewide = qs_active.exclude(fire_id__isnull=True)
@@ -892,7 +1059,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
                 continue
-            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
                 continue
             try:
@@ -934,7 +1101,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
                 continue
-            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
                 continue
             try:
@@ -971,6 +1138,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             try:
                 i.pk = None
                 i.date = tomorrow
+                i.planned_area = None
+                i.planned_distance = None
                 i.area = None
                 i.distance = None
                 i.status = 1
@@ -1038,6 +1207,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             location = pb.location
             est_start = pb.est_start
             conditions = pb.conditions
+            latitude = pb.latitude
+            longitude = pb.longitude
 
             user_acknow_formA = pb.user_a_record
             srm_acknow_formA = pb.srm_a_record
@@ -1050,6 +1221,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             query_list.append([fire_id, name, region, district, fire_type, form_name,
                                dt, burn_status, ignition_status, external_assist,
                                planned_area, area, tenures, location, est_start, conditions,
+                               latitude, longitude,
                                user_acknow_formA, srm_acknow_formA, sdo_acknow_formA,
                                user_acknow_formB, srm_acknow_formB, sdo_acknow_formB,
                                rolled])
@@ -1062,6 +1234,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type", "Form",
             "Date", "Burn Status", "Ignition Status", "Assistance received from",
             "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
+            "Latitude", "Longitude",
             "DDO Acknow FormA", "RDO Acknow FormA", "SDO Acknow FormA",
             "DDO Acknow FormB", "RDO Acknow FormB", "SDO Acknow FormB",
             "Rolled"])
@@ -1198,6 +1371,498 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         logger.debug("Finally: returning PDF response.")
         return response
 
+
+class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
+
+    @property
+    def srm_group(self):
+        return Group.objects.get(name='Regional Duty Officer')
+
+    @property
+    def sdo_group(self):
+        return Group.objects.get(name='State Duty Officer')
+
+    @property
+    def sao_group(self):
+        return Group.objects.get(name='State Aviation Officer')
+
+    def get_form(self, request, obj=None, **kwargs):
+        if request.GET.has_key('form'):
+            #import ipdb; ipdb.set_trace()
+            if request.REQUEST.get('form')=='add_aircraft_burn':
+                return AircraftBurnForm
+            if request.REQUEST.get('form')=='edit_aircraft_burn':
+                return AircraftBurnEditForm
+
+#    def response_post_save_change(self, request, obj):
+#        """
+#        Override the redirect url after successful save of an existing PrescribedBurn
+#        """
+#        if 'edit_fire' in request.META.get('HTTP_REFERER') or 'edit_active_burn' in request.META.get('HTTP_REFERER'):
+#            url = reverse('admin:daily_burn_program') + '?report=epfp_fireload&date={}'.format(request.REQUEST['date'])
+#        elif 'edit_burn' in request.META.get('HTTP_REFERER'):
+#            url = reverse('admin:daily_burn_program') + '?report=epfp_planned&date={}'.format(request.REQUEST['date'])
+#        else:
+#            url = reverse('admin:daily_burn_program')
+#
+#        return HttpResponseRedirect(url)
+#
+#    def response_post_save_add(self, request, obj):
+#        """
+#        Override the redirect url after successful save of a new PrescribedBurn
+#        """
+#        if request.REQUEST.has_key('form'):
+#            if 'add_fire' in request.REQUEST['form'] or 'add_active_burn' in request.REQUEST['form']:
+#                url = reverse('admin:daily_burn_program') + '?report=epfp_fireload&date={}'.format(request.REQUEST['date'])
+#            if 'add_burn' in request.REQUEST['form']:
+#                url = reverse('admin:daily_burn_program') + '?report=epfp_planned&date={}'.format(request.REQUEST['date'])
+#        else:
+#            url = reverse('admin:daily_burn_program')
+#
+#        return HttpResponseRedirect(url)
+
+    def get_urls(self):
+        """
+        Add an extra view to handle marking a treatment as complete.
+        """
+        from django.conf.urls import patterns, url
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        info = self.model._meta.app_label, self.model._meta.module_name
+
+        urlpatterns = patterns(
+            '',
+            url(r'^aircraft-burn-program/$',
+                wrap(self.aircraft_burn_program),
+                name='aircraft_burn_program'),
+            url(r'^help',
+                wrap(self.help_view),
+                name='help_aircraft_view'),
+            url(r'^bulk_delete/([\w\,]+)/$',
+                wrap(self.bulk_delete),
+                name='bulk_aircraft_delete'),
+            url(r'^aircraft-burn-program/pdf',
+                wrap(self.pdflatex),
+                name='create_aircraftburns_pdf'),
+
+        )
+        return urlpatterns + super(AircraftBurnAdmin, self).get_urls()
+
+    def help_view(self, request, extra_context=None):
+        return TemplateResponse(request, 'admin/review/aircraftburn/help.html', {'report': request.GET['report']})
+
+    def bulk_delete(self, request, object_ids, extra_context=None):
+        """
+        View to bulk delete aircraft burns
+        """
+        pass
+#        burn_desc = "burns/bushfires" if 'epfp_fireload' in request.META.get('HTTP_REFERER') else "burns"
+#        object_ids = map(int, object_ids.split(','))
+#        #objects = PrescribedBurn.objects.filter(id__in=object_ids)
+#        objects = PrescribedBurn.objects.filter(Q(id__in=object_ids), ~Q(Q(status__isnull=True) & Q(area__isnull=True) & Q(form_name=PrescribedBurn.FORM_268B)))
+#        non_deletable_objects = PrescribedBurn.objects.filter(id__in=object_ids, status__isnull=True, area__isnull=True, form_name=PrescribedBurn.FORM_268B)
+#        for obj in objects:
+#            if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
+#                if self.sdo_group not in request.user.groups.all():
+#                    self.message_user(request, "Only state levels can delete a state acknowledged {}".format(burn_desc))
+#                    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+#
+#        if request.method == 'POST':
+#            if objects:
+#                objects.delete()
+#                return HttpResponseRedirect(reverse('admin:daily_burn_program'))
+#            else:
+#                self.message_user(request, "Cannot delete rolled records (records that were active or planned yesterday)", level=messages.ERROR)
+#                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+#
+#        context = {
+#            'deletable_objects': objects,
+#            'non_deletable_objects': non_deletable_objects,
+#            'current': objects[0] if objects else None,
+#        }
+#        template = 'admin/review/prescribedburn/delete_selected_confirmation.html'
+#        return TemplateResponse(request, template, context) #, current_app=self.admin_site.name)
+
+
+    def aircraft_burn_program(self, request, extra_context=None):
+        """
+        Display a list of the current day's planned aircraft burns
+        """
+        report_set = {'epfp_aircraft'}
+        report = request.GET.get('report', 'epfp_aircraft')
+
+        if request.REQUEST.has_key('report'):
+            report = request.REQUEST.get('report', None)
+
+        if request.REQUEST.has_key('date'):
+            dt = request.REQUEST.get('date', None)
+            if dt:
+                dt = datetime.strptime(dt, '%Y-%m-%d')
+        else:
+            dt = date.today()
+            time_now = datetime.now().time()
+            if time_now.hour > settings.DAY_ROLLOVER_HOUR:
+                dt = dt + timedelta(days=1)
+
+        yesterday = dt - timedelta(days=1)
+
+        qs_aircraft = AircraftBurn.objects.filter(date=dt)
+        if report=='epfp_aircraft':
+            title = "Today's Planned Burn Program"
+            # assumes all burns entered on date dt are planned (for date dt)
+            #qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268A)
+            form = AircraftBurnFilterForm(request.GET)
+
+        if request.REQUEST.has_key('region'):
+            region = request.REQUEST.get('region', None)
+            if region:
+                qs_aircraft = qs_aircraft.filter(prescription__region=region)
+
+        context = {
+            'title': title,
+            'qs_aircraft': qs_aircraft,
+            'form': form,
+            'report': report,
+            'username': request.user.username,
+            'date': dt.strftime('%Y-%m-%d'),
+        }
+        context.update(extra_context or {})
+        return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
+
+    def action_view(self, request, extra_context=None):
+        if request.REQUEST.has_key('report'):
+            report = request.REQUEST.get('report', None)
+
+        if request.POST.has_key('date'):
+            dt = datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
+        else:
+            raise Http404('Could not get Date')
+
+        referrer_url = request.META.get('HTTP_REFERER')
+        if request.POST.has_key('action'):
+            action = request.POST['action']
+
+            if request.POST.has_key('data'):
+                if len(request.POST['data']) == 0: # and action != "Copy Records":
+                    message = "No rows were selected"
+                    msg_type = "danger"
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+                data = [int(i.strip()) for i in request.POST['data'].split(',')]
+            else:
+                raise Http404('Could not get Data/Row IDs')
+
+        else:
+            raise Http404('Could not get Update Action command')
+
+        objects = AircraftBurn.objects.filter(id__in=data)
+        today = date.today()
+        now = timezone.now()
+        #today = date(2016,4,12)
+        tomorrow = today + timedelta(days=1)
+        yesterday = today - timedelta(days=1)
+        if action == "Regional Approval":
+
+            if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() or self.sao_group in request.user.groups.all() ):
+                message = "Only regional and state levels can approve aircraft burns"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+            # TODO can approve records for today or tomorrow only?
+            if not (dt == today or dt == tomorrow):
+                message = "Can only approve aircraft burns for today {}, or tomorrow {}.".format(today, tomorrow)
+                msg_type = "danger"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
+            count = 0
+            if report=='epfp_aircraft':
+                not_approved = []
+                already_eapproved = []
+                for obj in objects:
+                    if (obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED):
+                        if obj.form_isDraft:
+                            if Approval(aircraft_burn=obj, approval_type='SRM').count() == 0:
+                                Approval.objects.get_or_create(aircraft_burn=obj, user=request.user, approval_type='SRM', approval_date=now)
+                                obj.save()
+                                count += 1
+                                message = "Successfully approved {} record{}".format(count, "s" if count>1 else "")
+                                msg_type = "success"
+                            else:
+                                not_approved.append(obj.prescription.burn_id)
+
+                        elif obj.form_regional_approved:
+                            already_approved.append(obj.prescription.burn_id)
+                            message = "record already approved {}".format(', '.join(already_approved))
+                            msg_type = "danger"
+
+                    else:
+                        message = "Burn is not Corporate Approved {}".format(obj.prescription.burn_id)
+                        msg_type = "danger"
+
+                if not_approved:
+                    message = "record already approved {}".format(', '.join(not_approved))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+        elif action == "State Duty Approval":
+            burn_desc = "burns/bushfires" if action == "State Acknowledgement" else "burns"
+            if self.sdo_group not in request.user.groups.all():
+                message = "Only regional and state levels can acknowledge {}".format(burn_desc)
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+            if not (dt == today or dt == tomorrow):
+                message = "Can only acknowledge {} for today {}, or tomorrow {}.".format(burn_desc, today, tomorrow)
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+            count = 0
+            if report=='epfp_planned':
+                not_acknowledged = []
+                already_acknowledged = []
+                for obj in objects:
+                    if obj.formA_srm_acknowledged:
+                        if Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_A').count() == 0:
+                            Acknowledgement.objects.get_or_create(burn=obj, user=request.user, acknow_type='SDO_A', acknow_date=now)
+                            obj.save()
+                            count += 1
+                            message = "Successfully acknowledged {} record{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                        else:
+                            not_acknowledged.append(obj.fire_idd)
+
+                    elif not obj.formA_srm_acknowledged:
+                        message = "record must first be regionally acknowledged"
+                        msg_type = "danger"
+
+                    elif obj.formA_sdo_acknowledged:
+                        already_acknowledged.append(obj.fire_idd)
+                        message = "record already approved {}".format(', '.join(already_acknowledged))
+                        msg_type = "danger"
+
+                if not_acknowledged:
+                    message = "record already approved {}".format(', '.join(not_acknowledged))
+                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+                self.copy_planned_approved_records(dt)
+
+        elif action == "Delete State Acknowledgement" or action == "Delete State Approval":
+            if self.sdo_group not in request.user.groups.all():
+                message = "Only state levels can delete state acknowledgements"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+            count = 0
+            for obj in objects:
+                if report=='epfp_planned':
+                    if obj.formA_sdo_acknowledged:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_A')
+                        if ack:
+                            ack[0].delete()
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                else:
+                    if obj.formB_sdo_acknowledged:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SDO_B')
+                        if ack:
+                            ack[0].delete()
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} approval{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+
+            if count == 0:
+                message = "No 'Approved' records were removed"
+                msg_type = "info"
+
+        elif action == "Delete Regional Acknowledgement" or action == "Delete Regional Endorsement":
+            if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
+                message = "Only regional and state levels can delete regional acknowledgements"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
+
+            count = 0
+            for obj in objects:
+                if report=='epfp_planned':
+                    if obj.formA_srm_acknowledged:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_A')
+                        if ack:
+                            ack[0].delete()
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                else:
+                    if obj.formB_srm_acknowledged:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='SRM_B')
+                        if ack:
+                            ack[0].delete()
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} endorsement{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+
+            if count == 0:
+                message = "No 'Endorsed' records were removed"
+                msg_type = "info"
+
+        elif action == "Delete District Entry" or action == "Delete District Submit":
+            count = 0
+            for obj in objects:
+                if report=='epfp_planned':
+                    if obj.formA_user_acknowledged:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_A')
+                        if ack:
+                            ack[0].delete()
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {} submitted burn{}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+                else:
+                    if obj.formB_user_acknowledged:
+                        ack = Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B')
+                        if ack:
+                            ack[0].delete()
+                            obj.save()
+                            count += 1
+                            message = "Successfully deleted {0} submitted burn{1}/bushfire{1}".format(count, "s" if count>1 else "")
+                            msg_type = "success"
+
+            if count == 0:
+                message = "No records 'Submitted' status removed"
+                msg_type = "info"
+
+        elif action == "Delete Record":
+            """ This function now dealt with by javascript --> which calls bulk_delete()"""
+            pass
+
+        elif action == "Copy Record to Tomorrow":
+            if not (dt >= yesterday or dt <= tomorrow):
+                message = "Can only copy records for yesterday {}, today {}, or tomorrow {}.".format(yesterday, today, tomorrow)
+                msg_type = "danger"
+            else:
+                count = self.copy_planned_records(dt, objects)
+                message = "{} record{} copied".format(count, "s" if count > 1 else "")
+                msg_type = "info"
+
+#        elif action == "Set Active":
+#            count = 0
+#            for obj in objects:
+#                obj.status = PrescribedBurn.BURN_ACTIVE
+#                obj.save()
+#                count += 1
+#                message = "Successfully set {} record{} ACTIVE".format(count, "s" if count>1 else "")
+#                msg_type = "success"
+#
+#            if count == 0:
+#                message = "No records were modified"
+#                msg_type = "info"
+
+        return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
+
+    def pdflatex(self, request):
+        #import ipdb; ipdb.set_trace()
+        if request.GET.has_key('date'):
+            report_date = datetime.strptime(request.GET.get('date'), '%Y-%m-%d').date()
+        else:
+            raise Http404('Could not get Date')
+        aircraft_burns = AircraftBurn.objects.filter(date=report_date).distinct()
+
+        #aircraft_burns = aircraft_burns.filter(approvals__approval_type__in=['SAO'])
+
+#        def approval(aircraft_burns, approval_type):
+#            approvals = AircraftApproval(aircraft_burn__in=aircraft_burns, approval_type=approval_type).distinct()
+#            return ', '.join(set([i.user.get_full_name() for i in approvals]))
+#
+#        approval_records ={
+#            'srm': approval(aircraft_burns, 'SRM'),
+#            'sdo': approval(aircraft_burns, 'SDO'),
+#            'sao': approval(aircraft_burns, 'SAO'),
+#        }
+        obj = Prescription.objects.get(id=620)
+        template = request.GET.get("template", "pfp")
+        response = HttpResponse(content_type='application/pdf')
+        #texname = template + ".tex"
+        #filename = template + ".pdf"
+        texname = template + "_" + request.user.username + ".tex"
+        filename = template + "_" + request.user.username + ".pdf"
+        now = timezone.localtime(timezone.now())
+        timestamp = now.isoformat().rsplit(
+            ".")[0].replace(":", "")
+        downloadname = "daily_burn_program"
+        error_response = HttpResponse(content_type='text/html')
+        errortxt = downloadname.replace(".pdf", ".errors.txt.html")
+        error_response['Content-Disposition'] = (
+            '{0}; filename="{1}"'.format(
+            "inline", errortxt))
+
+        subtitles = {
+            #"daily_burn_program": "Part A - Daily Burn Program",
+            "form301": "FIRE 301 - Daily Aircraft Burn Program",
+        }
+        embed = False if request.GET.get("embed") == "false" else True
+        context = {
+            'user': request.user.get_full_name(),
+            'date': datetime.now().strftime('%d %b %Y'),
+            'time': datetime.now().strftime('%H:%M'),
+            'report_date': report_date.strftime('%d %b %Y'),
+            'state_regional_manager': datetime.now().strftime('%H:%M'),
+            'qs_aircraft_burns': aircraft_burns.order_by('prescription__burn_id'),
+            #'approval_records': approval_records,
+            'current': obj,
+            'prescription': obj,
+            'embed': embed,
+            'headers': request.GET.get("headers", True),
+            'title': request.GET.get("title", "Prescribed Fire Plan"),
+            'subtitle': subtitles.get(template, ""),
+            'timestamp': now,
+            'downloadname': downloadname,
+            'settings': settings,
+            'baseurl': request.build_absolute_uri("/")[:-1]
+        }
+        disposition = "attachment"
+        #disposition = "inline"
+        response['Content-Disposition'] = (
+            '{0}; filename="{1}"'.format(
+                disposition, downloadname))
+
+        directory = os.path.join(settings.MEDIA_ROOT, 'daily-burn-program' + os.sep)
+        if not os.path.exists(directory):
+            logger.debug("Making a new directory: {}".format(directory))
+            os.makedirs(directory)
+
+        logger.debug('Starting  render_to_string step')
+        err_msg = None
+        try:
+            output = render_to_string(
+                "latex/" + template + ".tex", context,
+                context_instance=RequestContext(request))
+        except Exception as e:
+            import traceback
+            err_msg = u"PDF tex template render failed (might be missing attachments):"
+            logger.debug(err_msg + "\n{}".format(e))
+
+            error_response.write(err_msg + "\n\n{0}\n\n{1}".format(e,traceback.format_exc()))
+            return error_response
+
+        with open(directory + texname, "w") as f:
+            f.write(output.encode('utf-8'))
+            logger.debug("Writing to {}".format(directory + texname))
+
+        logger.debug("Starting PDF rendering process ...")
+        cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
+        logger.debug("Running: {0}".format(" ".join(cmd)))
+        subprocess.call(cmd)
+
+        logger.debug("Cleaning up ...")
+        cmd = ['latexmk', '-cd', '-c', directory + texname]
+        logger.debug("Running: {0}".format(" ".join(cmd)))
+        subprocess.call(cmd)
+
+        logger.debug("Reading PDF output from {}".format(filename))
+        response.write(open(directory + filename).read())
+        logger.debug("Finally: returning PDF response.")
+        return response
 
 
 

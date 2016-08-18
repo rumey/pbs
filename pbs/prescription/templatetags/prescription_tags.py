@@ -142,8 +142,33 @@ def role_required(prescription, role):
     else:
         output = '<span style="display:none">0</span>'
     return output
-    
+
 @register.simple_tag(takes_context=True)
 def base_dir(context):
     """ Hack for getting the base_dir for uWSGI config. settings.BASE_DIR returns '' in latex templates when using uWSGI """
     return '{}'.format(os.getcwd())
+
+@register.simple_tag
+#@register.assignment_tag
+def _has_unique_district(objects):
+    #import ipdb; ipdb.set_trace()
+    objs_distinct = [obj.fire_idd for obj in objects.distinct('district')]
+    #return [] if objs_distinct==1 else objs_distinct
+    return True if len(objs_distinct)<=1 else False
+
+@register.assignment_tag(takes_context=True)
+def __has_unique_district(context):
+    import ipdb; ipdb.set_trace()
+    planned_burns = context['qs_burn']
+    objs_distinct = [obj.fire_idd for obj in planned_burns.distinct('district')]
+    #return [] if objs_distinct==1 else objs_distinct
+    return True if len(objs_distinct)<=1 else False
+
+@register.filter(takes_context=True)
+def has_unique_district(objects):
+    print objects
+    #objs_distinct = [obj.fire_idd for obj in objects.distinct('district')]
+    #return [] if objs_distinct==1 else objs_distinct
+   # return True if len(objs_distinct)<=1 else False
+    return True
+

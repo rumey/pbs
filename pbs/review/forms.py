@@ -1,6 +1,6 @@
 from django import forms
 from pbs.prescription.models import Prescription, Region, District
-from pbs.review.models import PrescribedBurn
+from pbs.review.models import PrescribedBurn, AircraftBurn
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.forms import ValidationError
@@ -26,6 +26,8 @@ class PrescribedBurnForm(forms.ModelForm):
 
         self.fields['planned_area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['planned_distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
         now = datetime.now()
         today = now.date()
@@ -66,6 +68,7 @@ class PrescribedBurnForm(forms.ModelForm):
         model = PrescribedBurn
         fields = ('region', 'prescription', 'date', 'planned_area',
                   'planned_distance', 'tenures', 'location', 'est_start', 'conditions',
+                  'latitude', 'longitude',
                  )
 
 
@@ -90,6 +93,8 @@ class PrescribedBurnEditForm(forms.ModelForm):
 
         self.fields['planned_area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['planned_distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
     def clean_prescription(self):
         instance = getattr(self, 'instance', None)
@@ -118,7 +123,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
 
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A, location=location)
             if objects and objects[0] != getattr(self, 'instance', None):
-                raise ValidationError("Burn ID  {}  already exists on this date, with this location".format(objects[0].prescription.burn_id))
+                raise ValidationError("Burn ID  {}  already exists with this date or location".format(objects[0].prescription.burn_id))
             else:
                 return self.cleaned_data['location']
 
@@ -126,6 +131,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
         model = PrescribedBurn
         fields = ('region', 'prescription', 'date', 'planned_area',
                   'planned_distance', 'tenures', 'location', 'est_start', 'conditions',
+                  'latitude', 'longitude',
                  )
 
 
@@ -148,8 +154,13 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         self.fields['prescription'].required = True
         self.fields['status'].required = True
 
+        self.fields['location'].required = True
+        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
+
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
     def clean(self):
         if self.cleaned_data['area']==None and self.cleaned_data['distance']==None:
@@ -159,18 +170,20 @@ class PrescribedBurnActiveForm(forms.ModelForm):
             # check for integrity constraint - duplicate keys
             prescription = self.cleaned_data['prescription']
             dt = self.cleaned_data['date']
-            #location = self.cleaned_data['location']
+            location = self.cleaned_data['location']
 
-            #objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
-            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B)
+            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
+            #objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B)
             if objects:
-                raise ValidationError("Burn ID  {}  already exists on this date".format(objects[0].prescription.burn_id))
+                raise ValidationError("Burn ID  {}  already exists with this date or location".format(objects[0].prescription.burn_id))
             else:
                 return self.cleaned_data
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures',)
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location',
+                  'latitude', 'longitude',
+            )
 
 
 class PrescribedBurnEditActiveForm(forms.ModelForm):
@@ -183,6 +196,9 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         region_idx = [i[0] for i in region.choices if prescribed_burn.get_region_display()==i[1]][0]
         region.choices = [region.choices[region_idx]]
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
+
+        self.fields['location'].required = True
+        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
 
         prescription = self.fields['prescription']
         self.fields['prescription'].queryset = prescription.queryset.filter(burn_id=prescribed_burn.fire_idd)
@@ -203,6 +219,8 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
     def clean_prescription(self):
         instance = getattr(self, 'instance', None)
@@ -211,26 +229,28 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
         else:
             return self.cleaned_data['prescription']
 
-#    def clean_location(self):
-#
-#        if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
-#            # check for integrity constraint - duplicate keys
-#            prescription = self.cleaned_data['prescription']
-#            dt = self.cleaned_data['date']
-#            location = self.cleaned_data['location']
-#
-#            if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to:
-#                raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
-#
-#            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
-#            if objects:
-#                raise ValidationError("Burn ID  {}  already exists on this date, with this location".format(objects[0].prescription.burn_id))
-#            else:
-#                return self.cleaned_data['location']
+    def clean_location(self):
+
+        if self.cleaned_data.has_key('prescription') and self.cleaned_data.has_key('date'):
+            # check for integrity constraint - duplicate keys
+            prescription = self.cleaned_data['prescription']
+            dt = self.cleaned_data['date']
+            location = self.cleaned_data['location']
+
+            if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to and not self.cleaned_data.has_key('status'):
+                raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
+
+            objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
+            if objects and objects[0] != getattr(self, 'instance', None):
+                raise ValidationError("Burn ID  {}  already exists with this date or location".format(objects[0].prescription.burn_id))
+            else:
+                return self.cleaned_data['location']
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures',)
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location',
+                  'latitude', 'longitude',
+            )
 
 
 class FireForm(forms.ModelForm):
@@ -256,7 +276,7 @@ class FireForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'fire_tenures',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
 
 
 class FireEditForm(forms.ModelForm):
@@ -313,7 +333,7 @@ class FireEditForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'external_assist', 'area', 'fire_tenures',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
 
 
 class PrescribedBurnFilterForm(forms.ModelForm):
@@ -347,5 +367,49 @@ class CsvForm(forms.Form):
     fromDate = forms.DateField(required=False)
     toDate = forms.DateField(required=True)
 
+
+class AircraftBurnFilterForm(forms.ModelForm):
+    region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
+    approval_status = forms.ChoiceField(required=False, choices=AircraftBurn.APPROVAL_CHOICES)
+
+    class Meta:
+        fields = ('region', 'approval_status')
+        model = AircraftBurn
+
+
+class AircraftBurnForm(forms.ModelForm):
+    region = forms.ModelChoiceField(required=True, queryset=Region.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        super(AircraftBurnForm, self).__init__(*args, **kwargs)
+
+        self.fields['region'].required = True
+        self.fields['prescription'].required = True
+        self.fields['date'].required = True
+        self.fields['area'].required = True
+        self.fields['est_start'].required = True
+        self.fields['bombing_duration'].required = True
+        now = datetime.now()
+        today = now.date()
+        date_str = today.strftime('%Y-%m-%d')
+        self.fields['date'].widget.attrs.update({'value': date_str})
+
+        self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
+
+    class Meta:
+        #exlude = ('flight_seq', 'aircraft_rego', 'arrival_time', 'program',)
+        fields = ('region', 'prescription', 'date', 'area', 'est_start', 'bombing_duration', 'min_smc', 'max_fdi', 'sdi_per_day', 'aircrew')
+        model = AircraftBurn
+
+
+class AircraftBurnEditForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(AircraftBurnEditForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        fields = ('prescription', 'date', 'area', 'est_start', 'bombing_duration', 'min_smc', 'max_fdi', 'sdi_per_day',
+                  'flight_seq', 'aircraft_rego', 'arrival_time', 'program', 'aircrew'
+            )
+        model = AircraftBurn
 
 
