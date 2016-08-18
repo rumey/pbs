@@ -26,6 +26,8 @@ class PrescribedBurnForm(forms.ModelForm):
 
         self.fields['planned_area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['planned_distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
         now = datetime.now()
         today = now.date()
@@ -66,6 +68,7 @@ class PrescribedBurnForm(forms.ModelForm):
         model = PrescribedBurn
         fields = ('region', 'prescription', 'date', 'planned_area',
                   'planned_distance', 'tenures', 'location', 'est_start', 'conditions',
+                  'latitude', 'longitude',
                  )
 
 
@@ -90,6 +93,8 @@ class PrescribedBurnEditForm(forms.ModelForm):
 
         self.fields['planned_area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['planned_distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
     def clean_prescription(self):
         instance = getattr(self, 'instance', None)
@@ -126,6 +131,7 @@ class PrescribedBurnEditForm(forms.ModelForm):
         model = PrescribedBurn
         fields = ('region', 'prescription', 'date', 'planned_area',
                   'planned_distance', 'tenures', 'location', 'est_start', 'conditions',
+                  'latitude', 'longitude',
                  )
 
 
@@ -153,6 +159,8 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
     def clean(self):
         if self.cleaned_data['area']==None and self.cleaned_data['distance']==None:
@@ -173,7 +181,9 @@ class PrescribedBurnActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location',)
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location',
+                  'latitude', 'longitude',
+            )
 
 
 class PrescribedBurnEditActiveForm(forms.ModelForm):
@@ -209,6 +219,8 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
     def clean_prescription(self):
         instance = getattr(self, 'instance', None)
@@ -225,7 +237,7 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
             dt = self.cleaned_data['date']
             location = self.cleaned_data['location']
 
-            if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to:
+            if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to and not self.cleaned_data.has_key('status'):
                 raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
 
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
@@ -236,7 +248,9 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location', )
+        fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location',
+                  'latitude', 'longitude',
+            )
 
 
 class FireForm(forms.ModelForm):

@@ -1204,6 +1204,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             location = pb.location
             est_start = pb.est_start
             conditions = pb.conditions
+            latitude = pb.latitude
+            longitude = pb.longitude
 
             user_acknow_formA = pb.user_a_record
             srm_acknow_formA = pb.srm_a_record
@@ -1216,6 +1218,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             query_list.append([fire_id, name, region, district, fire_type, form_name,
                                dt, burn_status, ignition_status, external_assist,
                                planned_area, area, tenures, location, est_start, conditions,
+                               latitude, longitude,
                                user_acknow_formA, srm_acknow_formA, sdo_acknow_formA,
                                user_acknow_formB, srm_acknow_formB, sdo_acknow_formB,
                                rolled])
@@ -1228,6 +1231,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type", "Form",
             "Date", "Burn Status", "Ignition Status", "Assistance received from",
             "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
+            "Latitude", "Longitude",
             "DDO Acknow FormA", "RDO Acknow FormA", "SDO Acknow FormA",
             "DDO Acknow FormB", "RDO Acknow FormB", "SDO Acknow FormB",
             "Rolled"])

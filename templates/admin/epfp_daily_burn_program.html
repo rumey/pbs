@@ -376,7 +376,12 @@ select, button{
                 <th>Last Ignition</th>
                 <td colspan="5">{{ qs.last_ignition }}</td>
               </tr>
-
+              <tr>
+                <th>Latitude</th>
+                <td>{{ qs.latitude }}</td>
+                <th>Longitude</th>
+                <td colspan="3">{{ qs.longitude }}</td>
+              </tr>
               <tr>
                 <th>Submit</th>
                 <td>{{ qs.user_a_record  }}</td>
@@ -391,10 +396,6 @@ select, button{
                 <th>Prescribing Officer</th>
                 <td colspan="3">{{ qs.prescription.prescribing_officer.get_full_name }}</td>
               </tr>
-
-
-
-
 
             </tbody>
           </table>
@@ -528,6 +529,12 @@ select, button{
                 <tr>
                     <th>Location</th>
                     <td colspan="5">{{ qs.location }}</td>
+                </tr>
+                <tr>
+                    <th>Latitude</th>
+                    <td>{{ qs.latitude }}</td>
+                    <th>Longitude</th>
+                    <td colspan="3">{{ qs.longitude }}</td>
                 </tr>
 
               {% endif %}
