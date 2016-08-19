@@ -549,6 +549,9 @@ class BurnProgramLink(models.Model):
             ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1) as "active",
             "prescription_prescription"."burn_id", "prescription_prescription"."location", "prescription_prescription"."forest_blocks",
             "review_burnprogramlink"."area_ha", "prescription_prescription"."area", "review_prescribedburn"."date", "review_prescribedburn"."est_start",
+            "review_prescribedburn"."planned_area" as "pb_planned_area", "review_prescribedburn"."area" as "pb_area",
+            "review_prescribedburn"."planned_distance" as "pb_planned_distance", "review_prescribedburn"."distance" as "pb_distance",
+            "review_prescribedburn"."latitude" as "pb_latitude", "review_prescribedburn"."longitude" as "pb_longitude",
             "review_burnprogramlink"."longitude", "review_burnprogramlink"."latitude", "review_burnprogramlink"."wkb_geometry"
             FROM "prescription_prescription"
                 LEFT OUTER JOIN "review_prescribedburn" ON ( "prescription_prescription"."id" = "review_prescribedburn"."prescription_id" )

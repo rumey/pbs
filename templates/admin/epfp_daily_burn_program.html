@@ -256,6 +256,7 @@ select, button{
     <option value="6">Delete State Approval</option>
     <option value="7">Delete Record</option>
     <option value="8">Copy Record to Tomorrow</option>
+    <option value="9">Update Daily Burn Links</option>
     </select>
     <button id="update-button" class="btn btn-small btn-info" type="button" disabled>Go</button>
 </div>
@@ -907,6 +908,10 @@ $('#update-button').click(function(){
 
     var action = $("#actions :selected").text();
     console.log("Actions " + $("#actions").val());
+
+    if (action == "Update Daily Burn Links"){
+        growl({"message": "Updating Daily Burn Links ...", "type": "info"});
+    }
 
     if (action == "Delete Record"){
         //console.log("Delete Selected ************ " + checked_list.toString());

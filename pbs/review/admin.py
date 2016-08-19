@@ -714,6 +714,17 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
 
     def action_view(self, request, extra_context=None):
+    
+        referrer_url = request.META.get('HTTP_REFERER')
+        if request.POST.has_key('action'):
+            action = request.POST['action']
+        else:
+            raise Http404('Could not get Update Action command')
+
+        if action == "Update Daily Burn Links":
+            BurnProgramLink.populate() # update the BurnProgramLink links
+            return HttpResponse(json.dumps({"redirect": referrer_url, "message": "Updated Daily Burn Links", "type": "info"}))
+
         if request.REQUEST.has_key('report'):
             report = request.REQUEST.get('report', None)
 
@@ -722,21 +733,15 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         else:
             raise Http404('Could not get Date')
 
-        referrer_url = request.META.get('HTTP_REFERER')
-        if request.POST.has_key('action'):
-            action = request.POST['action']
-
-            if request.POST.has_key('data'):
-                if len(request.POST['data']) == 0: # and action != "Copy Records":
-                    message = "No rows were selected"
-                    msg_type = "danger"
-                    return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
-                data = [int(i.strip()) for i in request.POST['data'].split(',')]
-            else:
-                raise Http404('Could not get Data/Row IDs')
-
+        if request.POST.has_key('data') :
+            if len(request.POST['data']) == 0: # and action != "Copy Records":
+                message = "No rows were selected"
+                msg_type = "danger"
+                return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+            data = [int(i.strip()) for i in request.POST['data'].split(',')]
         else:
-            raise Http404('Could not get Update Action command')
+            raise Http404('Could not get Data/Row IDs')
+
 
         objects = PrescribedBurn.objects.filter(id__in=data)
         today = date.today()
@@ -783,7 +788,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
                 self.copy_planned_approved_records(dt)
-                BurnProgramLink.link_records() # update the BurnProgramLink links
 
             elif report=='epfp_fireload':
                 self.copy_ongoing_records(dt) # copy yesterdays ongoing active records to today
@@ -861,6 +865,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 count = self.copy_planned_records(dt, objects)
                 message = "{} record{} copied".format(count, "s" if count > 1 else "")
                 msg_type = "info"
+
 
 #        elif action == "Set Active":
 #            count = 0
