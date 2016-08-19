@@ -489,7 +489,7 @@ class AircraftBurn(Audit):
 
 class AnnualIndicativeBurnProgram(models.Model):
     ogc_fid = models.IntegerField(primary_key=True)
-    wkb_geometry = models.MultiPolygonField(srid=4283, blank=True, null=True)
+    wkb_geometry = models.MultiPolygonField(srid=4326, blank=True, null=True)
     region = models.CharField(max_length=35, blank=True)
     district = models.CharField(max_length=35, blank=True)
     burnid = models.CharField(max_length=30, blank=True)
@@ -513,41 +513,48 @@ class AnnualIndicativeBurnProgram(models.Model):
 
 
 class BurnProgramLink(models.Model):
-    program_record = models.ForeignKey(AnnualIndicativeBurnProgram)
     prescription = models.ForeignKey(Prescription, unique=True)
+    wkb_geometry = models.MultiPolygonField(srid=4326)
+    area_ha = models.FloatField()
+    longitude = models.FloatField()
+    latitude = models.FloatField()
+    perim_km = models.FloatField()
+    trtd_area = models.FloatField()
 
     @classmethod
-    def link_records(cls):
+    def populate(cls):
         # Links prescriptions to burn program records imported using ogr2ogr
-        AnnualIndicativeBurnProgram.objects.all().delete()
         import subprocess
-        subprocess.check_call(['ogr2ogr', '-append', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]),
+        subprocess.check_call(['ogr2ogr', '-overwrite', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]),
             settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', 'annual_indicative_burn_program', '-t_srs', 'EPSG:4326'])
         for p in AnnualIndicativeBurnProgram.objects.all():
             for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.finan_yr.replace("/", "/20")):
                 if cls.objects.filter(prescription=prescription).exists():
                     obj = cls.objects.get(prescription=prescription)
                     obj.program_record = p
-                    obj.save()
                 else:
-                    cls(prescription=prescription, program_record=p).save()            
+                    obj = cls(prescription=prescription, program_record=p)
+                obj.polygon = p.wkb_geometry
+                obj.area_ha = p.area_ha
+                obj.longitude = p.longitude
+                obj.latitude = p.latitude
+                obj.perim_km = p.perim_km
+                obj.trtd_area = p.trtd_area
+                obj.save()
+
         from django.db import connection
         cursor = connection.cursor()
-        try:
-            cursor.execute('''create materialized view review_mv_dailyburns as SELECT
-              ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) as "planned",
-                ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1) as "active",
-                "prescription_prescription"."burn_id", "prescription_prescription"."location", "prescription_prescription"."forest_blocks",
-                "review_annualindicativeburnprogram"."area_ha", "prescription_prescription"."area", "review_prescribedburn"."date", "review_prescribedburn"."est_start",
-                "review_annualindicativeburnprogram"."longitude", "review_annualindicativeburnprogram"."latitude", "review_annualindicativeburnprogram"."wkb_geometry"
-                FROM "prescription_prescription"
+        cursor.execute('''create or replace view review_v_dailyburns as SELECT
+            ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) as "planned",
+            ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1) as "active",
+            "prescription_prescription"."burn_id", "prescription_prescription"."location", "prescription_prescription"."forest_blocks",
+            "review_burnprogramlink"."area_ha", "prescription_prescription"."area", "review_prescribedburn"."date", "review_prescribedburn"."est_start",
+            "review_burnprogramlink"."longitude", "review_burnprogramlink"."latitude", "review_burnprogramlink"."wkb_geometry"
+            FROM "prescription_prescription"
                 LEFT OUTER JOIN "review_prescribedburn" ON ( "prescription_prescription"."id" = "review_prescribedburn"."prescription_id" )
                 LEFT OUTER JOIN "review_acknowledgement" ON ( "review_prescribedburn"."id" = "review_acknowledgement"."burn_id" )
                 LEFT OUTER JOIN "review_burnprogramlink" ON ( "prescription_prescription"."id" = "review_burnprogramlink"."prescription_id" )
-                LEFT OUTER JOIN "review_annualindicativeburnprogram" ON ( "review_burnprogramlink"."program_record_id" = "review_annualindicativeburnprogram"."ogc_fid" )
-                WHERE
-                ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1)
-                OR ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1);
-                create materialized view review_mv_todaysburns as select * from review_mv_dailyburns where date = current_date;''')
-        except:
-            cursor.execute('''refresh materialized view review_mv_dailyburns; refresh materialized view review_mv_todaysburns;''')
+            WHERE
+            ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1)
+            OR ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1);
+            create or replace view review_v_todaysburns as select * from review_v_dailyburns where date = current_date;''')
