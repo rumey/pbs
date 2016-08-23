@@ -34,6 +34,8 @@ if not DEBUG:
         'pbs.dpaw.wa.gov.au.',
         'pbs-training.dpaw.wa.gov.au',
         'pbs-training.dpaw.wa.gov.au.',
+        'pbs-dev.dpaw.wa.gov.au',
+        'pbs-dev.dpaw.wa.gov.au.'
     ]
 
 # Application definition

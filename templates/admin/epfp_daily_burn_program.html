@@ -224,7 +224,7 @@ select, button{
     <li><a value="form268a" href="javascript: pdf_url('form268a');">Form 268a</a></li>
     <li><a value="form268b" href="javascript: pdf_url('form268b');">Form 268b</a></li>
     <li><a value="form268c" href="javascript: pdf_url('form268c');">Form 268c</a></li>
-    <li><a value="form301" href="{% url 'admin:create_aircraftburns_pdf' %}?date={{date}}&template=form301">Form 301</a></li>
+    {% comment %}<li><a value="form301" href="{% url 'admin:create_aircraftburns_pdf' %}?date={{date}}&template=form301">Form 301</a></li>{% endcomment %}
     <li><a value="form268a_rdo" href="javascript: pdf_url('form268a_rdo');">Form 268a (RDO)</a></li>
     <li><a value="form268b_rdo" href="javascript: pdf_url('form268b_rdo');">Form 268b (RDO)</a></li>
     <li><a value="export_csv" href="{% url 'admin:daily_burn_program_exportcsv' %}?date={{date}}&Export_CSV=export_csv">Export CSV</a></li>
@@ -256,6 +256,7 @@ select, button{
     <option value="6">Delete State Approval</option>
     <option value="7">Delete Record</option>
     <option value="8">Copy Record to Tomorrow</option>
+    <option value="9">Update Daily Burn Links</option>
     </select>
     <button id="update-button" class="btn btn-small btn-info" type="button" disabled>Go</button>
 </div>
@@ -907,6 +908,10 @@ $('#update-button').click(function(){
 
     var action = $("#actions :selected").text();
     console.log("Actions " + $("#actions").val());
+
+    if (action == "Update Daily Burn Links"){
+        growl({"message": "Updating Daily Burn Links ...", "type": "info"});
+    }
 
     if (action == "Delete Record"){
         //console.log("Delete Selected ************ " + checked_list.toString());
