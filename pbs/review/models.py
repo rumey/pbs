@@ -149,14 +149,14 @@ class PrescribedBurn(Audit):
         verbose_name="Today's treatment area (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
     area = models.DecimalField(
-        verbose_name="Area Burnt Yesterday (ha)", max_digits=12, decimal_places=1,
+        verbose_name="Yesterday's treatment area (ha)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
 
     planned_distance = models.DecimalField(
         verbose_name="Today's treatment distance (km)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
     distance = models.DecimalField(
-        verbose_name="Distance Burnt Yesterday (km)", max_digits=12, decimal_places=1,
+        verbose_name="Yesterday's treatment distance (km)", max_digits=12, decimal_places=1,
         validators=[MinValueValidator(0.0)], null=True, blank=True)
 
     tenures= models.TextField(verbose_name="Tenure")

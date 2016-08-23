@@ -21,8 +21,8 @@ $(function() {
 
     $('label:contains("Today\'s treatment area (ha):")').text('Today\'s treatment area (ha)*:').css("font-weight","Bold")
     $('label:contains("Today\'s treatment distance (km):")').text('Today\'s treatment distance (km)*:').css("font-weight","Bold")
-    $('label:contains("Area Burnt Yesterday (ha):")').text('Area Burnt Yesterday (ha)*:').css("font-weight","Bold")
-    $('label:contains("Distance Burnt Yesterday (km):")').text('Distance Burnt Yesterday (km)*:').css("font-weight","Bold")
+    $('label:contains("Yesterday\'s treatment area (ha):")').text('Yesterday\'s treatment area (ha)*:').css("font-weight","Bold")
+    $('label:contains("Yesterday\'s treatment distance (km):")').text('Yesterday\'s treatment distance (km)*:').css("font-weight","Bold")
 
     {% if not is_sdo %}
         $("#id_conditions").attr("disabled", "disabled");
