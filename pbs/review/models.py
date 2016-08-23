@@ -547,9 +547,17 @@ class BurnProgramLink(models.Model):
         cursor.execute('''create or replace view review_v_dailyburns as SELECT
             ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) as "planned",
             ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1) as "active",
-            "prescription_prescription"."burn_id", "prescription_prescription"."location", "prescription_prescription"."forest_blocks",
-            "review_burnprogramlink"."area_ha", "prescription_prescription"."area", "review_prescribedburn"."date", "review_prescribedburn"."est_start",
-            "review_burnprogramlink"."longitude", "review_burnprogramlink"."latitude", "review_burnprogramlink"."wkb_geometry"
+            "prescription_prescription"."burn_id",
+            "prescription_prescription"."location",
+            "prescription_prescription"."forest_blocks",
+            "review_burnprogramlink"."area_ha" indicative_area,
+            "review_prescribedburn"."est_start" burn_est_start,
+            "review_prescribedburn"."date" burn_target_date,
+            "review_prescribedburn"."longitude" burn_target_long,
+            "review_prescribedburn"."latitude" burn_target_lat,
+            "review_prescribedburn"."planned_area" burn_planned_area_today,
+            "review_prescribedburn"."planned_distance" burn_planned_distance_today,
+            "review_burnprogramlink"."wkb_geometry"
             FROM "prescription_prescription"
                 LEFT OUTER JOIN "review_prescribedburn" ON ( "prescription_prescription"."id" = "review_prescribedburn"."prescription_id" )
                 LEFT OUTER JOIN "review_acknowledgement" ON ( "review_prescribedburn"."id" = "review_acknowledgement"."burn_id" )
@@ -557,4 +565,4 @@ class BurnProgramLink(models.Model):
             WHERE
             ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1)
             OR ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1);
-            create or replace view review_v_todaysburns as select * from review_v_dailyburns where date = current_date;''')
+            create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date = current_date;''')
