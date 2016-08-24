@@ -9,6 +9,11 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
 
+        for sender in orm['review.PrescribedBurn'].objects.filter(latitude=None):
+            sender.latitude=0.0
+            sender.longitude=0.0
+            sender.save()
+
         # Changing field 'PrescribedBurn.latitude'
         db.alter_column(u'review_prescribedburn', 'latitude', self.gf('django.db.models.fields.FloatField')(default=1))
 
