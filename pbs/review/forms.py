@@ -26,8 +26,8 @@ class PrescribedBurnForm(forms.ModelForm):
 
         self.fields['planned_area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['planned_distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
-#        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
-#        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
         now = datetime.now()
         today = now.date()
@@ -93,8 +93,8 @@ class PrescribedBurnEditForm(forms.ModelForm):
 
         self.fields['planned_area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['planned_distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
-#        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
-#        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
+        self.fields['latitude'].widget.attrs.update({'placeholder': 'Enter Latitude to 5 dec places'})
+        self.fields['longitude'].widget.attrs.update({'placeholder': 'Enter Longitude to 5 dec places'})
 
     def clean_prescription(self):
         instance = getattr(self, 'instance', None)
