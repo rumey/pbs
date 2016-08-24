@@ -164,8 +164,8 @@ class PrescribedBurn(Audit):
     est_start = models.TimeField('Estimated Start Time', null=True, blank=True)
     conditions = models.TextField(verbose_name='SDO Special Conditions', null=True, blank=True)
     rolled = models.BooleanField(verbose_name="Fire Rolled from yesterday", editable=False, default=False)
-    latitude = models.DecimalField(verbose_name="Latitude", max_digits=9, decimal_places=5, null=True, blank=True)
-    longitude = models.DecimalField(verbose_name="Longitude", max_digits=9, decimal_places=5, null=True, blank=True)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
     #aircraft_burn = models.BooleanField(verbose_name="Aircraft Burn", default=False)
 
     def clean(self):

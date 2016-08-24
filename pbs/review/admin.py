@@ -4,7 +4,7 @@ from functools import update_wrapper
 from django.contrib.auth.models import Group, User
 from django.template.response import TemplateResponse
 
-from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement, AircraftApproval, BurnProgramLink
+from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement, AircraftApproval, BurnProgramLink, AnnualIndicativeBurnProgram
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
         PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
         AircraftBurnForm, AircraftBurnEditForm, AircraftBurnFilterForm
@@ -349,6 +349,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 logger.info('burn_id '.format(burn_id))
                 p = Prescription.objects.filter(burn_id=burn_id)[0]
                 tenures = ', '.join([i.name for i in p.tenures.all()])
+
+                ai = AnnualIndicativeBurnProgram.objects.filter(burnid=burn_id)
+                if len(ai) > 0:
+                    latitude = str(ai[0].latitude)
+                    longitude = str(ai[0].longitude)
+                else:
+                    latitude = None
+                    longitude = None
+
+
                 if len(p.location.split('|')) > 1:
                     tokens = p.location.split('|')
                     location = tokens[1] + 'km ' + tokens[2] + ' of ' + tokens[3]
@@ -361,6 +371,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     "tenures": tenures,
                     "prescription_name": p.name,
                     "prescription_area": str(p.area),
+                    "latitude": latitude,
+                    "longitude": longitude,
                     }
                 return HttpResponse(json.dumps(d))
 
