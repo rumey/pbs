@@ -534,7 +534,7 @@ class BurnProgramLink(models.Model):
                     obj.program_record = p
                 else:
                     obj = cls(prescription=prescription, program_record=p)
-                obj.polygon = p.wkb_geometry
+                obj.wkb_geometry = p.wkb_geometry
                 obj.area_ha = p.area_ha
                 obj.longitude = p.longitude
                 obj.latitude = p.latitude
