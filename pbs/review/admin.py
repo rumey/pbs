@@ -166,7 +166,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return Group.objects.get(name='State Duty Officer Assistant')
 
     def can_admin(self, request):
-        return True if request.user.groups.filter(name__icontains='Administrator') or request.user.is_superuser else False
+        return True if request.user.is_superuser else False
 
     def get_form(self, request, obj=None, **kwargs):
         if request.GET.has_key('form'):
