@@ -165,6 +165,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     def sdo_assist_group(self):
         return Group.objects.get(name='State Duty Officer Assistant')
 
+    def can_admin(self, request):
+        return True if request.user.groups.filter(name__icontains='Administrator') or request.user.is_superuser else False
+
     def get_form(self, request, obj=None, **kwargs):
         if request.GET.has_key('form'):
             if request.REQUEST.get('form')=='add_fire':
@@ -1031,6 +1034,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'kmi_download_url': settings.KMI_DOWNLOAD_URL,
             'csv_download_url': settings.CSV_DOWNLOAD_URL,
             'shp_download_url': settings.SHP_DOWNLOAD_URL,
+            'can_admin': self.can_admin(request), 
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
