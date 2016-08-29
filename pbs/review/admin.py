@@ -1210,6 +1210,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 name = pb.prescription.name
                 region = str(pb.prescription.region)
                 district = str(pb.prescription.district)
+
             else:
                 fire_id = pb.fire_id
                 name = pb.fire_name
@@ -1231,6 +1232,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             latitude = pb.latitude
             longitude = pb.longitude
 
+            ai = AnnualIndicativeBurnProgram.objects.filter(burnid=fire_id)
+            if ai:
+                lat_long_updated = "Yes" if round(float(ai[0].latitude), 5) != round(pb.latitude,5) or round(float(ai[0].longitude),5) != round(pb.longitude, 5) else "No"
+
             user_acknow_formA = pb.user_a_record
             srm_acknow_formA = pb.srm_a_record
             sdo_acknow_formA = pb.sdo_a_record
@@ -1242,7 +1247,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             query_list.append([fire_id, name, region, district, fire_type, form_name,
                                dt, burn_status, ignition_status, external_assist,
                                planned_area, area, tenures, location, est_start, conditions,
-                               latitude, longitude,
+                               latitude, longitude, lat_long_updated,
                                user_acknow_formA, srm_acknow_formA, sdo_acknow_formA,
                                user_acknow_formB, srm_acknow_formB, sdo_acknow_formB,
                                rolled])
@@ -1255,7 +1260,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type", "Form",
             "Date", "Burn Status", "Ignition Status", "Assistance received from",
             "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
-            "Latitude", "Longitude",
+            "Latitude", "Longitude", "Lat/Long Updated",
             "DDO Acknow FormA", "RDO Acknow FormA", "SDO Acknow FormA",
             "DDO Acknow FormB", "RDO Acknow FormB", "SDO Acknow FormB",
             "Rolled"])
