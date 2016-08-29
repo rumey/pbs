@@ -179,7 +179,6 @@ class PrescribedBurn(Audit):
             self.region = self.prescription.region.id
             self.district = self.prescription.district
 
-
     def clean_fire_id(self):
         if not (len(self.fire_id)>=6 and self.fire_id[-4]=='_'): # ignore if this is an edit (field is readonly)
             if not self.fire_id or str(self.fire_id)[0] in ('-', '+') or not str(self.fire_id).isdigit() or not len(self.fire_id)==3:
@@ -195,6 +194,10 @@ class PrescribedBurn(Audit):
                 raise ValidationError("{} already exists for date {}".format(fire_id, self.date))
 
             self.fire_id = fire_id
+
+        # set the Lat/Long to Zero, since Bushfire is not assigning these required fields
+        self.latitude = 0.0
+        self.longitude = 0.0
 
     def clean_date(self):
         today = date.today()
