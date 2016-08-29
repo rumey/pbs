@@ -1,7 +1,8 @@
-Ian Kealley,RDO
 Ryan Butler,RDO
 Johannes Pieterse,RDO
 Nigel Wessels,RDO
+Kieren Douglas,RDO
+Corina Hitchcock,RDO
 Alan Byrne,RDO
 Bill Dempsey,RDO
 Daryl Moncrieff,RDO
@@ -20,6 +21,7 @@ Deon Utber,RDO
 Greg Mair,RDO
 Mike Shephard,RDO
 Peter Hartley,RDO
+Vince Hilder,RDO
 Bob Hagan,RDO
 Peter Gibson,RDO
 Peter Henderson,RDO
@@ -32,9 +34,11 @@ Mike Meinema,RDO
 Rob Towers,RDO
 Stefan De Haan,RDO
 Shawn Debono,RDO
+Michael Pasotti,RDO
+Leigh Sage,RDO
 Bradley Barton,RDO
 Lachie Mccaw,RDO
-Peter Keppel,RDO
+Peter Bamess,RDO
 Rod Simmonds,RDO
 Tim Foley,RDO
 Graeme Keals,RDO
@@ -50,6 +54,12 @@ Paul Brennan,RDO
 Peter Dans,RDO
 Richard Boykett,RDO
 Beverly Gardiner,RDO
+Richard Boykett,RDO
+Vaughan(Charles) Smith,RDO
+Chris Stewart,RDO
+Greg Durell,RDO
+B Bone,RDO
+Trevor Howard,RDO
 Bel Catcheside,SDOA
 Colleen Clements,SDOA
 Jennifer Debono,SDOA
@@ -64,3 +74,5 @@ Murray Mitchell,SDO
 Paul Brennan,SDO
 Peter Dans,SDO
 Richard Boykett,SDO
+B Bone,SDO
+Trevor Howard,SDO
