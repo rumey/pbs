@@ -61,6 +61,9 @@ class TrafficControlDiagramManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
 
+    def get_query_set(self):
+        qs = super(TrafficControlDiagramManager, self).get_query_set().order_by('-name')
+        return qs
 
 @python_2_unicode_compatible
 class TrafficControlDiagram(models.Model):
