@@ -62,7 +62,7 @@ class TrafficControlDiagramManager(models.Manager):
         return self.get(name=name)
 
     def get_query_set(self):
-        qs = super(TrafficControlDiagramManager, self).get_query_set().order_by('-name')
+        qs = super(TrafficControlDiagramManager, self).get_query_set().order_by('display_order', 'name')
         return qs
 
 @python_2_unicode_compatible
@@ -71,6 +71,7 @@ class TrafficControlDiagram(models.Model):
     """
     name = models.CharField(max_length=64, unique=True)
     path = models.FileField(storage=trafficdiagram_storage, upload_to=".")
+    display_order = models.IntegerField(default=1)
     objects = TrafficControlDiagramManager()
 
     @property

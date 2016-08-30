@@ -1,37 +1,23 @@
 # -*- coding: utf-8 -*-
 from south.utils import datetime_utils as datetime
 from south.db import db
-from south.v2 import DataMigration
+from south.v2 import SchemaMigration
 from django.db import models
-from pbs.implementation.models import TrafficControlDiagram
 
-class Migration(DataMigration):
+
+class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        "Write your forwards methods here."
-        # Note: Don't use "from appname.models import ModelName". 
-        # Use orm.ModelName to refer to models in this application,
-        # and orm['appname.ModelName'] for models in other applications.
-        l = [
-             ['DPAW001A', 'DPAW001A.pdf'],
-             ['DPAW002', 'DPAW002.pdf'],
-             ['DPAW003', 'DPAW003.pdf'],
-             ['DPAW004', 'DPAW004.pdf'],
-             ['DPAW005', 'DPAW005.pdf'],
-             ['DPAW006', 'DPAW006.pdf'],
-             ['DPAW007', 'DPAW007.pdf'],
-             ['DPAW008', 'DPAW008.pdf'],
-             ['DPAW008A', 'DPAW008A.pdf'],
-             ['DPAW009', 'DPAW009.pdf'],
-             ['DPAW001', 'DPAW001.pdf']
-            ]
-
-        for i in l:
-            TrafficControlDiagram.objects.get_or_create(name=i[0], path=i[1])
+        # Adding field 'TrafficControlDiagram.display_order'
+        db.add_column(u'implementation_trafficcontroldiagram', 'display_order',
+                      self.gf('django.db.models.fields.IntegerField')(default=1),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        "Write your backwards methods here."
+        # Deleting field 'TrafficControlDiagram.display_order'
+        db.delete_column(u'implementation_trafficcontroldiagram', 'display_order')
+
 
     models = {
         u'auth.group': {
@@ -204,6 +190,7 @@ class Migration(DataMigration):
         },
         u'implementation.trafficcontroldiagram': {
             'Meta': {'ordering': "[u'id']", 'object_name': 'TrafficControlDiagram'},
+            'display_order': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '64'}),
             'path': ('django.db.models.fields.files.FileField', [], {'max_length': '100'})
@@ -348,4 +335,3 @@ class Migration(DataMigration):
     }
 
     complete_apps = ['implementation']
-    symmetrical = True
