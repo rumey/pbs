@@ -1,0 +1,77 @@
+\fancyhead[R] {
+    {\bfseries FIRE268b} \break
+    {\bfseries Fire Management Services Branch} \break
+    \textsc{\Small
+    Technology Park, Western Precinct \break
+    17 Dick Perry Ave \break
+    Kensington WA 6151 \break
+    Phone: (08) 9219 9108 Fax: (08) 9367 9913 \break
+    }
+  }
+
+\fancyfoot[L]{ \leftmark\newline {{date}} {{time}} \\ \footnotesize Web link to Department of Parks and Wildlife Daily Burn Program: \url{% templatetag openbrace %}http://www.dpaw.wa.gov.au/}}
+\noindent Sent by: {{ user }}\hfill Date: {{report_date}}\hfill Region: {{region}}
+\subsection{\hfil SUMMARY OF CURRENT FIRE LOAD\hfil}
+
+\begin{table}[h]
+\footnotesize
+\subsubsection{Prescribed Burns}
+\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
+%%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
+\hline
+\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \bfseries\makecell[c]{Further \\ Ignitions \\ Required} & \bfseries\makecell[c]{Yesterday's \\ area \\ (ha or km)} & \textbf{Tenure} \\
+\hline
+\endhead
+{% for pb in qs_fireload %}
+{% if pb.prescription %}
+   \textbf{ {{ pb|texify|safe }}} & 
+    {{ pb.name|texify|safe }} & 
+    {% if pb.active %}Yes{% else %}No{% endif %} & 
+    {% if pb.further_ignitions_req %}Yes{% else %}No{% endif %} & 
+    {{ pb.area_str }} & 
+    {{ pb.tenures_str }} & 
+    \hline
+{% endif %}
+{% empty %}
+    \multicolumn{6}{|X|}{No Prescribed Burns for Today} \\
+    \hline
+{% endfor %}
+\end{longtabu}
+\end{table}
+
+\begin{table}[h]
+\footnotesize
+\subsubsection{Bushfires}
+\begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
+%%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
+\hline
+\textbf{Burn ID} & \textbf{Name} & \textbf{Active} & \textbf{Area} & \textbf{Tenure} & \bfseries\makecell[c]{Assistance \\ received from}\\
+\hline
+\endhead
+{% for pb in qs_fireload %}
+{% if not pb.prescription %}
+   \textbf{ {{ pb|texify|safe }}} & 
+    {{ pb.name|texify|safe }} & 
+    {% if pb.active %}Yes{% else %}No{% endif %} & 
+    {{ pb.area_str }} & 
+    {{ pb.tenures_str }} & 
+    {{ pb.external_assist_str }}\\
+    \hline
+{% endif %}
+{% empty %}
+    \multicolumn{6}{|X|}{No Bushfires for Today} \\
+    \hline
+{% endfor %}
+\end{longtabu}
+\end{table}
+
+\subsubsection{Acknowledged}
+\begin{tabu} to \linewidth { | X[0.4] | X | }
+\hline
+\textbf{by Regional Duty Officer} & \textbf{ {{ acknow_records.srm_B }} } \\
+\hline
+\textbf{by State Duty Officer} & \textbf{ {{ acknow_records.sdo_B }} } \\
+\hline
+\end{tabu}\\%%[\baselineskip]
+
+\clearpage

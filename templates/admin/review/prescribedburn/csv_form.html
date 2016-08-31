@@ -1,0 +1,96 @@
+{% extends "admin/base_site.html" %}
+{% load i18n staticfiles admin_list %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+  {% url 'admin:prescription_priorityjustification_changelist' as priority_justification %}
+  <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:daily_burn_program' %}?report=epfp_summary">{% trans 'Daily Burn Program' %}</a> <span class="divider">/</span></li>
+  <li>FMSB Report</li>
+</ul>
+{% endblock %}
+
+{% block extrahead %}{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/widgets.css" %}">
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+{{ media }}
+<style>
+    div#id_pageerrors.error {
+        background-color: #F2DEDE;
+        padding-top: 10px;
+        padding-left: 10px;
+        padding-bottom: 1px;
+        margin-bottom: 10px;
+    }
+    div.collapse,
+    div.collapse textarea {
+        width: 99%;
+    }
+    hr.id_purposes_hr {
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block contentwrapper %}
+<h1>FMSB Report - Export as CSV</h1>
+<div class="row">
+<div class="span12">
+<div id="id_pageerrors"><span id="id__all__"></span></div>
+<form action="" method="post">{% csrf_token %}
+    From Date: {{ form.fromDate }}
+    ToDate: {{ form.toDate }}
+    {% comment %}
+    <a id="id_save_button" href="#" class="btn pull-right btn-success">{% trans 'Export' %}</a>
+    {% endcomment %}
+    <p class="pull-right">
+        <a class="btn btn-small btn-info" href="javascript: csv_url();" target=""><i class="icon-plus icon-white"></i> Export CSV</a>
+        <a id="id_cancel_button" href="javascript: history.go(-1)" class="btn btn-danger">Return</a>
+    </p>
+
+</form>
+</div>
+</div>
+
+<script>
+$(function() {
+    $('a#id_save_button').click(function(e) {
+        console.log("********");
+        //ajaxPost(e);
+        $.ajax({
+            type: "POST",
+            url: "{% url 'admin:daily_burn_program_exportcsv' %}",
+            //url: "",
+            dataType: "json",
+            data: $('form').serialize(),
+            success: function(response){
+                $("body").append('<iframe src="/tmp/getFile?'+ $.param(response) + '" style="display: none;" ></iframe>');
+            }
+        });
+    });
+
+    $("#id_toDate").datepicker({ dateFormat: "yy-mm-dd"  }).val();
+    $("#id_fromDate").datepicker({ dateFormat: "yy-mm-dd"  }).val();
+    //console.log("TO DATE " + $("#id_toDate").val());
+
+
+    csv_url = function() {
+        // created to allow region to be passed to admin.py
+        var toDate = $("#id_toDate").val();
+        var fromDate = $("#id_fromDate").val();
+        location.href = "{% url 'admin:daily_burn_program_exportcsv' %}?fromDate=" + fromDate + "&toDate=" + toDate + "&Export_CSV=export_csv";
+        //console.log("REGION " + toDate);
+
+        //window.setTimeout(function () {
+        //    if ($(".ui-page-active .ui-popup-active").length > 0){
+        //        location.href = "{% url 'admin:daily_burn_program' %}";
+        //    }
+        //}, 5000)
+    };
+
+});
+
+</script>
+
+{% endblock %}

@@ -61,4 +61,12 @@
 <h4>Custom<a href="{{ upload_document }}?tag={{ "Traffic Diagrams"|tag_id }}&next={{ request.get_full_path }}" class="pull-right btn btn-small btn-info"><i class="icon-plus"></i> Upload Custom Traffic Control Diagram</a></h4>
 {% filter_by_tag_name current.document_set "Traffic Diagrams" as document_set %}
 {% include "admin/document_list.html" with document_type="Traffic Control Diagrams" %}
+
+<script>
+    // Limiting the size of the select box i.e. limiting items displayed when clicked
+    $(".column-traffic_diagram > select").attr("onmousedown", "if(this.options.length>13){this.size=13;}")
+    $(".column-traffic_diagram > select").attr("onchange", "this.size=0;")
+    $(".column-traffic_diagram > select").attr("onblur", "this.size=0;")
+
+</script>
 {% endblock %}

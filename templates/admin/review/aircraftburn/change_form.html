@@ -1,0 +1,160 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}{{ block.super }}
+
+{% block content_title %}{% if title %}<h1>{{ form_title }}</h1>{% endif %}{% endblock %}
+
+<script>
+
+$(function() {
+
+    var current_url = $(location).attr('href');
+    if (current_url.indexOf('add_fire') > -1) {
+        $("#id_breadcrumb_name").text("Add Bushfire");
+    }
+
+    $("#id_date").datepicker({ dateFormat: "yy-mm-dd" }).val();
+    $("#id_planned_area").attr("min", 0.0);
+    $("#id_area").attr("min", 0.0);
+    $("#id_planned_distance").attr("min", 0.0);
+    $("#id_distance").attr("min", 0.0);
+
+    $('label:contains("Planned Burn Area (ha):")').text('Planned Burn Area (ha)*:').css("font-weight","Bold")
+    $('label:contains("Planned Burn Distance (km):")').text('Planned Burn Distance (km)*:').css("font-weight","Bold")
+    $('label:contains("Area Burnt Yesterday (ha):")').text('Area Burnt Yesterday (ha)*:').css("font-weight","Bold")
+    $('label:contains("Distance Burnt Yesterday (km):")').text('Distance Burnt Yesterday (km)*:').css("font-weight","Bold")
+
+    {% if not is_sdo %}
+        $("#id_conditions").attr("disabled", "disabled");
+    {% endif %}
+
+    $("#id_region").click(function () {
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'admin:prescription_view' %}",
+            data: {
+                region: $("#id_region :selected").val()
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                $("#id_prescription").html(response.burn_ids)
+
+            }
+        })
+    });
+
+    // next section required for page refresh following validation error on page
+    /*
+    var region_selected = $("#id_region :selected").text();
+    if (region_selected.indexOf('---------') < 0 && current_url.indexOf('edit') < 0) { // search for substring '-----' --> returns true if not present and not an edit form --> can filter prescriptions based on selected filter
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'admin:prescription_view' %}",
+            data: {
+                region: $("#id_region :selected").val()
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                $("#id_prescription").html(response.burn_ids)
+
+            }
+        })
+    }
+    */
+
+    $("#id_planned_area").change(function () {
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'admin:prescription_view' %}",
+            data: {
+                burn_id: $("#id_prescription :selected").text()
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                $("#id_planned_area").attr("max", response['prescription_area'])
+
+            }
+        })
+    });
+
+    $("#id_area").change(function () {
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'admin:prescription_view' %}",
+            data: {
+                burn_id: $("#id_prescription :selected").text()
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                //$("#id_area").attr("max", response['prescription_area'])
+                $( "#id_max_area_exceeded").remove();
+                if (parseFloat($("#id_area").val()) > parseFloat(response['prescription_area'])) {
+                    $( "<div class='help-inline'><span id='id_max_area_exceeded'><font color='red'> NOTE: Input exceeds max. Planned Area (" + response['prescription_area'] + " ha) </font></span></div>" ).insertAfter( "#id_area_help" );
+                }
+
+            }
+        })
+    });
+
+
+    $("#id_prescription").change(function () {
+        //console.log('True  ' + $("#id_prescription").val() )
+
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'admin:prescription_view' %}",
+            data: {
+                burn_id: $("#id_prescription :selected").text()
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                //console.log("response " + response);
+                //console.log("response.location " + response['location']);
+                $("#id_location").val(response['location']);
+                $("#id_tenures").val(response['tenures']);
+
+                $( "#id_prescription_name").remove()
+                $( "<span id='id_prescription_name'>  " + response['prescription_name'] + "</span>" ).insertAfter( "#id_prescription" );
+                $("#id_planned_area").attr("max", response['prescription_area'])
+            }
+        })
+    });
+
+
+    $("#id_fire_id").change(function () {
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'admin:prescription_view' %}",
+            data: {
+                district: $("#id_district :selected").val(),
+                fire_id: $("#id_fire_id").val()
+            },
+            success: function(response){
+                var response = JSON.parse(response);
+                $( "#id_bushfire_code").remove()
+                $( "<span id='id_bushfire_code'>  " + response['bushfire_id'] + "</span>" ).insertAfter( "#id_fire_id" );
+            }
+        })
+    });
+
+    $( "<div class='help-inline'><span id='id_status_help'> The definition of 'active' can be found in the glossary of the Prescribed Fire Manual</span></div>" ).insertAfter( "#id_status" );
+    $( "<div class='help-inline'><span id='id_status_help'> Time format must be HH:MM (24 hour clock)</span></div>" ).insertAfter( "#id_est_start" );
+
+    $( "<div class='help-inline'><span id='id_planned_area_help'> Must input at least one of Area or Distance</span></div>" ).insertAfter( "#id_planned_area" );
+    if (current_url.indexOf('active_burn') > -1) {
+        $( "<div class='help-inline'><span id='id_area_help'> Must input at least one of Area or Distance.<br> This area is the same as the 'Area treated today (ha)' in the day of burn achievement update page</span></div>" ).insertAfter( "#id_area" );
+    }
+
+
+        $("select#id_risk").prop('disabled', true);
+        $("a#add_id_risk").hide();
+        $('form').bind('submit', function() {
+            $('select#id_risk').removeAttr('disabled');
+        });
+
+    $(".datetimeshortcuts").find('a').remove()
+
+});
+
+</script>
+{% endblock %}

@@ -187,7 +187,16 @@
       ["view_proposedaction", "report", "proposedaction"],
       ["add_summarycompletionstate", "report", "summarycompletionstate"],
       ["change_summarycompletionstate", "report", "summarycompletionstate"],
-      ["view_summarycompletionstate", "report", "summarycompletionstate"]
+      ["view_summarycompletionstate", "report", "summarycompletionstate"],
+      ["add_prescribedburn", "review", "prescribedburn"],
+      ["view_prescribedburn", "review", "prescribedburn"],
+      ["change_prescribedburn", "review", "prescribedburn"],
+      ["delete_prescribedburn", "review", "prescribedburn"],
+      ["add_aircraftburn", "review", "aircraftburn"],
+      ["view_aircraftburn", "review", "aircraftburn"],
+      ["change_aircraftburn", "review", "aircraftburn"],
+      ["delete_aircraftburn", "review", "aircraftburn"]
+
     ]
   }
 },
@@ -232,5 +241,36 @@
       ["delete_burnstate", "review", "burnstate"]
     ]
   }
+},
+{
+  "pk": 6,
+  "model": "auth.group",
+  "fields": {
+    "name": "Regional Duty Officer",
+    "permissions": [
+      ["can_endorse", "review", "prescribedburn"]
+    ]
+  }
+},
+{
+  "pk": 7,
+  "model": "auth.group",
+  "fields": {
+    "name": "State Duty Officer",
+    "permissions": [
+      ["can_endorse", "review", "prescribedburn"],
+      ["can_approve", "review", "prescribedburn"]
+    ]
+  }
+},
+{
+  "pk": 8,
+  "model": "auth.group",
+  "fields": {
+    "name": "State Duty Officer Assistant",
+    "permissions": [
+    ]
+  }
 }
+
 ]

@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n %}
+{% load admin_urls %}
+
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+<li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>
+<li><a href="javascript: history.go(-1)">{% trans 'Daily Burn Program' %}</a> <span class="divider">/</span></li>
+<li>{% trans 'Help' %}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+    {% if report == "epfp_planned" %}
+      <h1>Help - Form 268a</h1>
+      <p>{% blocktrans %}
+        <ol>
+            <li>Select the date - this must be today's or tomorrow's date</li>
+            <li>Click on "Add a planned burn"</li>
+            <li>Complete the burn details</li>
+            <li>Before SDO approval, all burns must be submitted at the district level and endorsed at the regional level</li>
+            <li>Use the filter buttons to select your region / district</li>
+            <li>To submit burn/s at the district level, tick the box/es next to the burn and select "District Submit", click on "Update" button</li>
+            <li>To endorse burn/s at the regional level, tick the box/es next to the burn and select "Regional Endorsement", click on "Update" button</li>
+            <li>To approve burn/s at the state level, tick the box/es next to the burn and select "State Approval", click on "Update" button</li>
+        </ol>
+      {% endblocktrans %}</p>
+    {% elif report == "epfp_fireload" %}
+      <h1>Help - Form 268b</h1>
+      <p>{% blocktrans %}
+        <ol>
+            <li>Select the date - this must be today's or tomorrow's date</li>
+            <li>Use the filter buttons to select your region / district</li>
+            <li>Enter new burns using the "Add Burn" button</li>
+            <li>Enter new bushfires using the "Add Bushfire" button</li>
+            <li>The (r) next to a burn indicates that it was rolled over from the previous day's records i.e. it was active yesterday</li>
+            <li>All previously active burns and bushfires must be updated with the status (active/inactive) and area burnt yeterday (ha or km)</li>
+            <li>Before SDO can acknowledge the fire load, all burns and bushfires must be entered at the district level and endorsed at the regional level</li>
+            <li>To enter burns and bushfires at the district level, tick the box/es next to the burn and select "District Entered", click on "Update" button</li>
+            <li>To acknowledge burns and bushfires at the regional level, tick the box/es next to the burn and select "Regional Acknowledgement", click on "Update" button</li>
+            <li>To acknowledge burns and bushfires at state level, tick the box/es next to the burn and select "State Acknowledgement", click on "Update" button</li>
+        </ol>
+      {% endblocktrans %}</p>
+
+    {% endif %}
+
+    <form action="" method="post">{% csrf_token %}
+    <div>
+    <a id="id_cancel_button" href="javascript: history.go(-1)" class="btn btn-info">Return</a>
+    </div>
+    </form>
+{% endblock %}

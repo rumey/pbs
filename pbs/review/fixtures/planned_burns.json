@@ -1,0 +1,660 @@
+[
+{
+  "pk": 1,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "DFES"
+  }
+},
+{
+  "pk": 2,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "DPaW External"
+  }
+},
+{
+  "pk": 3,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "BFB"
+  }
+},
+{
+  "pk": 4,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "FPC"
+  }
+},
+{
+  "pk": 5,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "LGA"
+  }
+},
+{
+  "pk": 6,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Main Roads"
+  }
+},
+{
+  "pk": 7,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Mining Company"
+  }
+},
+{
+  "pk": 8,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "PP Owner"
+  }
+},
+{
+  "pk": 9,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Private Contractors"
+  }
+},
+{
+  "pk": 10,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "SES"
+  }
+},
+{
+  "pk": 11,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "WAPOL"
+  }
+},
+{
+  "pk": 12,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Western Power"
+  }
+},
+{
+  "pk": 13,
+  "model": "review.externalassist",
+  "fields": {
+    "name": "Other"
+  }
+},
+
+{
+  "pk": 1,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "5(1)(G)"
+  }
+},
+{
+  "pk": 2,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "5(1)(H)"
+  }
+},
+{
+  "pk": 3,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Conservation Park"
+  }
+},
+{
+  "pk": 4,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Department of Defence"
+  }
+},
+{
+  "pk": 5,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Executive Director Freehold"
+  }
+},
+{
+  "pk": 6,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Ex-Pastoral Lease"
+  }
+},
+{
+  "pk": 7,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Local Government Reserve"
+  }
+},
+{
+  "pk": 8,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "National Park"
+  }
+},
+{
+  "pk": 9,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Nature Reserve"
+  }
+},
+{
+  "pk": 10,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Other"
+  }
+},
+{
+  "pk": 11,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Other Crown Land"
+  }
+},
+{
+  "pk": 12,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Pastoral Lease"
+  }
+},
+{
+  "pk": 13,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Private Property"
+  }
+},
+{
+  "pk": 14,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Regional Park"
+  }
+},
+{
+  "pk": 15,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Road Reserve"
+  }
+},
+{
+  "pk": 16,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "State Forest"
+  }
+},
+{
+  "pk": 17,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Unallocated Crown Land"
+  }
+},
+{
+  "pk": 18,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Unmanaged Reserve"
+  }
+},
+{
+  "pk": 19,
+  "model": "review.firetenure",
+  "fields": {
+    "name": "Water Corporation"
+  }
+},
+
+{
+  "COMMENT": "PLANNED, APPROVED",
+  "pk": 1,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 613,
+    "region": 7,
+    "district": 14,
+    "date": "2016-05-26",
+    "status": null,
+    "form_name": 1,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": "Some ..."
+  }
+},
+{
+  "COMMENT": "PLANNED, APPROVED",
+  "pk": 2,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 614,
+    "region": 7,
+    "district": 14,
+    "date": "2016-05-26",
+    "status": null,
+    "form_name": 1,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": "Some ..."
+  }
+},
+{
+  "COMMENT": "PLANNED, APPROVED",
+  "pk": 3,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 615,
+    "region": 7,
+    "district": 14,
+    "date": "2016-05-26",
+    "status": null,
+    "form_name": 1,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": "Some ..."
+  }
+},
+{
+  "COMMENT": "DUPLICATE, PLANNED, ENDORSED",
+  "pk": 4,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 616,
+    "region": 7,
+    "district": 14,
+    "date": "2016-05-26",
+    "status": null,
+    "form_name": 1,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": "Some ..."
+  }
+},
+{
+  "COMMENT": "DUPLICATE, PLANNED, ENDORSED",
+  "pk": 5,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["wilsonc"],
+    "modifier": ["wilsonc"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 617,
+    "region": 7,
+    "district": 14,
+    "date": "2016-05-26",
+    "status": null,
+    "form_name": 1,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": "Some ..."
+  }
+},
+
+{
+  "COMMENT": "FORM B, DUPLICATE BURN_ID, ACTIVE, APPROVED",
+  "pk": 6,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 616,
+    "region": 7,
+    "district": 14,
+    "date": "2016-05-26",
+    "status": 1,
+    "form_name": 2,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": 0.1,
+    "est_start": "18:59:59",
+    "conditions": "Some ...",
+    "rolled": "True"
+  }
+},
+{
+  "COMMENT": "FORM BACTIVE, APPROVED",
+  "pk": 7,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 617,
+    "region": 7,
+    "district": 14,
+    "date": "2016-05-26",
+    "status": 1,
+    "form_name": 2,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": 0.1,
+    "est_start": "18:59:59",
+    "conditions": "Some ...",
+    "rolled": "True"
+  }
+},
+{
+  "COMMENT": "FORM B, ACTIVE, APPROVED",
+  "pk": 8,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 618,
+    "region": 6,
+    "district": 11,
+    "date": "2016-05-26",
+    "status": 1,
+    "form_name": 2,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": 0.2,
+    "est_start": "18:59:59",
+    "conditions": "Some ...",
+    "rolled": "True"
+  }
+},
+{
+  "COMMENT": "FORM B, ACTIVE, APPROVED",
+  "pk": 9,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 619,
+    "region": 8,
+    "district": 16,
+    "date": "2016-05-26",
+    "status": 1,
+    "form_name": 2,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": null,
+    "est_start": "18:59:59",
+    "conditions": "Some ...",
+    "rolled": "True"
+  }
+},
+{
+  "COMMENT": "FORM B, INACTIVE, APPROVED",
+  "pk": 10,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-26",
+    "modified": "2016-05-26",
+    "prescription": 620,
+    "region": 8,
+    "district": 15,
+    "date": "2016-05-26",
+    "status": 2,
+    "form_name": 2,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": 1.0,
+    "est_start": "18:59:59",
+    "conditions": "Some ...",
+    "rolled": "True"
+  }
+},
+{
+  "COMMENT": "FORM B, INACTIVE, APPROVED",
+  "pk": 11,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-24",
+    "modified": "2016-05-24",
+    "prescription": 620,
+    "region": 8,
+    "district": 15,
+    "date": "2016-05-24",
+    "status": 2,
+    "form_name": 2,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": 1.0,
+    "est_start": "18:59:59",
+    "conditions": "Some ...",
+    "rolled": "True"
+  }
+},
+{
+  "COMMENT": "FORM B, INACTIVE, APPROVED",
+  "pk": 12,
+  "model": "review.prescribedburn",
+  "fields": {
+    "creator": ["jawaidm"],
+    "modifier": ["jawaidm"],
+    "created": "2016-05-25",
+    "modified": "2016-05-25",
+    "prescription": 620,
+    "region": 8,
+    "district": 15,
+    "date": "2016-05-25",
+    "status": 2,
+    "form_name": 2,
+    "ignition_status": 1,
+    "planned_area": 10,
+    "area": 1.0,
+    "est_start": "18:59:59",
+    "conditions": "Some ...",
+    "rolled": "True"
+  }
+},
+
+
+
+{
+  "pk": 1,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 1,
+    "user": ["jawaidm"],
+    "acknow_type": "USER_A",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 2,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 2,
+    "user": ["jawaidm"],
+    "acknow_type": "USER_A",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 3,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 2,
+    "user": ["jawaidm"],
+    "acknow_type": "SRM_A",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 4,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 3,
+    "user": ["jawaidm"],
+    "acknow_type": "USER_A",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 5,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 3,
+    "user": ["jawaidm"],
+    "acknow_type": "SRM_A",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 6,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 3,
+    "user": ["jawaidm"],
+    "acknow_type": "SDO_A",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 7,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 4,
+    "user": ["wilsonc"],
+    "acknow_type": "USER_A",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 8,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 4,
+    "user": ["wilsonc"],
+    "acknow_type": "SRM_A",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 9,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 4,
+    "user": ["wilsonc"],
+    "acknow_type": "SDO_A",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+
+
+{
+  "pk": 10,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 5,
+    "user": ["jawaidm"],
+    "acknow_type": "USER_B",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 11,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 6,
+    "user": ["jawaidm"],
+    "acknow_type": "USER_B",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 12,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 6,
+    "user": ["jawaidm"],
+    "acknow_type": "SRM_B",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 13,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 7,
+    "user": ["jawaidm"],
+    "acknow_type": "USER_B",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 14,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 7,
+    "user": ["jawaidm"],
+    "acknow_type": "SRM_B",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+},
+{
+  "pk": 15,
+  "model": "review.acknowledgement",
+  "fields": {
+    "burn": 7,
+    "user": ["jawaidm"],
+    "acknow_type": "SDO_B",
+    "acknow_date": "2016-05-26 18:18:18"
+  }
+}
+
+
+]
+
+
+

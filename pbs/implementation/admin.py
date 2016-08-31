@@ -254,7 +254,7 @@ class RoadSegmentAdmin(PrescriptionMixin, SavePrescriptionMixin,
     def get_readonly_fields(self, request, obj=None):
         #import ipdb; ipdb.set_trace()
         if self.prescription.is_draft or request.user.has_perm('prescription.can_admin'):
-            return self.readonly_fields 
+            return self.readonly_fields
         else:
             return ("name", "road_type", "traffic_considerations",
                    "traffic_diagram")

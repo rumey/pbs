@@ -13,6 +13,11 @@ SECRET_KEY = os.environ['SECRET_KEY']
 FEX_MAIL = os.environ.get('FEX_MAIL', 'pbs@dpaw.wa.gov.au')
 FEX_SVR_HTTP = os.environ.get('FEX_SVR_HTTP', 'https://fex.dpaw.wa.gov.au')
 PDF_TO_FEXSRV = os.environ.get('PDF_TO_FEXSRV', True)
+DAY_ROLLOVER_HOUR = int(os.environ.get('DAY_ROLLOVER_HOUR', 17))
+
+KMI_DOWNLOAD_URL = os.environ['KMI_DOWNLOAD_URL']
+CSV_DOWNLOAD_URL = os.environ['CSV_DOWNLOAD_URL']
+SHP_DOWNLOAD_URL = os.environ['SHP_DOWNLOAD_URL']
 
 # PDF MUTEX - file lock max time 4 mins (4*60)
 MAX_LOCK_TIME = os.environ.get('MAX_LOCK_TIME', 240)
@@ -29,6 +34,8 @@ if not DEBUG:
         'pbs.dpaw.wa.gov.au.',
         'pbs-training.dpaw.wa.gov.au',
         'pbs-training.dpaw.wa.gov.au.',
+        'pbs-dev.dpaw.wa.gov.au',
+        'pbs-dev.dpaw.wa.gov.au.'
     ]
 
 # Application definition
@@ -63,7 +70,7 @@ INSTALLED_APPS = (
     'django_select2',
     'chosen',
     'smart_selects',
-    #'debug_toolbar',
+    'debug_toolbar',
     #'debug_toolbar_htmltidy',
     'crispy_forms',
     'registration',
@@ -80,7 +87,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'swingers.middleware.auth.AuthenticationMiddleware'
+    'dpaw_utils.middleware.SSOLoginMiddleware',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -144,7 +151,7 @@ SOUTH_TESTS_MIGRATE = False
 SKIP_SOUTH_TESTS = True
 
 # Application version number
-APPLICATION_VERSION_NO = '1.4.6'
+APPLICATION_VERSION_NO = '1.4.9'
 
 # Application title
 SITE_TITLE = 'Prescribed Burn System'
@@ -227,6 +234,7 @@ AUTH_LDAP_USER_ATTR_MAP = {
 # Misc settings
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
+ANNUAL_INDIC_PROGRAM_PATH = os.environ.get("ANNUAL_INDIC_PROGRAM_PATH", "burnprogram.shp")
 
 COMPRESS_ENABLED = False
 
