@@ -496,7 +496,7 @@ class AnnualIndicativeBurnProgram(models.Model):
     region = models.CharField(max_length=35, blank=True)
     district = models.CharField(max_length=35, blank=True)
     burnid = models.CharField(max_length=30, blank=True)
-    finan_yr = models.CharField(max_length=50, blank=True)
+    fin_yr = models.CharField(max_length=8, blank=True, null=True)
     location = models.CharField(max_length=254, blank=True)
     status = models.CharField(max_length=254, blank=True)
     priority = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
@@ -531,12 +531,11 @@ class BurnProgramLink(models.Model):
         subprocess.check_call(['ogr2ogr', '-overwrite', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]),
             settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', 'annual_indicative_burn_program', '-t_srs', 'EPSG:4326'])
         for p in AnnualIndicativeBurnProgram.objects.all():
-            for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.finan_yr.replace("/", "/20")):
+            for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.fin_yr.replace("/", "/20")):
                 if cls.objects.filter(prescription=prescription).exists():
                     obj = cls.objects.get(prescription=prescription)
-                    obj.program_record = p
                 else:
-                    obj = cls(prescription=prescription, program_record=p)
+                    obj = cls(prescription=prescription)
                 obj.wkb_geometry = p.wkb_geometry
                 obj.area_ha = p.area_ha
                 obj.longitude = p.longitude
