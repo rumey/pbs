@@ -200,6 +200,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         else:
             url = reverse('admin:daily_burn_program')
 
+        logger.info('Editing PrescribedBurn: USER: {}, ID: {}, BURN_ID: {}'.format(request.user.get_full_name(), obj.id, obj.fire_idd))
+
         return HttpResponseRedirect(url)
 
     def response_post_save_add(self, request, obj):
@@ -213,6 +215,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 url = reverse('admin:daily_burn_program') + '?report=epfp_planned&date={}'.format(request.REQUEST['date'])
         else:
             url = reverse('admin:daily_burn_program')
+
+        logger.info('Adding PrescribedBurn: USER: {}, ID: {}, BURN_ID: {}'.format(request.user.get_full_name(), obj.id, obj.fire_idd))
 
         return HttpResponseRedirect(url)
 
@@ -349,7 +353,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         if request.is_ajax():
             if request.REQUEST.has_key('burn_id'):
                 burn_id = str( request.REQUEST.get('burn_id') )
-                logger.info('burn_id '.format(burn_id))
+                #logger.info('burn_id {}'.format(burn_id))
                 p = Prescription.objects.filter(burn_id=burn_id)[0]
                 tenures = ', '.join([i.name for i in p.tenures.all()])
 
@@ -389,14 +393,15 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 bushfire_id = district + '_' + fire_id
                 return HttpResponse(json.dumps({'bushfire_id': bushfire_id}))
 
-            if request.REQUEST.has_key('region'):
+            if request.REQUEST.has_key('region') and request.REQUEST.get('region'):
                 qs = Prescription.objects.filter(burnstate__review_type__in=['FMSB'], planning_status=Prescription.PLANNING_APPROVED).filter(burnstate__review_type__in=['DRFMS']).distinct()
                 qs = qs.filter(region=request.REQUEST.get('region')).order_by('burn_id')
 
                 #burn_ids = ["<option value={}>{}</option>".format(p.id, p.burn_id) for p in qs]
                 burn_ids = ModelChoiceField(queryset=qs).widget.render(value="pk_prescription", name="prescription")
+                return HttpResponse(json.dumps({"location": None, "tenures": None, 'bushfire_id': None, 'burn_ids': burn_ids}))
 
-        return HttpResponse(json.dumps({"location": None, "tenures": None, 'bushfire_id': None, 'burn_ids': burn_ids}))
+        return HttpResponse(json.dumps({"location": None, "tenures": None, 'bushfire_id': None, 'burn_ids': None}))
 
     def district_action_view(self, request, extra_context=None):
         """
@@ -925,6 +930,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         if request.method == 'POST':
             if objects:
+                for o in objects:
+                    logger.info('Deleting PrescribedBurn: USER: {}, ID: {}, BURN_ID: {}'.format(request.user.get_full_name(), o.id, o.fire_idd))
                 objects.delete()
                 return HttpResponseRedirect(reverse('admin:daily_burn_program'))
             else:
