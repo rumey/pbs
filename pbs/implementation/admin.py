@@ -9,6 +9,8 @@ from pbs.prescription.admin import (PrescriptionMixin,
                                     SavePrescriptionMixin)
 
 from chosen.widgets import ChosenSelectMultiple
+from django.conf import settings
+import json
 
 
 class OperationalOverviewAdmin(PrescriptionMixin, SavePrescriptionMixin,
@@ -258,6 +260,16 @@ class RoadSegmentAdmin(PrescriptionMixin, SavePrescriptionMixin,
         else:
             return ("name", "road_type", "traffic_considerations",
                    "traffic_diagram")
+
+    def changelist_view(self, request, prescription_id, extra_context=None):
+        """ Add exclusions to the context """
+        context = {
+            'tcd_exclusions': json.dumps(settings.TCD_EXCLUSIONS),
+        }
+        context.update(extra_context or {})
+
+        return super(RoadSegmentAdmin, self).changelist_view(
+            request, prescription_id, extra_context=context)
 
 
 class TrailSegmentAdmin(PrescriptionMixin, SavePrescriptionMixin,

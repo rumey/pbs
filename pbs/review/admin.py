@@ -734,7 +734,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
 
     def action_view(self, request, extra_context=None):
-    
+
         referrer_url = request.META.get('HTTP_REFERER')
         if request.POST.has_key('action'):
             action = request.POST['action']
@@ -1041,7 +1041,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'kmi_download_url': settings.KMI_DOWNLOAD_URL,
             'csv_download_url': settings.CSV_DOWNLOAD_URL,
             'shp_download_url': settings.SHP_DOWNLOAD_URL,
-            'can_admin': self.can_admin(request), 
+            'can_admin': self.can_admin(request),
         }
         context.update(extra_context or {})
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
@@ -1232,6 +1232,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             external_assist = ', '.join([i.name for i in pb.external_assist.all()])
             planned_area = pb.planned_area
             area = pb.area
+            planned_distance = pb.planned_distance
+            distance = pb.distance
             tenures = pb.tenures
             location = pb.location
             est_start = pb.est_start
@@ -1240,6 +1242,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             longitude = pb.longitude
 
             ai = AnnualIndicativeBurnProgram.objects.filter(burnid=fire_id)
+            lat_long_updated = ''
             if ai:
                 lat_long_updated = "Yes" if round(float(ai[0].latitude), 5) != round(pb.latitude,5) or round(float(ai[0].longitude),5) != round(pb.longitude, 5) else "No"
 
@@ -1253,7 +1256,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
             query_list.append([fire_id, name, region, district, fire_type, form_name,
                                dt, burn_status, ignition_status, external_assist,
-                               planned_area, area, tenures, location, est_start, conditions,
+                               planned_area, area, planned_distance, distance,
+                               tenures, location, est_start, conditions,
                                latitude, longitude, lat_long_updated,
                                user_acknow_formA, srm_acknow_formA, sdo_acknow_formA,
                                user_acknow_formB, srm_acknow_formB, sdo_acknow_formB,
@@ -1266,7 +1270,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type", "Form",
             "Date", "Burn Status", "Ignition Status", "Assistance received from",
-            "Planned Area", "Actual Area", "Tenures", "Location", "Est Start", "Conditions",
+            "Planned Area", "Actual Area", "Planned Distance","Actual Distance",
+            "Tenures", "Location", "Est Start", "Conditions",
             "Latitude", "Longitude", "Lat/Long Updated",
             "DDO Acknow FormA", "RDO Acknow FormA", "SDO Acknow FormA",
             "DDO Acknow FormB", "RDO Acknow FormB", "SDO Acknow FormB",

@@ -63,10 +63,34 @@
 {% include "admin/document_list.html" with document_type="Traffic Control Diagrams" %}
 
 <script>
-    // Limiting the size of the select box i.e. limiting items displayed when clicked
-    $(".column-traffic_diagram > select").attr("onmousedown", "if(this.options.length>13){this.size=13;}")
-    $(".column-traffic_diagram > select").attr("onchange", "this.size=0;")
-    $(".column-traffic_diagram > select").attr("onblur", "this.size=0;")
+
+$(function(){
+    var tcd_list = {{ tcd_exclusions|safe }}
+    //var tcd_list = ['DEC001', 'DEC002']
+    //console.log('TCD LIST 2 ' +  tcd_list)
+
+    // id ending with '-traffic_diagram' ($=) [^= --> starting-with]
+    $("[id$=-traffic_diagram]").each(function() {
+        // slice() --> clone/copy by value
+        var tmp_list = tcd_list.slice();
+        var selected_text = $(this)[0].selectedOptions[0].text
+        tmp_list = remove(tmp_list, selected_text);
+        for (var i in tmp_list) {
+            //$('#id_form-0-traffic_diagram > option:contains("DEC002")').remove();
+            $('#' + $(this)[0].id + ' > option:contains("' + tmp_list[i] + '")').remove();
+        }
+    });
+
+    function remove(arr, what) {
+        var found = arr.indexOf(what);
+        while (found !== -1) {
+            arr.splice(found, 1);
+            found = arr.indexOf(what);
+        }
+        return arr;
+    }
+
+});
 
 </script>
 {% endblock %}

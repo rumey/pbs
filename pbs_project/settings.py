@@ -18,6 +18,9 @@ DAY_ROLLOVER_HOUR = int(os.environ.get('DAY_ROLLOVER_HOUR', 17))
 KMI_DOWNLOAD_URL = os.environ['KMI_DOWNLOAD_URL']
 CSV_DOWNLOAD_URL = os.environ['CSV_DOWNLOAD_URL']
 SHP_DOWNLOAD_URL = os.environ['SHP_DOWNLOAD_URL']
+TCD_EXCLUSIONS_FILE = os.environ.get('TCD_EXCLUSIONS_FILE', None)
+TCD_EXCLUSIONS = [line.rstrip('\n') for line in open(TCD_EXCLUSIONS_FILE) if not line.rstrip('\n')==''] if TCD_EXCLUSIONS_FILE else []
+
 
 # PDF MUTEX - file lock max time 4 mins (4*60)
 MAX_LOCK_TIME = os.environ.get('MAX_LOCK_TIME', 240)
