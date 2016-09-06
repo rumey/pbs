@@ -11,7 +11,10 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.forms import ValidationError
 from django.conf import settings
+import sys
 
+import logging
+logger = logging.getLogger('pbs')
 
 class BurnState(models.Model):
     prescription = models.ForeignKey(Prescription, related_name='burnstate')
@@ -531,18 +534,22 @@ class BurnProgramLink(models.Model):
         subprocess.check_call(['ogr2ogr', '-overwrite', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]),
             settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', 'annual_indicative_burn_program', '-t_srs', 'EPSG:4326'])
         for p in AnnualIndicativeBurnProgram.objects.all():
-            for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.fin_yr.replace("/", "/20")):
-                if cls.objects.filter(prescription=prescription).exists():
-                    obj = cls.objects.get(prescription=prescription)
-                else:
-                    obj = cls(prescription=prescription)
-                obj.wkb_geometry = p.wkb_geometry
-                obj.area_ha = p.area_ha
-                obj.longitude = p.longitude
-                obj.latitude = p.latitude
-                obj.perim_km = p.perim_km
-                obj.trtd_area = p.trtd_area
-                obj.save()
+            try:
+                for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.fin_yr.replace("/", "/20")):
+                    if cls.objects.filter(prescription=prescription).exists():
+                        obj = cls.objects.get(prescription=prescription)
+                    else:
+                        obj = cls(prescription=prescription)
+                    obj.wkb_geometry = p.wkb_geometry
+                    obj.area_ha = p.area_ha
+                    obj.longitude = p.longitude
+                    obj.latitude = p.latitude
+                    obj.perim_km = p.perim_km
+                    obj.trtd_area = p.trtd_area
+                    obj.save()
+            except:
+                logger.error('ERROR: Assigning AnnulaIndicativeBurnProgram \n{}'.format(sys.exc_info()))
+
 
         from django.db import connection
         cursor = connection.cursor()

@@ -9,4 +9,5 @@
   <li><a href="{% url 'admin:report_areaachievement_changelist' current.id %}">Section B11 &#x2010; Day of burn achievement update</a> <span class="divider">/</span></li>
   <li>{% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}</li>
 </ul>
+
 {% endblock %}
