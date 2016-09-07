@@ -532,7 +532,7 @@ class BurnProgramLink(models.Model):
         # Links prescriptions to burn program records imported using ogr2ogr
         import subprocess
         subprocess.check_call(['ogr2ogr', '-overwrite', '-f', 'PostgreSQL', "PG:dbname='{NAME}' host='{HOST}' port='{PORT}' user='{USER}' password={PASSWORD}".format(**settings.DATABASES["default"]),
-            settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', 'annual_indicative_burn_program', '-t_srs', 'EPSG:4326'])
+            settings.ANNUAL_INDIC_PROGRAM_PATH, '-nln', 'review_annualindicativeburnprogram', '-nlt', 'PROMOTE_TO_MULTI', settings.SHP_LAYER, '-t_srs', 'EPSG:4326'])
         for p in AnnualIndicativeBurnProgram.objects.all():
             try:
                 for prescription in Prescription.objects.filter(burn_id=p.burnid, financial_year=p.fin_yr.replace("/", "/20")):

@@ -238,6 +238,7 @@ AUTH_LDAP_USER_ATTR_MAP = {
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
 ANNUAL_INDIC_PROGRAM_PATH = os.environ.get("ANNUAL_INDIC_PROGRAM_PATH", "burnprogram.shp")
+SHP_LAYER = os.environ.get("SHP_LAYER", "BPP_AN_Statewide_Albers")
 
 COMPRESS_ENABLED = False
 
