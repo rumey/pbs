@@ -1942,6 +1942,11 @@ class RegionalObjectiveAdmin(admin.ModelAdmin):
         return super(RegionalObjectiveAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs)
 
+    def save_model(self, request, obj, form, change):
+        obj.creator = request.user
+        obj.modifier = request.user
+        obj.save()
+
 
 class SuccessCriteriaAdmin(PrescriptionMixin, SavePrescriptionMixin,
                            BaseAdmin):
