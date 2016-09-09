@@ -176,9 +176,10 @@ class Tenure(models.Model):
 @python_2_unicode_compatible
 class Purpose(models.Model):
     name = models.CharField(max_length=200)
+    display_order = models.PositiveIntegerField(default=1)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['display_order', 'name']
 
     def __str__(self):
         return self.name
