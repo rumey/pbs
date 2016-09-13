@@ -623,8 +623,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 return HttpResponseRedirect(referrer_url)
 
             # TODO can approve records for today or tomorrow only?
-            if not (dt == today or dt == tomorrow):
-                message = "Can only acknowledge burns for today {}, or tomorrow {}.".format(today, tomorrow)
+            if not (dt == yesterday or dt == today or dt == tomorrow):
+                message = "Can only acknowledge burns for yesterday {}, today {}, or tomorrow {}.".format(yesterday, today, tomorrow)
                 self.message_user(request, message, level=messages.ERROR)
                 return HttpResponseRedirect(referrer_url)
 
@@ -775,8 +775,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "Only regional and state levels can acknowledge {}".format(burn_desc)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-            if not (dt == today or dt == tomorrow):
-                message = "Can only acknowledge {} for today {}, or tomorrow {}.".format(burn_desc, today, tomorrow)
+            if not (dt == yesterday or dt == today or dt == tomorrow):
+                message = "Can only acknowledge {} for yesterday {}, today {}, or tomorrow {}.".format(burn_desc, today, tomorrow)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
             count = 0
