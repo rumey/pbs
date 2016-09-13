@@ -39,7 +39,7 @@ def add_ordering():
                 count += 1
         print('Updated Purposes Ordering: {}'.format(count))
     except:
-        raise Exception('ERROR assigning oerdering to Purposes Display')
+        raise Exception('ERROR assigning ordering to Purposes Display')
 
 
 if __name__ == "__main__":
