@@ -1303,10 +1303,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
 
         planned_burns = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268A, acknowledgements__acknow_type__in=['SDO_A']).exclude(prescription__isnull=True)
-        fireload = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268B, status=PrescribedBurn.BURN_ACTIVE, acknowledgements__acknow_type__in=['SDO_B'])
+        fireload = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268B, acknowledgements__acknow_type__in=['SDO_B'])
 
         planned_burns_rdo = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268A, acknowledgements__acknow_type__in=['SRM_A']).exclude(prescription__isnull=True)
-        fireload_rdo = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268B, status=PrescribedBurn.BURN_ACTIVE, acknowledgements__acknow_type__in=['SRM_B'])
+        fireload_rdo = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268B, acknowledgements__acknow_type__in=['SRM_B'])
 
         def acknow(burns, acknow_type):
             acknowledgements = Acknowledgement.objects.filter(burn__in=burns, acknow_type=acknow_type).distinct()
