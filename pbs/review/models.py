@@ -394,8 +394,8 @@ class PrescribedBurn(Audit):
 
     class Meta:
         unique_together = ('prescription', 'date', 'form_name', 'location')
-        verbose_name = 'Prescribed Burn'
-        verbose_name_plural = 'Prescribed Burns'
+        verbose_name = 'Prescribed Burn or Bushfire'
+        verbose_name_plural = 'Prescribed Burns and Bushfires'
         permissions = (
             ("can_endorse", "Can endorse burns"),
             ("can_approve", "Can approve burns"),
