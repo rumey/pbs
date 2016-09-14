@@ -1,6 +1,7 @@
 {% extends "admin/base_site.html" %}
 {% load i18n staticfiles admin_list %}
 {% load prescription_tags %}
+{% load pbs_tags %}
 {% load pagination_tags %}
 
 
@@ -229,7 +230,7 @@ select, button{
     <li><a value="form268b_rdo" href="javascript: pdf_url('form268b_rdo');">Form 268b (RDO)</a></li>
     <li><a value="export_csv" href="{% url 'admin:daily_burn_program_exportcsv' %}?date={{date}}&Export_CSV=export_csv">Export CSV</a></li>
     <li><a value="export_csv" href="{% url 'admin:csv_view' %}">FMSB Report</a></li>
-    {% if can_admin %}
+    {% if can_admin or request.user|has_group:"FMSB GIS" %}
         <li><a value="kmi_download_url" href="{{kmi_download_url}}">KML - Download Today's Burns</a></li>
         <li><a value="csv_download_url" href="{{csv_download_url}}">CSV - Download Today's Burns</a></li>
         <li><a value="shp_download_url" href="{{shp_download_url}}">SHP - Download Today's Burns</a></li>
@@ -258,7 +259,7 @@ select, button{
     <option value="6">Delete State Approval</option>
     <option value="7">Delete Record</option>
     <option value="8">Copy Record to Tomorrow</option>
-    {% if can_admin %}
+    {% if can_admin or request.user|has_group:"FMSB GIS" %}
         <option value="9">Update Daily Burn Links</option>
     {% endif %}
     </select>
