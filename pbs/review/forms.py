@@ -35,7 +35,7 @@ class PrescribedBurnForm(forms.ModelForm):
         time_now = now.time()
         date_str = tomorrow.strftime('%Y-%m-%d') if time_now.hour > settings.DAY_ROLLOVER_HOUR else today.strftime('%Y-%m-%d')
         self.fields['date'].widget.attrs.update({'value': date_str})
-        self.fields['est_start'].widget.attrs.update({'value': now.strftime('%H:%M')})
+        self.fields['est_start'].required = True
         self.initial['status'] = 1
 
     def clean(self):
