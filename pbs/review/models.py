@@ -389,8 +389,11 @@ class PrescribedBurn(Audit):
                 return max([i.ignition for i in area_achievements])
         return None
 
-    def __str__(self):
+    def short_str(self):
         return self.prescription.burn_id if self.prescription else self.fire_id
+
+    def __str__(self):
+        return self.prescription.burn_id + ' (Burn)' if self.prescription else self.fire_id + ' (Fire)'
 
     class Meta:
         unique_together = ('prescription', 'date', 'form_name', 'location')

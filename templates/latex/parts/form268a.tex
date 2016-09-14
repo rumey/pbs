@@ -45,7 +45,7 @@ The following Burns are proposed for ignition today subject to the approval of t
 \hline
 \endhead
 {% for pb in qs_planned_burns %}
-\textbf{ {{ pb|texify|safe }}} & {{ pb.name|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.prescription.purposes_list|texify|safe }} & {{ pb.planned_area_str }} & {{ pb.est_start }} \\
+\textbf{ {{ pb.short_str|texify|safe }}} & {{ pb.name|texify|safe }} & {{ pb.location|texify|safe }} & {{ pb.prescription.purposes_list|texify|safe }} & {{ pb.planned_area_str }} & {{ pb.est_start }} \\
 \hline
 {% empty %}
 \multicolumn{6}{|X|}{No Burns Planned for Today} \\
@@ -70,7 +70,7 @@ The following Burns are proposed for ignition today subject to the approval of t
 \endhead
 {% for pb in qs_planned_burns %}
   {% if pb.conditions %}
-    \textbf{ {{ pb|texify|safe }}} & {{ pb.conditions|texify|safe }} \\
+    \textbf{ {{ pb.short_str|texify|safe }}} & {{ pb.conditions|texify|safe }} \\
      \hline
   {% endif %}
 {% empty %}

@@ -49,7 +49,7 @@ The following burns, which have been approved for ignition today, have been plan
 \hline
 \endhead
 {% for pb in qs_planned_burns %}
-    \textbf{ {{ pb|texify|safe }}} & 
+    \textbf{ {{ pb.short_str|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
     {{ pb.location|texify|safe }} & 
     {{ pb.prescription.purposes_list|texify|safe }} & 

@@ -24,7 +24,7 @@
 \endhead
 {% for pb in qs_fireload %}
 {% if pb.prescription %}
-   \textbf{ {{ pb|texify|safe }}} & 
+   \textbf{ {{ pb.short_str|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
     {% if pb.active %}Yes{% else %}No{% endif %} & 
     {% if pb.further_ignitions_req %}Yes{% else %}No{% endif %} & 
@@ -50,7 +50,7 @@
 \endhead
 {% for pb in qs_fireload %}
 {% if not pb.prescription %}
-   \textbf{ {{ pb|texify|safe }}} & 
+   \textbf{ {{ pb.short_str|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
     {% if pb.active %}Yes{% else %}No{% endif %} & 
     {{ pb.area_str }} & 
