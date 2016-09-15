@@ -132,7 +132,6 @@ class PrescribedBurn(Audit):
 #        Prescription, chained_field="region", chained_model_field="region",
 #        show_all=False, auto_choose=True, blank=True, null=True)
 
-    fire_tenures = models.ManyToManyField(FireTenure, blank=True)
 
     # Required for Fire records
     fire_id = models.CharField(verbose_name="Fire Number", max_length=8, null=True, blank=True)

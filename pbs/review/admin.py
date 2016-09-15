@@ -1217,12 +1217,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 name = pb.prescription.name
                 region = str(pb.prescription.region)
                 district = str(pb.prescription.district)
+                purposes = ', '.join([i.name for i in pb.prescription.purposes.all()])
+                tenures = pb.tenures
 
             else:
                 fire_id = pb.fire_id
                 name = pb.fire_name
                 region = str(Region.objects.get(id=int(pb.region)).name)
                 district = str(pb.district)
+                purposes = ''
+                tenures = ', '.join([i.name for i in pb.fire_tenures.all()])
 
             form_name = pb.get_form_name_display().strip('Form ')
             fire_type = pb.fire_type
@@ -1234,7 +1238,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             area = pb.area
             planned_distance = pb.planned_distance
             distance = pb.distance
-            tenures = pb.tenures
             location = pb.location
             est_start = pb.est_start
             conditions = pb.conditions
@@ -1260,7 +1263,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             query_list.append([fire_id, name, region, district, fire_type, form_name,
                                dt, burn_status, ignition_status, external_assist,
                                planned_area, area, planned_distance, distance,
-                               tenures, location, est_start, conditions,
+                               tenures, purposes, location, est_start, conditions,
                                latitude, longitude, lat_long_updated,
                                user_acknow_formA, srm_acknow_formA, sdo_acknow_formA,
                                user_acknow_formB, srm_acknow_formB, sdo_acknow_formB,
@@ -1274,7 +1277,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         writer.writerow(["Fire ID", "Name", "Region", "District", "Type", "Form",
             "Date", "Burn Status", "Ignition Status", "Assistance received from",
             "Planned Area", "Actual Area", "Planned Distance","Actual Distance",
-            "Tenures", "Location", "Est Start", "Conditions",
+            "Tenures", "Purposes", "Location", "Est Start", "Conditions",
             "Latitude", "Longitude", "Lat/Long Updated",
             "DDO Acknow FormA", "RDO Acknow FormA", "SDO Acknow FormA",
             "DDO Acknow FormB", "RDO Acknow FormB", "SDO Acknow FormB",
