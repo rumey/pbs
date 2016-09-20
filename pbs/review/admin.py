@@ -1331,7 +1331,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         now = timezone.localtime(timezone.now())
         timestamp = now.isoformat().rsplit(
             ".")[0].replace(":", "")
-        downloadname = "daily_burn_program.pdf"
+        if template == "daily_burn_program":
+            downloadname = "daily_burn_program_" + report_date.strftime('%Y-%m-%d') + ".pdf"
+        else:
+            downloadname = "daily_burn_program_" + template + "_" + report_date.strftime('%Y-%m-%d') + ".pdf"
         error_response = HttpResponse(content_type='text/html')
         errortxt = downloadname.replace(".pdf", ".errors.txt.html")
         error_response['Content-Disposition'] = (
