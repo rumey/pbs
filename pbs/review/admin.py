@@ -370,8 +370,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     tokens = p.location.split('|')
                     location = tokens[1] + 'km ' + tokens[2] + ' of ' + tokens[3]
                 else:
-                    #location = p.location
-                    location = None
+                    location = p.location
+                    #location = None
 
                 d = {
                     "location": location,

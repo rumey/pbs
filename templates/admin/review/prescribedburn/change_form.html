@@ -52,8 +52,9 @@ $(function() {
                 $('#loading_prescriptions').remove();
             }
         })
-    }).change();
-
+    });
+    
+    $("#id_prescription").prop('disabled', true);
     // next section required for page refresh following validation error on page
     /*
     var region_selected = $("#id_region :selected").text();
@@ -151,7 +152,6 @@ $(function() {
         })
     });
 
-    $( "<div class='help-inline'><span id='id_burn_id_help'> Select a Region to populate the Burn ID list</span></div>" ).insertAfter( "#id_prescription" );
     $( "<div class='help-inline'><span id='id_status_help'> The definition of 'active' can be found in the glossary of the Prescribed Fire Manual</span></div>" ).insertAfter( "#id_status" );
     $( "<div class='help-inline'><span id='id_est_start_help'> Time format must be HH:MM (24 hour clock)</span></div>" ).insertAfter( "#id_est_start" );
 
