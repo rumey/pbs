@@ -1216,6 +1216,14 @@ class Prescription(Audit):
                     if modified is not None])
 
     @property
+    def current_fmsb_record(self):
+        return self.burnstate.filter(review_type='FMSB',review_date__gte=self.approval_set.latest().created)
+
+    @property
+    def current_drfms_record(self):
+        return self.burnstate.filter(review_type='DRFMS',review_date__gte=self.approval_set.latest().created)
+
+    @property
     def fmsb_record(self):
         return self.burnstate.filter(review_type='FMSB')
 

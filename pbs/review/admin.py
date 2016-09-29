@@ -393,8 +393,25 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 bushfire_id = district + '_' + fire_id
                 return HttpResponse(json.dumps({'bushfire_id': bushfire_id}))
 
-            if request.REQUEST.has_key('region') and request.REQUEST.get('region'):
-                qs = Prescription.objects.filter(burnstate__review_type__in=['FMSB'], planning_status=Prescription.PLANNING_APPROVED).filter(burnstate__review_type__in=['DRFMS']).distinct()
+            if request.REQUEST.has_key('region') and request.REQUEST.get('region') and request.REQUEST.has_key('form_name') and request.REQUEST.get('form_name'):
+                if request.REQUEST.get('form_name') == 'add_burn':
+                    # Display prescriptions that have a current approval and
+                    #have been reviewed since last approval creation date
+                    presc_ids = [a.prescription.pk for a in Approval.objects.filter(valid_to__gte=date.today()) if a.prescription.current_fmsb_record.count() > 0 and a.prescription.current_drfms_record.count() > 0]
+                    qs = Prescription.objects.filter(
+                        pk__in=presc_ids,
+                        planning_status=Prescription.PLANNING_APPROVED,
+                        approval_status=Prescription.APPROVAL_APPROVED,
+                        status=Prescription.STATUS_OPEN,
+                        burnstate__review_type__in=['FMSB'],
+                        ignition_status__in=[Prescription.IGNITION_NOT_STARTED,
+                            Prescription.IGNITION_COMMENCED]).filter(
+                                burnstate__review_type__in=['DRFMS']).distinct()
+                else:
+                    # Display all prescriptions that have ever been approved
+                    presc_ids = [a.prescription.pk for a in Approval.objects.all()]
+                    qs = Prescription.objects.filter(pk__in=presc_ids).exclude(ignition_status=Prescription.IGNITION_NOT_STARTED).distinct()
+                
                 qs = qs.filter(region=request.REQUEST.get('region')).order_by('burn_id')
 
                 #burn_ids = ["<option value={}>{}</option>".format(p.id, p.burn_id) for p in qs]

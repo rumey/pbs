@@ -78,7 +78,7 @@
       <td>{{ prescription.name }}</td>
       <td>
         <div class="text-center">
-        {% for records in prescription.fmsb_record %}
+        {% for records in prescription.current_fmsb_record %}
           {{ records.record }}
           {% if request.user.username == records.user.username %}
           <a id="delete-fmsb-review" href="{% url 'admin:review_burnstate_delete' records.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a>
@@ -89,7 +89,7 @@
       </td>
       <td>
         <div class="text-center">
-        {% for records in prescription.drfms_record %}
+        {% for records in prescription.current_drfms_record %}
           {{ records.record }}
           {% if request.user.username == records.user.username %}
           <a id="delete-drfms-review" href="{% url 'admin:review_burnstate_delete' records.id %}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a>

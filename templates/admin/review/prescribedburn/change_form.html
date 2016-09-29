@@ -28,20 +28,31 @@ $(function() {
         $("#id_conditions").attr("disabled", "disabled");
     {% endif %}
 
-    $("#id_region").click(function () {
+    $("#id_region").change(function () {
+        $('#id_prescription').prop('disabled', true);
+        $('#id_prescription').parent().append("<span id=loading_prescriptions class='label'>Loading . . .</span>");
+        if (current_url.indexOf('add_active_burn') > -1) {
+            var prescription_view_url = "{% url 'admin:prescription_view' %}";
+            var page_form_name = 'add_active_burn';
+        } else {
+            var prescription_view_url = "{% url 'admin:prescription_view' %}";
+            var page_form_name = 'add_burn';
+        }
         $.ajax({
             type: 'GET',
-            url: "{% url 'admin:prescription_view' %}",
+            url: prescription_view_url,
             data: {
-                region: $("#id_region :selected").val()
+                region: $("#id_region :selected").val(),
+                form_name: page_form_name
             },
             success: function(response){
                 var response = JSON.parse(response);
                 $("#id_prescription").html(response.burn_ids)
-
+                $('#id_prescription').prop('disabled', false);
+                $('#loading_prescriptions').remove();
             }
         })
-    });
+    }).change();
 
     // next section required for page refresh following validation error on page
     /*
@@ -99,7 +110,6 @@ $(function() {
 
     $("#id_prescription").change(function () {
         //console.log('True  ' + $("#id_prescription").val() )
-
         $.ajax({
             type: 'GET',
             url: "{% url 'admin:prescription_view' %}",
@@ -108,6 +118,7 @@ $(function() {
             },
             success: function(response){
                 var response = JSON.parse(response);
+
                 //console.log("response " + response);
                 //console.log("response.location " + response['location']);
                 $("#id_location").val(response['location']);
@@ -140,8 +151,9 @@ $(function() {
         })
     });
 
+    $( "<div class='help-inline'><span id='id_burn_id_help'> Select a Region to populate the Burn ID list</span></div>" ).insertAfter( "#id_prescription" );
     $( "<div class='help-inline'><span id='id_status_help'> The definition of 'active' can be found in the glossary of the Prescribed Fire Manual</span></div>" ).insertAfter( "#id_status" );
-    $( "<div class='help-inline'><span id='id_status_help'> Time format must be HH:MM (24 hour clock)</span></div>" ).insertAfter( "#id_est_start" );
+    $( "<div class='help-inline'><span id='id_est_start_help'> Time format must be HH:MM (24 hour clock)</span></div>" ).insertAfter( "#id_est_start" );
 
     $( "<div class='help-inline'><span id='id_planned_area_help'> Must input at least one of Area or Distance</span></div>" ).insertAfter( "#id_planned_area" );
     if (current_url.indexOf('active_burn') > -1) {
