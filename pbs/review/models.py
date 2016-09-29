@@ -556,6 +556,7 @@ class BurnProgramLink(models.Model):
         from django.db import connection
         cursor = connection.cursor()
         cursor.execute('''
+            create or replace view review_v_dailyburns as
             select
               p.burn_id,
               pb.date as burn_target_date,
