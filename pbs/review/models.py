@@ -555,25 +555,69 @@ class BurnProgramLink(models.Model):
 
         from django.db import connection
         cursor = connection.cursor()
-        cursor.execute('''create or replace view review_v_dailyburns as SELECT
-            ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1) as "planned",
-            ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1) as "active",
-            "prescription_prescription"."burn_id",
-            "prescription_prescription"."location",
-            "prescription_prescription"."forest_blocks",
-            "review_burnprogramlink"."area_ha" indicative_area,
-            "review_prescribedburn"."est_start" burn_est_start,
-            "review_prescribedburn"."date" burn_target_date,
-            "review_prescribedburn"."longitude" burn_target_long,
-            "review_prescribedburn"."latitude" burn_target_lat,
-            "review_prescribedburn"."planned_area" burn_planned_area_today,
-            "review_prescribedburn"."planned_distance" burn_planned_distance_today,
-            "review_burnprogramlink"."wkb_geometry"
-            FROM "prescription_prescription"
-                LEFT OUTER JOIN "review_prescribedburn" ON ( "prescription_prescription"."id" = "review_prescribedburn"."prescription_id" )
-                LEFT OUTER JOIN "review_acknowledgement" ON ( "review_prescribedburn"."id" = "review_acknowledgement"."burn_id" )
-                LEFT OUTER JOIN "review_burnprogramlink" ON ( "prescription_prescription"."id" = "review_burnprogramlink"."prescription_id" )
-            WHERE
-            ("review_acknowledgement"."acknow_type" IN ('SDO_A') AND "review_prescribedburn"."form_name" = 1)
-            OR ("review_acknowledgement"."acknow_type" IN ('SDO_B') AND "review_prescribedburn"."form_name" = 2 AND "review_prescribedburn"."status" = 1);
+        cursor.execute('''
+            select
+              p.burn_id,
+              pb.date as burn_target_date,
+              case
+                when string_agg(pb.form_name::text, ', ') = '1, 2' or string_agg(pb.form_name::text, ', ') = '2, 1' then
+                    'Active - Planned Ignitions Today'
+                when string_agg(pb.form_name::text, ', ') = '2' then
+                    'Active - No Planned Ignitions Today'
+                when string_agg(pb.form_name::text, ', ') = '1' then
+                    'Planned - No Prior Ignitions'
+                else
+                    'Error'
+              end as burn_stat,
+              p.location,
+              p.forest_blocks,
+              link.area_ha AS indicative_area,
+              (select rpb.est_start
+               from review_prescribedburn rpb
+               where
+                    rpb.date = pb.date and
+                    rpb.prescription_id::text = pb.prescription_id::text and
+                    rpb.form_name = 1) AS burn_est_start, -- use time from 268a
+              coalesce(
+                (select rpb.longitude
+                 from review_prescribedburn rpb
+                 where
+                        rpb.date = pb.date and
+                        rpb.prescription_id::text = pb.prescription_id::text and
+                        rpb.form_name = 1),
+                pb.longitude) AS burn_target_long, -- use longitude from 268a, else 268b
+              coalesce(
+                (select rpb.latitude
+                 from review_prescribedburn rpb
+                 where
+                    rpb.date = pb.date and
+                    rpb.prescription_id::text = pb.prescription_id::text and
+                    rpb.form_name = 1),
+                pb.latitude) AS burn_target_lat, -- use latitude from 268a, else 268b
+              (select rpb.planned_area
+               from review_prescribedburn rpb
+               where
+                  rpb.date = pb.date and
+                  rpb.prescription_id::text = pb.prescription_id::text and
+                  rpb.form_name = 1) AS burn_planned_area_today, -- use planned_area from 268a
+              (select rpb.planned_distance
+               from review_prescribedburn rpb
+               where
+                  rpb.date = pb.date and
+                  rpb.prescription_id::text = pb.prescription_id::text and
+                  rpb.form_name = 1) AS burn_planned_distance_today, -- use planned_distance from 268a
+              link.wkb_geometry
+            from
+              (((prescription_prescription p
+                 LEFT JOIN review_prescribedburn  pb ON ((p.id = pb.prescription_id)))
+                 LEFT JOIN review_acknowledgement ack ON ((pb.id = ack.burn_id)))
+                 LEFT JOIN review_burnprogramlink link ON ((p.id = link.prescription_id)))
+            WHERE (
+                (((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1)) OR -- approved 268a
+                ((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))) -- approved active 268b
+            group by
+                p.burn_id, p.location, p.forest_blocks, burn_target_date, indicative_area,
+                burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
+                burn_planned_area_today, burn_planned_distance_today
+            ORDER BY p.burn_id, burn_target_date;
             create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date = current_date;''')
