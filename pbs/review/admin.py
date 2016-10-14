@@ -412,7 +412,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     presc_ids = [a.prescription.pk for a in Approval.objects.all()]
                     qs = Prescription.objects.filter(pk__in=presc_ids).exclude(ignition_status=Prescription.IGNITION_NOT_STARTED).distinct()
                 
-                qs = qs.filter(region=request.REQUEST.get('region')).order_by('burn_id')
+                qs = qs.filter(region=request.REQUEST.get('region')).order_by('-burn_id')
 
                 #burn_ids = ["<option value={}>{}</option>".format(p.id, p.burn_id) for p in qs]
                 burn_ids = ModelChoiceField(queryset=qs).widget.render(value="pk_prescription", name="prescription")
