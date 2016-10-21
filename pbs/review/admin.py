@@ -1096,7 +1096,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
 
         tomorrow = dt + timedelta(days=1) # relative to dt
-        objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE).exclude(ignition_status=PrescribedBurn.IGNITION_STATUS_COMPLETED)]
+        objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)]
         now = timezone.now()
         admin = User.objects.get(username='admin')
         count = 0
