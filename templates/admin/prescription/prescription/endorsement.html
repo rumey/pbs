@@ -67,8 +67,12 @@
         {{ form.as_p }}
     <div id="endorsement_disclaimer"><blockquote><em></em></blockquote></div>
     <div class="form-actions">
-    <input type="submit" value="{% trans 'Endorse' %}" class="btn btn-primary" name="_save"/>
-    <input type="submit" value="{% trans 'Reviewed and not endorsed' %}" class="btn btn-danger" name="_dont_endorse"/>
+      <div style='float: left;'>
+        <input type="submit" value="{% trans 'Endorse' %}" class="btn btn-primary" name="_save"/>
+      </div>
+      <div style='float: right;'>                                                                                                                                                                          
+        <input type="submit" value="{% trans 'Reviewed and not endorsed' %}" class="btn btn-danger" name="_dont_endorse"/>
+      </div>
     </div>
     </form>
     <script type="text/javascript">
