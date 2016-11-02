@@ -466,7 +466,12 @@ class Prescription(Audit):
     def generate_description(self):
         try:
             if self.tenures.count() > 0:
-                located = ", ".join(tenure.name for tenure in self.tenures.all())
+                tenure_names = [tenure.name for tenure in self.tenures.all()]
+                if len(tenure_names) > 1:
+                    located  = ', '.join(tenure_names[:-1]) + ' and ' + tenure_names[-1]
+                else:
+                    located  = ', '.join(tenure_names)
+
             else:
                 located = "TBD"
         except ValueError as e:
@@ -480,7 +485,16 @@ class Prescription(Audit):
         blocks = " in %s" % self.forest_blocks if self.forest_blocks else ""
 
         try:
-            veg_types = ", ".join(unicode(v) for v in self.fuel_types.all()) or "TBD"
+            if self.tenures.count() > 0:
+                veg_type_names = [v.name for v in self.fuel_types.all()]
+
+                if len(veg_type_names) > 1:
+                    veg_types  = ', '.join(veg_type_names[:-1]) + ' and ' + veg_type_names[-1]
+                else:
+                    veg_types  = ', '.join(veg_type_names)
+
+            else:
+                veg_types = "TBD"
         except ValueError as e:
             veg_types = "TBD"
 
