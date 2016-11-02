@@ -548,8 +548,8 @@ class Prescription(Audit):
         if self.financial_year:
             self.planned_year = int(self.financial_year.split('/')[0])
 
-        if self.description == "":
-            self.description = self.generate_description()
+        # because tenures and vegetation may have changed
+        self.description = self.generate_description()
 
 #        if all(x in [i.review_type for i in self.burnstate.all()] for x in ['FMSB','DRFMS']):
 #            self.reviewed = True
