@@ -10,6 +10,7 @@ from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, Prescrib
         AircraftBurnForm, AircraftBurnEditForm, AircraftBurnFilterForm
     )
 from pbs.prescription.models import Prescription, Approval, Region, District
+from pbs.report.models import AreaAchievement
 from datetime import datetime, date, timedelta
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -408,8 +409,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                             Prescription.IGNITION_COMMENCED]).filter(
                                 burnstate__review_type__in=['DRFMS']).distinct()
                 else:
-                    # Display all prescriptions that have ever been approved
-                    presc_ids = [a.prescription.pk for a in Approval.objects.all()]
+                    # Display all prescriptions that have had areaachievement records in past 12 months
+                    lastyear = date.today() + timedelta(days=-365)
+                    presc_ids = list(set([a.prescription.pk for a in AreaAchievement.objects.filter(ignition__gte=lastyear)]))
                     qs = Prescription.objects.filter(pk__in=presc_ids).exclude(ignition_status=Prescription.IGNITION_NOT_STARTED).distinct()
                 
                 qs = qs.filter(region=request.REQUEST.get('region')).order_by('-burn_id')
