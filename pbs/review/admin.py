@@ -154,6 +154,11 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
 
 class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
+    def is_role_based_user(self, request):
+        if any(role in request.user.username.upper() for role in ['_DDO', '_RDO']):
+            return True
+        return False
+
     @property
     def srm_group(self):
         return Group.objects.get(name='Regional Duty Officer')
@@ -280,6 +285,13 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
     def add_view(self, request, form_url='', extra_context=None):
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
+
+        if self.is_role_based_user(request):
+            self.message_user(request, "Role-based user is not permitted to Add {}. Please login with user credentials".format(
+                'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
         context = {'is_sdo': self.sdo_group in request.user.groups.all()}
         if request.GET.get('form') == 'add_fire':
             context.update({'form_title': 'Add Bushfire'})
@@ -471,8 +483,15 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #today = date(2016,4,12)
         tomorrow = today + timedelta(days=1)
         yesterday = today - timedelta(days=1)
-        if action == "District Entered" or action == "District Submit":
+
+
+        if self.is_role_based_user(request):
+            message = "Role-based user is not permitted to Acknowledge or Delete. Please login with user credentials"
+            msg_type = messages.ERROR 
+
+        elif action == "District Entered" or action == "District Submit":
             count = 0
+
             if report=='epfp_planned':
                 not_acknowledged = []
                 already_acknowledged = []
@@ -635,7 +654,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #today = date(2016,4,12)
         tomorrow = today + timedelta(days=1)
         yesterday = today - timedelta(days=1)
-        if action == "Regional Acknowledgement" or action == "Regional Endorsement":
+        
+        if self.is_role_based_user(request):
+            message = "Role-based user is not permitted to Acknowledge or Delete. Please login with user credentials"
+            msg_type = messages.ERROR 
+
+        elif action == "Regional Acknowledgement" or action == "Regional Endorsement":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
                 message = "Only regional and state levels can acknowledge burns"
                 self.message_user(request, message, level=messages.ERROR)
