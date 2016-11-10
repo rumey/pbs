@@ -307,6 +307,13 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         today = now.date()
         yesterday = today - timedelta(days=1)
         time_now = now.time()
+        
+        if self.is_role_based_user(request):
+            self.message_user(request, "Role-based user is not permitted to Edit {}. Please login with user credentials".format(
+                'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
         if obj.date < yesterday:
             self.message_user(request, "Past burns cannot be edited")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -341,6 +348,12 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         """
         Redirect to main page on delete.
         """
+        if self.is_role_based_user(request):
+            self.message_user(request, "Role-based user is not permitted to Delete {}. Please login with user credentials".format(
+                'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
         obj = self.get_object(request, unquote(object_id))
         if obj.formA_sdo_acknowledged or obj.formB_sdo_acknowledged:
             if self.sdo_group not in request.user.groups.all():
@@ -779,6 +792,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     def action_view(self, request, extra_context=None):
 
         referrer_url = request.META.get('HTTP_REFERER')
+        if self.is_role_based_user(request):
+            message = "Role-based user is not permitted to Modify records. Please login with user credentials"
+            msg_type = "danger"
+            return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": msg_type}))
+
         if request.POST.has_key('action'):
             action = request.POST['action']
         else:
@@ -950,6 +968,13 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         View to bulk delete prescribed burns/fires
         """
         referrer_url = request.META.get('HTTP_REFERER')
+        
+        if self.is_role_based_user(request):
+            self.message_user(request, "Role-based user is not permitted to Delete {}. Please login with user credentials".format(
+                'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
+            )
+            return HttpResponseRedirect(referrer_url)
+
         if request.REQUEST.has_key('object_ids'):
             object_ids = request.REQUEST.get('object_ids', None)
             if not object_ids:
