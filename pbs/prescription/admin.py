@@ -1122,7 +1122,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 formset.save()
                 if request.is_ajax():
                     message = obj.__str__() + ' summary updated successfully.'
-                    return HttpResponse(json.dumps({'message': message}))
+                    return HttpResponse(json.dumps({'message': message, 'description': obj.description}))
                 else:
                     return HttpResponseRedirect(obj.get_absolute_url())
             else:
