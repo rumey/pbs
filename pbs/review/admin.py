@@ -1384,9 +1384,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             return ', '.join(set([i.user.get_full_name() for i in acknowledgements]))
 
         acknow_records ={
-            'srm_A': acknow(planned_burns, 'SRM_A'),
+            'srm_A': acknow(planned_burns_rdo, 'SRM_A'),
             'sdo_A': acknow(planned_burns, 'SDO_A'),
-            'srm_B': acknow(fireload, 'SRM_B'),
+            'srm_B': acknow(fireload_rdo, 'SRM_B'),
             'sdo_B': acknow(fireload, 'SDO_B')
         }
         obj = Prescription.objects.get(id=620)
