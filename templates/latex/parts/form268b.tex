@@ -10,10 +10,9 @@
   }
 
 \fancyfoot[L]{ \leftmark\newline {{date}} {{time}} \\ \footnotesize Web link to Department of Parks and Wildlife Daily Burn Program: \url{% templatetag openbrace %}http://www.dpaw.wa.gov.au/}}
-\noindent Sent by: {{ user }}\hfill Date: {{report_date}}\hfill Region: {{region}}
+\noindent Date: {{report_date}}\hfill Region: {{region}}
 \subsection{\hfil SUMMARY OF CURRENT FIRE LOAD\hfil}
 
-\begin{table}[h]
 \footnotesize
 \subsubsection{Prescribed Burns}
 \begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
@@ -37,9 +36,7 @@
     \hline
 {% endfor %}
 \end{longtabu}
-\end{table}
 
-\begin{table}[h]
 \footnotesize
 \subsubsection{Bushfires}
 \begin{longtabu} to \linewidth { | X[0.8] | X[2.0] | X[0.8] | X[0.8] | X[0.8] | X | }
@@ -63,7 +60,6 @@
     \hline
 {% endfor %}
 \end{longtabu}
-\end{table}
 
 \subsubsection{Acknowledged}
 \begin{tabu} to \linewidth { | X[0.4] | X | }

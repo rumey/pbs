@@ -10,7 +10,7 @@
   }
 
 \fancyfoot[L]{ \leftmark\newline {{date}} {{time}} \\ \footnotesize Web link to Department of Parks and Wildlife Daily Burn Program: \url{% templatetag openbrace %}http://www.dpaw.wa.gov.au/}}
-\noindent Sent by: {{ user }}\hfill Date: {{report_date}}\hfill Region: {{region}}
+\noindent Date: {{report_date}}\hfill Region: {{region}}
 \subsubsection{Part A: TODAY'S PLANNED BURN PROGRAM}
 
 \begin{table}[h]
@@ -38,10 +38,9 @@
 
 The following Burns are proposed for ignition today subject to the approval of the State Duty Officer. The burns will be conducted in accordance with the approved burn plan.
 \footnotesize
-\begin{longtabu} to \linewidth { | X[0.7] | X[2.0] | X[0.8] | X[0.8] | X[1.0] | X | }
-%%\begin{longtabu} to \linewidth { | X | X | X | X |} %%X | X | X | }
+\begin{longtabu} to \linewidth { | X[0.7] | X[2.0] | X[1.0] | X[2.0] | X[0.8] | X[0.5] | }
 \hline
-\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \bfseries\makecell[c]{Todays treatment \\ area/km} & \bfseries\makecell[c]{Est Start \\ WST}
+\textbf{Burn ID} & \textbf{Name} & \textbf{Location} & \bfseries\makecell[c]{Burn \\ Purpose} & \bfseries\makecell[c]{Todays \\ treatment \\ area/km} & \bfseries\makecell[c]{Est Start \\ WST}
 \hline
 \endhead
 {% for pb in qs_planned_burns %}

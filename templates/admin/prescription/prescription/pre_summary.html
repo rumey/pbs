@@ -469,6 +469,7 @@ var ajaxPost = function(evt) {
             $('div#id_pageerrors').addClass('alert alert-success').text(
                 ' ' + data.message).prepend($('<i>').addClass('icon-ok'));
         };
+        $( "#id_description"  ).text( data.description );
         viewPort.update();
     });
 };
