@@ -559,7 +559,8 @@ class BurnProgramLink(models.Model):
             create or replace view review_v_dailyburns as
             select
               p.burn_id,
-              pb.date as burn_target_date,
+              to_char(pb.date, 'FMDay, DD Mon YYYY') as burn_target_date,
+              pb.date as burn_target_date_raw,
               case
                 when string_agg(pb.form_name::text, ', ') = '1, 2' or string_agg(pb.form_name::text, ', ') = '2, 1' then
                     'Active - Planned Ignitions Today'
@@ -570,7 +571,13 @@ class BurnProgramLink(models.Model):
                 else
                     'Error'
               end as burn_stat,
-              p.location,
+              case
+                when p.location like '%|%' then
+                    split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
+                        split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4)
+                else
+                    p.location
+              end as location,
               p.forest_blocks,
               link.area_ha AS indicative_area,
               (select rpb.est_start
@@ -619,6 +626,6 @@ class BurnProgramLink(models.Model):
             group by
                 p.burn_id, p.location, p.forest_blocks, burn_target_date, indicative_area,
                 burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
-                burn_planned_area_today, burn_planned_distance_today
-            ORDER BY p.burn_id, burn_target_date;
-            create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date = current_date;''')
+                burn_planned_area_today, burn_planned_distance_today, burn_target_date_raw
+            ORDER BY p.burn_id, burn_target_date_raw;
+            create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;''')
