@@ -573,10 +573,22 @@ class BurnProgramLink(models.Model):
               end as burn_stat,
               case
                 when p.location like '%|%' then
-                    split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
-                        split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4)
+                    case
+                        when p.forest_blocks not like '' then
+                            split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
+                                split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4) ||
+                                ' (' || p.forest_blocks || ')'
+                        else
+                            split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
+                                split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4)
+                        end
                 else
-                    p.location
+                    case
+                        when p.forest_blocks not like '' then
+                            p.location || ' (' || p.forest_blocks || ')'
+                        else
+                            p.location
+                        end
               end as location,
               p.forest_blocks,
               link.area_ha AS indicative_area,
