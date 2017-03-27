@@ -557,87 +557,93 @@ class BurnProgramLink(models.Model):
         cursor = connection.cursor()
         cursor.execute('''
             create or replace view review_v_dailyburns as
-            select
-              p.burn_id,
-              to_char(pb.date, 'FMDay, DD Mon YYYY') as burn_target_date,
-              pb.date as burn_target_date_raw,
-              case
-                when string_agg(pb.form_name::text, ', ') = '1, 2' or string_agg(pb.form_name::text, ', ') = '2, 1' then
-                    'Active - Planned Ignitions Today'
-                when string_agg(pb.form_name::text, ', ') = '2' then
-                    'Active - No Planned Ignitions Today'
-                when string_agg(pb.form_name::text, ', ') = '1' then
-                    'Planned - No Prior Ignitions'
-                else
-                    'Error'
-              end as burn_stat,
-              case
-                when p.location like '%|%' then
-                    case
-                        when p.forest_blocks not like '' then
-                            split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
-                                split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4) ||
-                                ' (' || p.forest_blocks || ')'
-                        else
-                            split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
-                                split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4)
-                        end
-                else
-                    case
-                        when p.forest_blocks not like '' then
-                            p.location || ' (' || p.forest_blocks || ')'
-                        else
-                            p.location
-                        end
-              end as location,
-              p.forest_blocks,
-              link.area_ha AS indicative_area,
-              (select rpb.est_start
-               from review_prescribedburn rpb
-               where
-                    rpb.date = pb.date and
-                    rpb.prescription_id::text = pb.prescription_id::text and
-                    rpb.form_name = 1) AS burn_est_start, -- use time from 268a
-              coalesce(
-                (select rpb.longitude
-                 from review_prescribedburn rpb
-                 where
-                        rpb.date = pb.date and
-                        rpb.prescription_id::text = pb.prescription_id::text and
-                        rpb.form_name = 1),
-                pb.longitude) AS burn_target_long, -- use longitude from 268a, else 268b
-              coalesce(
-                (select rpb.latitude
-                 from review_prescribedburn rpb
-                 where
-                    rpb.date = pb.date and
-                    rpb.prescription_id::text = pb.prescription_id::text and
-                    rpb.form_name = 1),
-                pb.latitude) AS burn_target_lat, -- use latitude from 268a, else 268b
-              (select rpb.planned_area
-               from review_prescribedburn rpb
-               where
-                  rpb.date = pb.date and
-                  rpb.prescription_id::text = pb.prescription_id::text and
-                  rpb.form_name = 1) AS burn_planned_area_today, -- use planned_area from 268a
-              (select rpb.planned_distance
-               from review_prescribedburn rpb
-               where
-                  rpb.date = pb.date and
-                  rpb.prescription_id::text = pb.prescription_id::text and
-                  rpb.form_name = 1) AS burn_planned_distance_today, -- use planned_distance from 268a
-              link.wkb_geometry
-            from
-              (((prescription_prescription p
-                 LEFT JOIN review_prescribedburn  pb ON ((p.id = pb.prescription_id)))
-                 LEFT JOIN review_acknowledgement ack ON ((pb.id = ack.burn_id)))
-                 LEFT JOIN review_burnprogramlink link ON ((p.id = link.prescription_id)))
-            WHERE (
-                (((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1)) OR -- approved 268a
-                ((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))) -- approved active 268b
-            group by
-                p.burn_id, p.location, p.forest_blocks, burn_target_date, indicative_area,
-                burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
-                burn_planned_area_today, burn_planned_distance_today, burn_target_date_raw
-            ORDER BY p.burn_id, burn_target_date_raw;
-            create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;''')
+			select
+			  p.burn_id,
+			  to_char(pb.date, 'FMDay, DD Mon YYYY') as burn_target_date,
+			  pb.date as burn_target_date_raw,
+			  case
+				when string_agg(pb.form_name::text, ', ') = '1, 2' or string_agg(pb.form_name::text, ', ') = '2, 1' then
+					'Active - Planned Ignitions Today'
+				when string_agg(pb.form_name::text, ', ') = '2' then
+					'Active - No Planned Ignitions Today'
+				when string_agg(pb.form_name::text, ', ') = '1' then
+					'Planned - No Prior Ignitions'
+				else
+					'Error'
+			  end as burn_stat,
+			  case
+				when p.location like '%|%' then
+					case
+						when p.forest_blocks not like '' then
+							split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
+								split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4) ||
+								' (' || p.forest_blocks || ')'
+						else
+							split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
+								split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4)
+						end
+				else
+					case
+						when p.forest_blocks not like '' then
+							p.location || ' (' || p.forest_blocks || ')'
+						else
+							p.location
+						end
+			  end as location,
+			  p.forest_blocks,
+			  link.area_ha AS indicative_area,
+			  coalesce(
+				(select rpb.est_start
+					 from review_prescribedburn rpb
+					 where
+						  rpb.date = pb.date and
+						  rpb.prescription_id::text = pb.prescription_id::text and
+						  rpb.form_name = 1)::text,
+				'') AS burn_est_start, -- use time from 268a
+			  coalesce(
+				(select rpb.longitude
+				 from review_prescribedburn rpb
+				 where
+						rpb.date = pb.date and
+						rpb.prescription_id::text = pb.prescription_id::text and
+						rpb.form_name = 1),
+				pb.longitude) AS burn_target_long, -- use longitude from 268a, else 268b
+			  coalesce(
+				(select rpb.latitude
+				 from review_prescribedburn rpb
+				 where
+					rpb.date = pb.date and
+					rpb.prescription_id::text = pb.prescription_id::text and
+					rpb.form_name = 1),
+				pb.latitude) AS burn_target_lat, -- use latitude from 268a, else 268b
+			  coalesce(
+				cast((select rpb.planned_area
+				 from review_prescribedburn rpb
+				 where
+					rpb.date = pb.date and
+					rpb.prescription_id::text = pb.prescription_id::text and
+					rpb.form_name = 1) as text),
+				'') AS burn_planned_area_today, -- use planned_area from 268a
+			  coalesce(
+				cast((select rpb.planned_distance
+				 from review_prescribedburn rpb
+				 where
+					rpb.date = pb.date and
+					rpb.prescription_id::text = pb.prescription_id::text and
+					rpb.form_name = 1) as text),
+				'') AS burn_planned_distance_today, -- use planned_distance from 268a
+			  link.wkb_geometry
+			from
+			  (((prescription_prescription p
+				 LEFT JOIN review_prescribedburn  pb ON ((p.id = pb.prescription_id)))
+				 LEFT JOIN review_acknowledgement ack ON ((pb.id = ack.burn_id)))
+				 LEFT JOIN review_burnprogramlink link ON ((p.id = link.prescription_id)))
+			WHERE (
+				(((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1)) OR -- approved 268a
+				((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))) -- approved active 268b
+			group by
+				p.burn_id, p.location, p.forest_blocks, burn_target_date, indicative_area,
+				burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
+				burn_planned_area_today, burn_planned_distance_today, burn_target_date_raw
+			ORDER BY p.burn_id, burn_target_date_raw;
+			create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;''')
