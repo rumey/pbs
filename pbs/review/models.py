@@ -572,22 +572,22 @@ class BurnProgramLink(models.Model):
 					'Error'
 			  end as burn_stat,
 			  case
-				when p.location like '%|%' then
+				when pb.location like '%|%' then
 					case
 						when p.forest_blocks not like '' then
-							split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
-								split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4) ||
+							split_part(pb.location, '|', 1) || ', ' || split_part(pb.location, '|', 2) || 'km ' ||
+								split_part(pb.location, '|', 3) || ' of '|| split_part(pb.location, '|', 4) ||
 								' (' || p.forest_blocks || ')'
 						else
-							split_part(p.location, '|', 1) || ', ' || split_part(p.location, '|', 2) || 'km ' ||
-								split_part(p.location, '|', 3) || ' of '|| split_part(p.location, '|', 4)
+							split_part(pb.location, '|', 1) || ', ' || split_part(pb.location, '|', 2) || 'km ' ||
+								split_part(pb.location, '|', 3) || ' of '|| split_part(pb.location, '|', 4)
 						end
 				else
 					case
 						when p.forest_blocks not like '' then
-							p.location || ' (' || p.forest_blocks || ')'
+							pb.location || ' (' || p.forest_blocks || ')'
 						else
-							p.location
+							pb.location
 						end
 			  end as location,
 			  p.forest_blocks,
@@ -598,7 +598,8 @@ class BurnProgramLink(models.Model):
 					 where
 						  rpb.date = pb.date and
 						  rpb.prescription_id::text = pb.prescription_id::text and
-						  rpb.form_name = 1)::text,
+						  rpb.form_name = 1 and
+						  rpb.location = pb.location)::text,
 				'') AS burn_est_start, -- use time from 268a
 			  coalesce(
 				(select rpb.longitude
@@ -606,7 +607,8 @@ class BurnProgramLink(models.Model):
 				 where
 						rpb.date = pb.date and
 						rpb.prescription_id::text = pb.prescription_id::text and
-						rpb.form_name = 1),
+						rpb.form_name = 1 and
+						rpb.location = pb.location),
 				pb.longitude) AS burn_target_long, -- use longitude from 268a, else 268b
 			  coalesce(
 				(select rpb.latitude
@@ -614,7 +616,8 @@ class BurnProgramLink(models.Model):
 				 where
 					rpb.date = pb.date and
 					rpb.prescription_id::text = pb.prescription_id::text and
-					rpb.form_name = 1),
+					rpb.form_name = 1 and
+					rpb.location = pb.location),
 				pb.latitude) AS burn_target_lat, -- use latitude from 268a, else 268b
 			  coalesce(
 				cast((select rpb.planned_area
@@ -622,7 +625,8 @@ class BurnProgramLink(models.Model):
 				 where
 					rpb.date = pb.date and
 					rpb.prescription_id::text = pb.prescription_id::text and
-					rpb.form_name = 1) as text),
+					rpb.form_name = 1 and
+					rpb.location = pb.location) as text),
 				'') AS burn_planned_area_today, -- use planned_area from 268a
 			  coalesce(
 				cast((select rpb.planned_distance
@@ -630,7 +634,8 @@ class BurnProgramLink(models.Model):
 				 where
 					rpb.date = pb.date and
 					rpb.prescription_id::text = pb.prescription_id::text and
-					rpb.form_name = 1) as text),
+					rpb.form_name = 1 and
+					rpb.location = pb.location) as text),
 				'') AS burn_planned_distance_today, -- use planned_distance from 268a
 			  link.wkb_geometry
 			from
@@ -642,7 +647,7 @@ class BurnProgramLink(models.Model):
 				(((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1)) OR -- approved 268a
 				((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))) -- approved active 268b
 			group by
-				p.burn_id, p.location, p.forest_blocks, burn_target_date, indicative_area,
+				p.burn_id, pb.location, p.forest_blocks, burn_target_date, indicative_area,
 				burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
 				burn_planned_area_today, burn_planned_distance_today, burn_target_date_raw
 			ORDER BY p.burn_id, burn_target_date_raw;
