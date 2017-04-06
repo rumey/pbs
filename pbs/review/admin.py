@@ -1143,6 +1143,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         tomorrow = today + timedelta(days=1)
         if not (dt == today or dt == tomorrow):
             # Can only copy records for today, or tomorrow
+            logger.warn('Ongoing Record: Can only copy records for today or tomorrow (268b today to 268b tomorrow). dt {}, today {}, tomorrow {}'.format(dt, today, tomorrow))
             return
 
 
@@ -1154,9 +1155,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         for obj in objects:
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Ongoing Record Already Exists (Fire) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Ongoing Record Already Exists (Burn) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             try:
                 obj.pk = None
@@ -1171,9 +1174,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 obj.rolled = True
                 obj.save()
                 count += 1
+                logger.info('Ongoing Record copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
-                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+                logger.warn('Ongoing Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
 
     def copy_planned_approved_records(self, dt):
         """
@@ -1186,6 +1190,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         tomorrow = today + timedelta(days=1)
         if not (dt == today or dt == tomorrow):
             # Can only copy records for today, or tomorrow
+            logger.warn('Planned Approved Record: Can only copy records for today or tomorrow (268a today to 268b tomorrow). dt {}, today {}, tomorrow {}'.format(dt, today, tomorrow))
             return
 
         tomorrow = dt + timedelta(days=1) # relative to dt
@@ -1196,9 +1201,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         for obj in objects:
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Planned Approved Record Already Exists (Fire) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Planned Approved Record Already Exists (Burn) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             try:
                 obj.pk = None
@@ -1215,9 +1222,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 obj.rolled = True
                 obj.save()
                 count += 1
+                logger.info('Planned Approved Record copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
-                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+                logger.warn('Planned Approved Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
 
     def copy_planned_records(self, dt, objects):
         """
@@ -1246,9 +1254,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 i.rolled = True
                 i.save()
                 count += 1
+                logger.info('Planned Record copied (268a today to 268a tomorrow). Record {}, today {}, tomorrow {}'.format(i.prescription.burn_id, dt, tomorrow))
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
-                logger.warn('WARNING: Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, tomorrow))
+                logger.warn('Planned Record not copied. Record {} already exists on day {}'.format(i.prescription.burn_id, tomorrow))
                 traceback.print_exc(file=sys.stdout)
                 pass
 
