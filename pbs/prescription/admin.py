@@ -103,8 +103,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     "approval_expiry", "ignition_status", "status",
                     "prescribing_officer_name", "date_modified_local", "contingencies_migrated")
 
-    actions = [delete_selected, 'export_to_csv', delete_approval_endorsement,
-               carry_over_burns, bulk_corporate_approve]
+    actions = [delete_selected, 'export_to_csv', 'burn_summary_to_csv',
+               delete_approval_endorsement, carry_over_burns, bulk_corporate_approve]
 
     form = PrescriptionCreateForm
     edit_form = PrescriptionEditForm
@@ -257,6 +257,24 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             del actions['bulk_corporate_approve']
 
         return actions
+
+    def burn_summary_to_csv(self, request, queryset):
+        response = HttpResponse(content_type="text/csv")
+        response['Content-Disposition'] = "attachment; filename=burn_summary.csv"
+
+        writer = unicodecsv.writer(response, quoting=unicodecsv.QUOTE_ALL)
+        writer.writerow([
+            'Burn ID', 'Name of Burn', 'Area (ha)',
+            'Priority', 'If Priority 1, explanatory comment*'])
+
+        for item in queryset.order_by('priority', 'burn_id'):
+            writer.writerow([
+                item.burn_id, item.name, "%0.1f" % item.area,
+                item.get_priority_display(), item.rationale if item.priority == 1 else ""
+            ])
+
+        return response
+    burn_summary_to_csv.short_description = ugettext_lazy("Export Burn Summary to CSV")
 
     def export_to_csv(self, request, queryset):
         # TODO: fix up the date/time formatting to use the default template
