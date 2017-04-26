@@ -12,6 +12,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.forms import ValidationError
 from django.conf import settings
 import sys
+from django.utils import timezone
 
 import logging
 logger = logging.getLogger('pbs')
@@ -390,6 +391,97 @@ class PrescribedBurn(Audit):
 
     def short_str(self):
         return self.prescription.burn_id if self.prescription else self.fire_id
+
+    def copy_ongoing_records(self, dt):
+        """
+        Copy today's 'active' records to tomorrow
+
+        268b - (Automatically) copy all records from yesterday that were Active when 268a Region Endorsement occurs,
+        except for Active and Area Burnt Yesterday
+
+        dt = from date, copied to dt+1
+        """
+
+        tomorrow = dt + timedelta(days=1) # relative to dt
+        #objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)]
+        objects = [self]
+        now = timezone.now()
+        admin = User.objects.get(username='admin')
+        count = 0
+        for obj in objects:
+            if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Ongoing Record Already Exists (Fire) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+                continue
+            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Ongoing Record Already Exists (Burn) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+                continue
+            try:
+                obj.pk = None
+                obj.date = tomorrow
+                obj.area = None
+                obj.status = None
+                obj.approval_268a_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268a_status_modified = now
+                obj.approval_268b_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268b_status_modified = now
+                obj.acknowledgements.all().delete()
+                obj.rolled = True
+                obj.save()
+                count += 1
+                logger.info('Ongoing Record copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+            except:
+                # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                logger.warn('Ongoing Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+
+    def copy_planned_approved_records_adhoc(self, dt):
+        """
+        Copy today's 'planned' records (268a), that have been SDO approved. to tomorrow ongoing (268b)
+
+        set Active and Area Burnt fields to None
+
+        dt = from date, copied to dt+1
+        """
+
+        tomorrow = dt + timedelta(days=1) # relative to dt
+        if not self.formA_sdo_acknowledged:
+            logger.info('Only SDO Acknowledged record can be copied from dt {} to tomorrow {}'.format(dt, tomorrow))
+            return
+
+        #objects = PrescribedBurn.objects.filter(date=dt, acknowledgements__acknow_type__in=['SDO_A'], form_name=PrescribedBurn.FORM_268A)
+        objects = [self]
+        now = timezone.now()
+        count = 0
+        for obj in objects:
+            if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Planned Approved Record Already Exists (Fire) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+                continue
+            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Planned Approved Record Already Exists (Burn) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+                continue
+            try:
+                obj.pk = None
+                obj.date = tomorrow
+                obj.area = None
+                obj.distance = None
+                obj.status = None
+                obj.approval_268a_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268a_status_modified = now
+                obj.approval_268b_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268b_status_modified = now
+                #obj.acknowledgements.all().delete()
+                obj.form_name=PrescribedBurn.FORM_268B
+                obj.rolled = True
+                obj.save()
+                count += 1
+                logger.info('Planned Approved Record copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+            except:
+                # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                logger.warn('Planned Approved Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+
 
     def __str__(self):
         return self.prescription.burn_id + ' (Burn)' if self.prescription else self.fire_id + ' (Fire)'
