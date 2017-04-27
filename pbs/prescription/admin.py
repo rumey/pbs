@@ -264,12 +264,12 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
 
         writer = unicodecsv.writer(response, quoting=unicodecsv.QUOTE_ALL)
         writer.writerow([
-            'Burn ID', 'Name of Burn', 'Area (ha)',
+            'Burn ID', 'Name of Burn', 'Area (ha)', 'Area to be treated (%)',
             'Priority', 'If Priority 1, explanatory comment*'])
 
         for item in queryset.order_by('priority', 'burn_id'):
             writer.writerow([
-                item.burn_id, item.name, "%0.1f" % item.area,
+                item.burn_id, item.name, "%0.1f" % item.area, item.treatment_percentage,
                 item.get_priority_display(), item.rationale if item.priority == 1 else ""
             ])
 
