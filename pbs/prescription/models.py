@@ -1496,7 +1496,7 @@ class Approval(Audit):
         editable=False)
     # the valid_to.default is redefined in the form to refer to the last day
     # of this prescription's planned season
-    valid_to = models.DateField(verbose_name="Valid To", default=timezone.now)
+    valid_to = models.DateField(verbose_name="Valid To")
     extension_count = models.PositiveSmallIntegerField(
         verbose_name="Extension Count", default=0,
         validators=[MaxValueValidator(3)], editable=False)
