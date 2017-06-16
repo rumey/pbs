@@ -655,7 +655,7 @@ class BurnImplementationState(AbstractState):
 
 
 class PostBurnChecklist(Audit):
-    prescription = models.ForeignKey(Prescription, blank=True, null=True)
+    prescription = models.ForeignKey(Prescription, blank=True, null=True, on_delete=models.PROTECT)
     action = models.CharField(max_length=320)
     relevant = models.BooleanField(default=False)
     completed_on = models.DateField(
@@ -824,7 +824,7 @@ class BurnClosureState(AbstractState):
 
 @python_2_unicode_compatible
 class AreaAchievement(Audit):
-    prescription = models.ForeignKey(Prescription)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
     #Jira issue PBS-1407
     ignition = models.DateField(
         verbose_name="Ignition Date",)
@@ -925,7 +925,7 @@ class Evaluation(Audit):
 
 
 class ProposedAction(Audit):
-    prescription = models.ForeignKey(Prescription)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
     observations = models.TextField(
         blank=True, verbose_name='Observations Identified')
     action = models.TextField(

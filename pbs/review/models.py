@@ -18,8 +18,8 @@ import logging
 logger = logging.getLogger('pbs')
 
 class BurnState(models.Model):
-    prescription = models.ForeignKey(Prescription, related_name='burnstate')
-    user = models.ForeignKey(User, help_text="User")
+    prescription = models.ForeignKey(Prescription, related_name='burnstate', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, help_text="User", on_delete=models.PROTECT)
     review_type = models.CharField(max_length=64)
     review_date = models.DateTimeField(auto_now_add=True)
 
@@ -60,8 +60,8 @@ class FireTenure(models.Model):
 
 
 class Acknowledgement(models.Model):
-    burn = models.ForeignKey('PrescribedBurn', related_name='acknowledgements')
-    user = models.ForeignKey(User, help_text="User", null=True, blank=True)
+    burn = models.ForeignKey('PrescribedBurn', related_name='acknowledgements', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, help_text="User", null=True, blank=True, on_delete=models.PROTECT)
     acknow_type = models.CharField(max_length=64, null=True, blank=True)
     acknow_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
@@ -128,7 +128,7 @@ class PrescribedBurn(Audit):
 
     fmt = "%Y-%m-%d %H:%M"
 
-    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='prescribed_burn', null=True, blank=True)
+    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='prescribed_burn', null=True, blank=True, on_delete=models.PROTECT)
 #    prescription = ChainedForeignKey(
 #        Prescription, chained_field="region", chained_model_field="region",
 #        show_all=False, auto_choose=True, blank=True, null=True)
@@ -140,7 +140,7 @@ class PrescribedBurn(Audit):
     region = models.PositiveSmallIntegerField(choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     district = ChainedForeignKey(
         District, chained_field="region", chained_model_field="region",
-        show_all=False, auto_choose=True, blank=True, null=True)
+        show_all=False, auto_choose=True, blank=True, null=True, on_delete=models.PROTECT)
     fire_tenures = models.ManyToManyField(FireTenure, verbose_name="Tenures", blank=True)
     date = models.DateField(auto_now_add=False)
     form_name = models.PositiveSmallIntegerField(verbose_name="Form Name (268a / 268b)", choices=FORM_NAME_CHOICES, editable=True)
@@ -497,8 +497,8 @@ class PrescribedBurn(Audit):
 
 
 class AircraftApproval(models.Model):
-    aircraft_burn = models.ForeignKey('AircraftBurn', related_name='approvals')
-    user = models.ForeignKey(User, help_text="User", null=True, blank=True)
+    aircraft_burn = models.ForeignKey('AircraftBurn', related_name='approvals', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, help_text="User", null=True, blank=True, on_delete=models.PROTECT)
     approval_type = models.CharField(max_length=64, null=True, blank=True)
     approval_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
@@ -534,7 +534,7 @@ class AircraftBurn(Audit):
 
     fmt = "%Y-%m-%d %H:%M"
 
-    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='aircraft_burns', null=True, blank=True)
+    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='aircraft_burns', null=True, blank=True, on_delete=models.PROTECT)
     #prescribed_burn = models.ForeignKey(PrescribedBurn, verbose_name="Daily Burn ID", related_name='aircraft_burn', null=True, blank=True)
 
     date = models.DateField(auto_now_add=False)
