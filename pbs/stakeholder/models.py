@@ -14,7 +14,7 @@ from pbs.prescription.models import Prescription
 
 @python_2_unicode_compatible
 class CriticalStakeholder(Audit):
-    prescription = models.ForeignKey(Prescription)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
     name = models.CharField(max_length=320)
     organisation = models.CharField(max_length=320)
     interest = models.TextField()
@@ -31,7 +31,7 @@ class CriticalStakeholder(Audit):
 
 
 class PublicContact(Audit):
-    prescription = models.ForeignKey(Prescription)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
     name = models.CharField(max_length=320)
     organisation = models.TextField()
     person = models.TextField(verbose_name="DPaW Person")
@@ -62,7 +62,7 @@ class Notification(Audit):
         (ORG_OTHER, 'Other')
     )
 
-    prescription = models.ForeignKey(Prescription)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
     notified = models.DateField(verbose_name="Date of Notification")
     contacted = models.TextField(verbose_name="Person Contacted")
     organisation = models.PositiveSmallIntegerField(

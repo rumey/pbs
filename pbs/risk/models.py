@@ -76,10 +76,10 @@ class Risk(Audit):
     prescription = models.ForeignKey(
         'prescription.Prescription',
         help_text="Prescription this issue belongs to.",
-        blank=True, null=True)
+        blank=True, null=True, on_delete=models.PROTECT)
     name = models.CharField(
         max_length=100, verbose_name="Potential Source of Risk")
-    category = models.ForeignKey(RiskCategory)
+    category = models.ForeignKey(RiskCategory, on_delete=models.PROTECT)
     risk = models.PositiveSmallIntegerField(
         choices=RISK_CHOICES, default=RISK_UNASSESSED)
     custom = models.BooleanField(
@@ -98,7 +98,7 @@ class Risk(Audit):
 class Context(Audit):
     prescription = models.ForeignKey(
         'prescription.Prescription',
-        help_text="Prescription this issue belongs to.",)
+        help_text="Prescription this issue belongs to.", on_delete=models.PROTECT)
     statement = models.TextField(verbose_name="Context Statement", blank=True)
 
     _required_fields = ('statement', )
@@ -139,7 +139,7 @@ class Action(Audit):
         ('day_of_burn_safety', 'Safety'),
     )
 
-    risk = models.ForeignKey(Risk, verbose_name='Potential Source of Risk')
+    risk = models.ForeignKey(Risk, verbose_name='Potential Source of Risk', on_delete=models.PROTECT)
     relevant = models.BooleanField(
         verbose_name="Action Relevant?",
         default=True, help_text="Include in Action List")
@@ -354,7 +354,7 @@ class Register(Audit):
 
     prescription = models.ForeignKey(
         'prescription.Prescription',
-        help_text="Prescription this risk register item belongs to.")
+        help_text="Prescription this risk register item belongs to.", on_delete=models.PROTECT)
     description = models.TextField(
         verbose_name="Risk Description", blank=True)
     draft_consequence = models.PositiveSmallIntegerField(
@@ -492,9 +492,9 @@ class TreatmentManager(models.Manager):
 
 @python_2_unicode_compatible
 class Treatment(Audit):
-    register = models.ForeignKey(Register)
+    register = models.ForeignKey(Register, on_delete=models.PROTECT)
     description = models.TextField()
-    location = models.ForeignKey(TreatmentLocation)
+    location = models.ForeignKey(TreatmentLocation, on_delete=models.PROTECT)
     complete = models.BooleanField(verbose_name="Dealt With?", default=False)
     objects = TreatmentManager()
 
@@ -514,7 +514,7 @@ class Contingency(Audit):
     '''
     prescription = models.ForeignKey(
         'prescription.Prescription',
-        help_text="Prescription this objective belongs to.")
+        help_text="Prescription this objective belongs to.", on_delete=models.PROTECT)
     description = models.TextField(
         help_text="Contingency Details", verbose_name="Contingency")
     trigger = models.TextField(help_text="Trigger")
@@ -567,7 +567,7 @@ class Contingency(Audit):
 
 @python_2_unicode_compatible
 class ContingencyAction(Audit):
-    contingency = models.ForeignKey(Contingency, related_name='actions')
+    contingency = models.ForeignKey(Contingency, related_name='actions', on_delete=models.PROTECT)
     action = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -576,7 +576,7 @@ class ContingencyAction(Audit):
 
 @python_2_unicode_compatible
 class ContingencyNotification(Audit):
-    contingency = models.ForeignKey(Contingency, related_name='notifications')
+    contingency = models.ForeignKey(Contingency, related_name='notifications', on_delete=models.PROTECT)
     name = models.CharField(max_length=100, verbose_name='Notify (Name)',
         blank=True, null=True)
     location = models.CharField(max_length=100, blank=True, null=True)
@@ -607,7 +607,7 @@ class Complexity(Audit):
     prescription = models.ForeignKey(
         'prescription.Prescription',
         help_text="Prescription this Complexity belongs to.",
-        blank=True, null=True)
+        blank=True, null=True, on_delete=models.PROTECT)
     factor = models.CharField(max_length=64)
     sub_factor = models.CharField(
         verbose_name="Sub-factor", max_length=64)
