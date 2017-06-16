@@ -718,8 +718,11 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                                "this ePFP.")
                         group = Group.objects.get(name='ePFP Application Administrator')
                     else:
-                        obj.endorsement_status = obj.ENDORSEMENT_DRAFT
-                        obj.endorsement_set.all().delete()
+                        logger.warning('Prescription {} - all endorsements input but "delete all" business logic triggered'.format(obj))
+                        for i in obj.endorsement_set.all():
+                            logger.info('Staff: {}, role: {}, endorsement: {}'.format(i.creator.get_full_name(), i.role, i.endorsed))
+                        #obj.endorsement_status = obj.ENDORSEMENT_DRAFT
+                        #obj.endorsement_set.all().delete()
                         msg = (" All endorsements have been reviewed but some "
                                "of them have not been endorsed on this ePFP.")
                     obj.save()

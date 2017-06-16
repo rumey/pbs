@@ -1473,7 +1473,7 @@ class Endorsement(Audit):
         (True, 'Endorsed'),
     )
     prescription = models.ForeignKey(Prescription)
-    role = models.ForeignKey(EndorsingRole)
+    role = models.ForeignKey(EndorsingRole, on_delete=models.PROTECT)
     endorsed = models.NullBooleanField(choices=ENDORSED_CHOICES, default=None)
 
     def __str__(self):
