@@ -1321,13 +1321,16 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             latitude = pb.latitude
             longitude = pb.longitude
 
-            ai = AnnualIndicativeBurnProgram.objects.filter(burnid=fire_id)
             lat_long_updated = ''
-            if ai:
-                lat_long_updated = "Yes" if round(float(ai[0].latitude), 5) != round(pb.latitude,5) or round(float(ai[0].longitude),5) != round(pb.longitude, 5) else "No"
-            else:
-                if pb.prescription:
-                    logger.warn('AnnualIndicativeBurnProgram: Prescription not present. {}'.format(fire_id))
+            try:
+                ai = AnnualIndicativeBurnProgram.objects.filter(burnid=fire_id)
+                if ai:
+                    lat_long_updated = "Yes" if round(float(ai[0].latitude), 5) != round(pb.latitude,5) or round(float(ai[0].longitude),5) != round(pb.longitude, 5) else "No"
+                else:
+                    if pb.prescription:
+                        logger.warn('AnnualIndicativeBurnProgram: Prescription not present. {}'.format(fire_id))
+            except:
+                logger.warn('AnnualIndicativeBurnProgram: Prescription not present. {}'.format(fire_id))
 
             user_acknow_formA = pb.user_a_record
             srm_acknow_formA = pb.srm_a_record

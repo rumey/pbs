@@ -639,7 +639,7 @@ class BurnProgramLink(models.Model):
                     obj.longitude = p.longitude
                     obj.latitude = p.latitude
                     obj.perim_km = p.perim_km
-                    obj.trtd_area = p.trtd_area
+                    obj.trtd_area = p.trtd_area if p.trtd_area else 0.0
                     obj.save()
             except:
                 logger.error('ERROR: Assigning AnnulaIndicativeBurnProgram \n{}'.format(sys.exc_info()))
