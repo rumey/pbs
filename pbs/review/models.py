@@ -588,7 +588,7 @@ class AircraftBurn(Audit):
         )
 
 class AnnualIndicativeBurnProgram(models.Model):
-    ogc_fid = models.IntegerField(primary_key=True)
+    objectid = models.IntegerField(primary_key=True)
     wkb_geometry = models.MultiPolygonField(srid=4326, blank=True, null=True)
     region = models.CharField(max_length=35, blank=True)
     district = models.CharField(max_length=35, blank=True)
