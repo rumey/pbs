@@ -673,3 +673,7 @@ ul.stat-list {
   font-weight: bold !important;
 }
 
+tr.burn-completed {
+    color: darkgray;
+}
+

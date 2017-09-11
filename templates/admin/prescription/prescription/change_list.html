@@ -319,6 +319,8 @@ $(document).ready(function() {
     // ---------------------------------------------------------
     // Hacky filter/column sort solution ends
     // ---------------------------------------------------------
+    $("td.column-status:contains('Burn Closed')").parent().addClass('burn-completed');
+    $("td.column-status:contains('Burn Closed')").siblings().children('a').css({color:'darkgray'})
 });
 </script>
 <div id="tablemask" class="hide row">
