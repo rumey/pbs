@@ -593,7 +593,7 @@ class AnnualIndicativeBurnProgram(models.Model):
     region = models.CharField(max_length=35, blank=True)
     district = models.CharField(max_length=35, blank=True)
     burnid = models.CharField(max_length=30, blank=True)
-    fin_yr = models.CharField(max_length=8, blank=True, null=True)
+    fin_yr = models.CharField(verbose_name='Fin Year', max_length=9, blank=True, null=True)
     location = models.CharField(max_length=254, blank=True)
     status = models.CharField(max_length=254, blank=True)
     priority = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
