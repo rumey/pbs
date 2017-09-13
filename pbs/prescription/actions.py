@@ -22,6 +22,9 @@ from django.conf import settings
 import datetime
 import subprocess
 
+import logging
+logger = logging.getLogger('pbs')
+
 
 def delete_selected(modeladmin, request, queryset):
     """
@@ -127,6 +130,7 @@ def delete_approval_endorsement(modeladmin, request, queryset):
     if request.POST.get('post'):
         obj = queryset[0]
         obj.clear_approvals()
+        logger.warning('Delete: Clearing Approvals/Endorsements {}, deleted by {}'.format(obj.burn_id, request.user.get_full_name()))
 
         update_permissions(obj, modeladmin.admin_site, "endorsement",
                            assign_perm)

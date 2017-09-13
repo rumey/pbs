@@ -770,6 +770,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         if request.method == 'POST':
             # The user has confirmed they wish to delete the endorsement
             endorsement.delete()
+            logger.warning('Delete: Endorsement {}, burn id {}, deleted by {}'.format(obj.burn_id, endorsement, request.user.get_full_name()))
             self.message_user(request, "Successfully deleted endorsement.")
             url = reverse('admin:prescription_prescription_endorse', args=(obj.id,))
             return HttpResponseRedirect(url)
@@ -917,6 +918,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             elif obj.approval_status == obj.APPROVAL_SUBMITTED:
                 if request.POST.get('_cancel'):
                     obj.clear_approvals()
+                    logger.warning('Delete: Clearing Approvals/Endorsements {}, {}'.format(obj.burn_id, request.user.get_full_name()))
                     self.message_user(
                         request, "Approval rejected. ePFP is now draft.")
                     return HttpResponseRedirect(url)
