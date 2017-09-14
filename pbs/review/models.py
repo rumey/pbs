@@ -116,13 +116,14 @@ class PrescribedBurn(Audit):
         (FORM_268B, 'Form 268b'),
     )
 
+    '''
+    BUSHFIRE_DISTRICT_ALIASES can be used to override the District's original code from the model. Usage e.g.:
     BUSHFIRE_DISTRICT_ALIASES = {
         'PHS' : 'PH',
         'SWC' : 'SC',
-        'EKM' : 'KIMB',
-        'WKM' : 'KIMB',
-        'KAL' : 'GF',
-        'PIL' : 'PF',
+    }
+    '''        
+    BUSHFIRE_DISTRICT_ALIASES = {
     }
 
 
@@ -135,7 +136,7 @@ class PrescribedBurn(Audit):
 
 
     # Required for Fire records
-    fire_id = models.CharField(verbose_name="Fire Number", max_length=8, null=True, blank=True)
+    fire_id = models.CharField(verbose_name="Fire Number", max_length=12, null=True, blank=True)
     fire_name = models.TextField(verbose_name="Name", null=True, blank=True)
     region = models.PositiveSmallIntegerField(choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     district = ChainedForeignKey(
@@ -191,7 +192,7 @@ class PrescribedBurn(Audit):
                 raise ValidationError("Value must be in range (001 - 999).")
 
             district = self.BUSHFIRE_DISTRICT_ALIASES[self.district.code] if self.BUSHFIRE_DISTRICT_ALIASES.has_key(self.district.code) else self.district.code
-            fire_id = "%s_%s" % (district, self.fire_id)
+            fire_id = "BF_%s_%s" % (district, self.fire_id)
             pb = PrescribedBurn.objects.filter(fire_id=fire_id, date=self.date)
             if pb and pb[0].id != self.id:
                 raise ValidationError("{} already exists for date {}".format(fire_id, self.date))
