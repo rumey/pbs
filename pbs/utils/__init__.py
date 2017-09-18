@@ -6,6 +6,9 @@ from django.utils.encoding import force_text
 from guardian.shortcuts import remove_perm
 
 from pbs.admin import get_permission_codename
+from django.core.mail import EmailMessage
+from django.conf import settings
+import os
 
 
 def get_deleted_objects(objs, opts, user, admin_site, using):
@@ -85,3 +88,21 @@ def create_permissions():
     # Regional Fire Coordinator can carry over burns too.
     obj_cust = Group.objects.get(name__icontains='objective custodians')
     obj_cust.permissions.add(can_carry_over)
+
+
+def support_email(subject, msg, exception=None, msg_type='Warning'):
+    if not settings.SUPPORT_EMAIL:
+       return
+
+    try:
+        env = os.getcwd().split('/')[-1].split('.')[0].split('-')[1].upper() # PROD/UAT/DEV etc
+    except:
+        env = ''
+
+    subject = 'PBS {}: {} ({})'.format(msg_type, subject, env)
+    body = '<p>Subject: {}</p><br><br>{}<br><br>{}'.format(subject, msg, exception)
+
+    message = EmailMessage(subject=subject, body=body, from_email=settings.FROM_EMAIL, to=settings.SUPPORT_EMAIL)
+    message.content_subtype = 'html'
+    message.send()
+

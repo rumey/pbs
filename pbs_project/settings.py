@@ -1,6 +1,7 @@
 import dj_database_url
 import ldap
 import os
+from confy import env
 
 from django_auth_ldap.config import (LDAPSearch, GroupOfNamesType,
                                      LDAPSearchUnion)
@@ -21,6 +22,8 @@ SHP_DOWNLOAD_URL = os.environ['SHP_DOWNLOAD_URL']
 TCD_EXCLUSIONS_FILE = os.environ.get('TCD_EXCLUSIONS_FILE', None)
 TCD_EXCLUSIONS = [line.rstrip('\n') for line in open(TCD_EXCLUSIONS_FILE) if not line.rstrip('\n')==''] if TCD_EXCLUSIONS_FILE else []
 
+FROM_EMAIL = env('FROM_EMAIL', 'from_email')
+SUPPORT_EMAIL = env('SUPPORT_EMAIL', None)
 
 # PDF MUTEX - file lock max time 4 mins (4*60)
 MAX_LOCK_TIME = os.environ.get('MAX_LOCK_TIME', 240)

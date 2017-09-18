@@ -13,7 +13,7 @@ from django.utils.translation import ugettext_lazy, ugettext as _
 from guardian.shortcuts import assign_perm
 
 from pbs.prescription.models import Prescription
-from pbs.utils import get_deleted_objects, update_permissions
+from pbs.utils import get_deleted_objects, update_permissions, support_email
 
 from pbs.document.models import Document, DocumentCategory
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -130,7 +130,9 @@ def delete_approval_endorsement(modeladmin, request, queryset):
     if request.POST.get('post'):
         obj = queryset[0]
         obj.clear_approvals()
-        logger.warning('Delete: Clearing Approvals/Endorsements {}, deleted by {}'.format(obj.burn_id, request.user.get_full_name()))
+        msg = 'Delete: Clearing Approvals/Endorsements', 'Burn ID: {}, Deleted by: {}'. format(obj.burn_id, request.user.get_full_name())
+        logger.warning(msg)
+        support_email('Delete: Clearing Approvals/Endorsements', msg)
 
         update_permissions(obj, modeladmin.admin_site, "endorsement",
                            assign_perm)

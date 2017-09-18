@@ -55,7 +55,7 @@ from pbs.report.forms import (
     SummaryCompletionStateForm, BurnImplementationStateForm, BurnClosureStateForm)
 
 from pbs.templatetags.pbs_markdown import markdownify
-from pbs.utils import get_deleted_objects, update_permissions
+from pbs.utils import get_deleted_objects, update_permissions, support_email
 from pbs.utils.widgets import CheckboxSelectMultiple
 
 from pbs import mutex, SemaphoreException
@@ -770,7 +770,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         if request.method == 'POST':
             # The user has confirmed they wish to delete the endorsement
             endorsement.delete()
-            logger.warning('Delete: Endorsement {}, burn id {}, deleted by {}'.format(obj.burn_id, endorsement, request.user.get_full_name()))
+            msg = 'Delete Endorsement', 'Burn ID: {}, Role: {}, Endorsed by: {}, Deleted by: {}'. format(obj.burn_id, endorsement.role, endorsement.modifier.get_full_name(), request.user.get_full_name())
+            logger.warning(msg)
+            support_email('Delete Endorsement', msg)
             self.message_user(request, "Successfully deleted endorsement.")
             url = reverse('admin:prescription_prescription_endorse', args=(obj.id,))
             return HttpResponseRedirect(url)
@@ -918,7 +920,10 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             elif obj.approval_status == obj.APPROVAL_SUBMITTED:
                 if request.POST.get('_cancel'):
                     obj.clear_approvals()
-                    logger.warning('Delete: Clearing Approvals/Endorsements {}, {}'.format(obj.burn_id, request.user.get_full_name()))
+                    msg = 'Delete: Clearing Approvals/Endorsements', 'Burn ID: {}, Deleted by: {}'. format(obj.burn_id, request.user.get_full_name())
+                    logger.warning(msg)
+                    support_email('Delete: Clearing Approvals/Endorsements', msg)
+
                     self.message_user(
                         request, "Approval rejected. ePFP is now draft.")
                     return HttpResponseRedirect(url)
