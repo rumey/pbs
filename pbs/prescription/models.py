@@ -485,7 +485,7 @@ class Prescription(Audit):
         blocks = " in %s" % self.forest_blocks if self.forest_blocks else ""
 
         try:
-            if self.tenures.count() > 0:
+            if self.fuel_types.count() > 0:
                 veg_type_names = [v.name for v in self.fuel_types.all()]
 
                 if len(veg_type_names) > 1:
