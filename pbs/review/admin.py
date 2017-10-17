@@ -36,7 +36,8 @@ from django.db.models import Q
 import subprocess
 import sys, traceback
 from django.db import IntegrityError
-from django.forms import ModelChoiceField
+from django.forms import ModelChoiceField, ChoiceField
+import requests
 
 import logging
 logger = logging.getLogger('pbs')
@@ -409,15 +410,17 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     }
                 return HttpResponse(json.dumps(d))
 
-            if request.REQUEST.has_key('fire_id'):
-                # calculate and return the bushfire_id string for the FireForm
-                fire_id = str( request.REQUEST.get('fire_id') )
-                district_id = request.REQUEST.get('district')
-                code = District.objects.get(id=district_id).code
-
-                district = PrescribedBurn.BUSHFIRE_DISTRICT_ALIASES[code] if PrescribedBurn.BUSHFIRE_DISTRICT_ALIASES.has_key(code) else code
-                bushfire_id = district + '_' + fire_id
-                return HttpResponse(json.dumps({'bushfire_id': bushfire_id}))
+            if request.REQUEST.has_key('district_id') and request.REQUEST.get('form_name')=='add_fire':
+                try:
+                    bfrs_base_url = settings.BFRS_URL if settings.BFRS_URL.endswith('/') else settings.BFRS_URL + os.sep
+                    params = '&district_id={}'.format(request.GET.get('district_id'))
+                    if request.GET.get('year'):
+                        params += '&year={}'.format(request.GET.get('year'))
+                    resp = requests.get(url=bfrs_base_url + 'api/v1/bushfire/fields/fire_number/?format=json' + params, auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO)).json()
+                    resp.insert(0, {u'fire_number': u'--------', u'name': u''})
+                except:
+                    resp = [{u'fire_number': u'BFRS lookup Failed', u'name': u''}]
+                return HttpResponse(json.dumps({'fire_numbers': resp}))
 
             if request.REQUEST.has_key('region') and request.REQUEST.get('region') and request.REQUEST.has_key('form_name') and request.REQUEST.get('form_name'):
                 if request.REQUEST.get('form_name') == 'add_burn':

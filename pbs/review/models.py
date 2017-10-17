@@ -17,6 +17,9 @@ from django.utils import timezone
 import logging
 logger = logging.getLogger('pbs')
 
+def current_finyear():
+    return datetime.now().year if datetime.now().month>6 else datetime.now().year-1
+
 class BurnState(models.Model):
     prescription = models.ForeignKey(Prescription, related_name='burnstate', on_delete=models.PROTECT)
     user = models.ForeignKey(User, help_text="User", on_delete=models.PROTECT)
@@ -136,7 +139,7 @@ class PrescribedBurn(Audit):
 
 
     # Required for Fire records
-    fire_id = models.CharField(verbose_name="Fire Number", max_length=12, null=True, blank=True)
+    fire_id = models.CharField(verbose_name="Fire Number", max_length=15, null=True, blank=True)
     fire_name = models.TextField(verbose_name="Name", null=True, blank=True)
     region = models.PositiveSmallIntegerField(choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     district = ChainedForeignKey(
@@ -184,21 +187,6 @@ class PrescribedBurn(Audit):
             self.district = self.prescription.district
 
     def clean_fire_id(self):
-        if not (len(self.fire_id)>=6 and self.fire_id[-4]=='_'): # ignore if this is an edit (field is readonly)
-            if not self.fire_id or str(self.fire_id)[0] in ('-', '+') or not str(self.fire_id).isdigit() or not len(self.fire_id)==3:
-                raise ValidationError("You must enter numeric digit with 3 characters (001 - 999).")
-
-            if int(self.fire_id)<1 or int(self.fire_id)>999:
-                raise ValidationError("Value must be in range (001 - 999).")
-
-            district = self.BUSHFIRE_DISTRICT_ALIASES[self.district.code] if self.BUSHFIRE_DISTRICT_ALIASES.has_key(self.district.code) else self.district.code
-            fire_id = "BF_%s_%s" % (district, self.fire_id)
-            pb = PrescribedBurn.objects.filter(fire_id=fire_id, date=self.date)
-            if pb and pb[0].id != self.id:
-                raise ValidationError("{} already exists for date {}".format(fire_id, self.date))
-
-            self.fire_id = fire_id
-
         # set the Lat/Long to Zero, since Bushfire is not assigning these required fields
         self.latitude = 0.0
         self.longitude = 0.0

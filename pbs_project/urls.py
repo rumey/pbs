@@ -6,9 +6,15 @@ from pbs.document.models import Document
 from pbs.sites import site
 from pbs.forms import PbsPasswordResetForm
 
+from tastypie.api import Api
+from pbs.review.api import PrescribedBurnResource
+
 handler500 = 'pbs.views.handler500'
 # Define the simplest possible view for Document uploads.
 document_download = ObjectDownloadView.as_view(model=Document, file_field='document')
+
+v1_api = Api(api_name='v1')
+v1_api.register(PrescribedBurnResource())
 
 urlpatterns = patterns('',
     (r'^docs/', include('django.contrib.admindocs.urls')),
@@ -21,4 +27,6 @@ urlpatterns = patterns('',
     (r'^', include('django.contrib.auth.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
     url('^documents/(?P<pk>\d+)/download$', document_download, name='document_download'),
+
+    url(r'^api/', include(v1_api.urls)),
 )

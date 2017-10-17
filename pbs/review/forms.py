@@ -7,6 +7,7 @@ from django.forms import ValidationError
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Field, Div
+import requests
 
 class BurnStateSummaryForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
@@ -255,18 +256,27 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
             )
 
 
+class ChoiceFieldNoValidation(forms.ChoiceField):
+    """ Because the Choice field decalared is empty, and populaeted by jscript, validation fails - so remove validation """
+    def validate(self, value):
+        pass
+
 class FireForm(forms.ModelForm):
+    fire_number = ChoiceFieldNoValidation(required=False)
+    year = forms.ChoiceField(required=False)
+    #year = forms.ChoiceField(choices=((0, '--------'), (1, 2016), (2, 2017)) )
+
     def __init__(self, *args, **kwargs):
         super(FireForm, self).__init__(*args, **kwargs)
 
+        self.fields['year'].choices = self.year_choices
         self.fields['region'].required = True
         self.fields['district'].required = True
-        self.fields['fire_id'].required = True
-        self.fields['fire_name'].required = True
+        self.fields['fire_id'].widget = forms.HiddenInput()
+        self.fields['fire_name'].widget = forms.HiddenInput()
         self.fields['status'].required = True
         self.fields['area'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
-        self.fields['fire_id'].widget.attrs.update({'placeholder': 'Digits must be between 001-999'})
         now = datetime.now()
         today = now.date()
         tomorrow = today + timedelta(days=1)
@@ -276,9 +286,29 @@ class FireForm(forms.ModelForm):
 
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
 
+    @property
+    def year_choices(self):
+        """ Returns tuple eg. ((0,'--------'), (1,2017)) """
+        choices = [[0, '--------']]
+        bfrs_url = settings.BFRS_URL if settings.BFRS_URL.endswith('/') else settings.BFRS_URL + os.sep
+        years = ['--------'] + requests.get(url=bfrs_url + 'api/v1/bushfire/fields/year/?format=json', auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO)).json()
+        return tuple([(years.index(i), i) for i in years])
+
+    def clean(self):
+        fire_id = self.cleaned_data['fire_id']
+        if not fire_id or not len(fire_id)==15:
+            raise ValidationError("You must select a fire number")
+
+        dt = self.cleaned_data['date']
+        pb = PrescribedBurn.objects.filter(fire_id=fire_id, date=dt)
+        if pb:
+            raise ValidationError("{} already exists for date {}".format(fire_id, dt))
+
+        return self.cleaned_data
+
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
+        fields = ('region', 'district', 'year', 'fire_number', 'fire_id','date', 'status', 'area', 'fire_tenures', 'fire_name',)
 
 
 class FireEditForm(forms.ModelForm):
@@ -298,11 +328,11 @@ class FireEditForm(forms.ModelForm):
         region.choices = [region.choices[region_idx]]
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
 
-        district = self.fields['district']
-        self.fields['district'].queryset = district.queryset.filter(name=prescribed_burn.district)
-        self.fields['district'].widget.attrs['readonly'] = True
+        self.initial['district'] = prescribed_burn.district.id
+        self.fields['district'].widget.attrs['disabled'] = 'disabled'
 
         self.fields['fire_id'].widget.attrs['readonly'] = True
+        self.fields['fire_name'].widget.attrs['readonly'] = True
 
         status = self.fields['status']
         status.choices = status.choices[1:]
@@ -319,12 +349,15 @@ class FireEditForm(forms.ModelForm):
         else:
             return self.cleaned_data['region']
 
-#    def clean_district(self):
-#        instance = getattr(self, 'instance', None)
-#        if instance and instance.pk:
-#            return instance.district
-#        else:
-#            return self.cleaned_data['district']
+    def clean_district(self):
+        """
+        need this when widget is disabled
+        """
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.district
+        else:
+            return self.cleaned_data['district']
 
     def clean_fire_id(self):
         instance = getattr(self, 'instance', None)
