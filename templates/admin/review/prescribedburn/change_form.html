@@ -4,6 +4,7 @@
 
 {% block content_title %}{% if title %}<h1>{{ form_title }}</h1>{% endif %}{% endblock %}
 
+
 <script>
 
 $(function() {
@@ -36,6 +37,7 @@ $(function() {
         if ($("#id_year :selected").val() > 0) { year = $("#id_year :selected").text(); }
         if ($("#id_district :selected").val() > 0) { district_id = $("#id_district :selected").val(); }
         $( "#id_bushfire_name").remove()
+        $( "#id_tenure_ignition_point").remove()
             
         $('#id_fire_number').prop('disabled', true).attr('title', 'Must first select Region/District/Year');
         if (year || district_id) {
@@ -51,11 +53,17 @@ $(function() {
                 success: function(response){
                     var response = JSON.parse(response);
                     var myselect = $('<select>');
+                    var tenure_name = '';
                     $('#id_fire_number').empty();
                     console.log(response['fire_numbers'])
                     $.each(response['fire_numbers'], function(idx, key) {
                         //myselect.append( $('<option></option>').val(idx).html(key['fire_number']).attr({'name': key['name']}) );
-                        myselect.append( $('<option></option>').val(key['fire_number']).html(key['fire_number']).attr({'name': key['name']}) );
+                        //myselect.append( $('<option></option>').val(key['fire_number']).html(key['fire_number']).attr({'name': key['name']}) );
+                        tenure_name = key['tenure__name'];
+                        if (tenure_name.indexOf('Other') > -1 && key['other_tenure'] != null) {
+                            tenure_name = key['other_tenure'];
+                        }
+                        myselect.append( $('<option></option>').val(key['fire_number']).html(key['fire_number']).attr({'name': key['name']}).attr({'tenure__name': tenure_name}) );
                     });
                     $('#id_fire_number').append(myselect.html());
                     $('#id_fire_number').prop('disabled', false);
@@ -235,9 +243,12 @@ $(function() {
 
     $("#id_fire_number").change(function () {
         $( "#id_bushfire_name").remove()
-        $( "<span id='id_bushfire_name' style='padding: 20px;'>  " + $("#id_fire_number :selected").attr('name') + "</span>" ).insertAfter( "#id_fire_number" );
+        $( "#id_tenure_ignition_point").remove()
+        $( "<span id='id_bushfire_name' style='padding: 20px;'>" + $("#id_fire_number :selected").attr('name') + "</span>" ).insertAfter( "#id_fire_number" );
+        $( "<span id='id_tenure_ignition_point'><br>Tenure of Ignition Point:   " + $("#id_fire_number :selected").attr('tenure__name') + "</span>" ).insertAfter( "#id_bushfire_name" );
         $("#id_fire_id").val($("#id_fire_number :selected").val());
         $("#id_fire_name").val($("#id_fire_number :selected").attr('name'));
+        $("#id_tenures").val($("#id_fire_number :selected").attr('tenure__name'));
     });
 
 

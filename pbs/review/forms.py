@@ -274,6 +274,7 @@ class FireForm(forms.ModelForm):
         self.fields['district'].required = True
         self.fields['fire_id'].widget = forms.HiddenInput()
         self.fields['fire_name'].widget = forms.HiddenInput()
+        self.fields['tenures'].widget = forms.HiddenInput()
         self.fields['status'].required = True
         self.fields['area'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
@@ -308,19 +309,22 @@ class FireForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'year', 'fire_number', 'fire_id','date', 'status', 'area', 'fire_tenures', 'fire_name',)
+        #fields = ('region', 'district', 'year', 'fire_number', 'fire_id','date', 'status', 'area', 'fire_tenures', 'fire_name',)
+        fields = ('region', 'district', 'year', 'fire_number', 'fire_id','date', 'status', 'area', 'fire_name', 'tenures',)
 
 
 class FireEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FireEditForm, self).__init__(*args, **kwargs)
         prescribed_burn = kwargs.get('instance')
-        self.initial['fire_id'] = self.initial['fire_id'][-3:]
+        #self.initial['fire_id'] = self.initial['fire_id'][-3:]
 
-        self.fields['fire_name'].required = True
+        #self.fields['fire_name'].required = True
         self.fields['status'].required = True
         self.fields['area'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
+        self.fields['tenures'].required = False
+        self.fields['tenures'].label = 'Tenure of Ignition Point'
 
         # hack to get the instance choices (region and district) to display read-only/disabled
         region = self.fields['region']
@@ -333,6 +337,7 @@ class FireEditForm(forms.ModelForm):
 
         self.fields['fire_id'].widget.attrs['readonly'] = True
         self.fields['fire_name'].widget.attrs['readonly'] = True
+        self.fields['tenures'].widget.attrs['readonly'] = True
 
         status = self.fields['status']
         status.choices = status.choices[1:]
@@ -368,7 +373,8 @@ class FireEditForm(forms.ModelForm):
 
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
+        #fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'tenures', 'date', 'status', 'area',)
 
 
 class PrescribedBurnFilterForm(forms.ModelForm):

@@ -417,9 +417,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     if request.GET.get('year'):
                         params += '&year={}'.format(request.GET.get('year'))
                     resp = requests.get(url=bfrs_base_url + 'api/v1/bushfire/fields/fire_number/?format=json' + params, auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO)).json()
-                    resp.insert(0, {u'fire_number': u'--------', u'name': u''})
+                    resp.insert(0, {u'fire_number': u'--------', u'name': u'', u'tenure__name': u'', u'other_tenure': u''})
                 except:
-                    resp = [{u'fire_number': u'BFRS lookup Failed', u'name': u''}]
+                    resp = [{u'fire_number': u'BFRS lookup Failed', u'name': u'', u'tenure__name': u'', u'other_tenure': u''}]
                 return HttpResponse(json.dumps({'fire_numbers': resp}))
 
             if request.REQUEST.has_key('region') and request.REQUEST.get('region') and request.REQUEST.has_key('form_name') and request.REQUEST.get('form_name'):
