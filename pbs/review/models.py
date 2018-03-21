@@ -125,7 +125,7 @@ class PrescribedBurn(Audit):
         'PHS' : 'PH',
         'SWC' : 'SC',
     }
-    '''        
+    '''
     BUSHFIRE_DISTRICT_ALIASES = {
     }
 
@@ -191,11 +191,11 @@ class PrescribedBurn(Audit):
         self.latitude = 0.0
         self.longitude = 0.0
 
-    def clean_date(self):
-        today = date.today()
-        tomorrow = today + timedelta(days=1)
-        if not self.pk and (self.date < today or self.date > tomorrow):
-            raise ValidationError("You must enter burn plans for today or tommorow's date only.")
+#    def clean_date(self):
+#        today = date.today()
+#        tomorrow = today + timedelta(days=1)
+#        if not self.pk and (self.date < today or self.date > tomorrow):
+#            raise ValidationError("You must enter burn plans for today or tommorow's date only.")
 
     def clean_planned_distance(self):
         if self.planned_area==None and self.planned_distance==None:

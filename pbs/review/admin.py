@@ -177,18 +177,23 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         if request.GET.has_key('form'):
+            self.form = None
             if request.REQUEST.get('form')=='add_fire':
-                return FireForm
+                self.form = FireForm
             if request.REQUEST.get('form')=='edit_fire':
-                return FireEditForm
+                self.form = FireEditForm
             if request.REQUEST.get('form')=='add_burn':
-                return PrescribedBurnForm
+                self.form = PrescribedBurnForm
             if request.REQUEST.get('form')=='add_active_burn':
-                return PrescribedBurnActiveForm
+                self.form = PrescribedBurnActiveForm
             if request.REQUEST.get('form')=='edit_active_burn':
-                return PrescribedBurnEditActiveForm
+                self.form = PrescribedBurnEditActiveForm
             if request.REQUEST.get('form')=='edit_burn':
-                return PrescribedBurnEditForm
+                self.form = PrescribedBurnEditForm
+
+            if self.form:
+                self.form.current_user = request.user
+            return self.form
 
     def csv_view(self, request):
         """ view to render the FMSB Report form """
@@ -308,14 +313,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         today = now.date()
         yesterday = today - timedelta(days=1)
         time_now = now.time()
-        
+
         if self.is_role_based_user(request):
             self.message_user(request, "Role-based user is not permitted to Edit {}. Please login with user credentials".format(
                 'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
             )
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-        if obj.date < yesterday:
+        if obj.date < yesterday and not self.can_admin(request):
             self.message_user(request, "Past burns cannot be edited")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
@@ -441,7 +446,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     lastyear = date.today() + timedelta(days=-365)
                     presc_ids = list(set([a.prescription.pk for a in AreaAchievement.objects.filter(ignition__gte=lastyear)]))
                     qs = Prescription.objects.filter(pk__in=presc_ids).exclude(ignition_status=Prescription.IGNITION_NOT_STARTED).distinct()
-                
+
                 qs = qs.filter(region=request.REQUEST.get('region')).order_by('-burn_id')
 
                 #burn_ids = ["<option value={}>{}</option>".format(p.id, p.burn_id) for p in qs]
@@ -503,7 +508,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         if self.is_role_based_user(request):
             message = "Role-based user is not permitted to Acknowledge or Delete. Please login with user credentials"
-            msg_type = messages.ERROR 
+            msg_type = messages.ERROR
 
         elif action == "District Entered" or action == "District Submit":
             count = 0
@@ -670,10 +675,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #today = date(2016,4,12)
         tomorrow = today + timedelta(days=1)
         yesterday = today - timedelta(days=1)
-        
+
         if self.is_role_based_user(request):
             message = "Role-based user is not permitted to Acknowledge or Delete. Please login with user credentials"
-            msg_type = messages.ERROR 
+            msg_type = messages.ERROR
 
         elif action == "Regional Acknowledgement" or action == "Regional Endorsement":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
@@ -682,7 +687,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 return HttpResponseRedirect(referrer_url)
 
             # TODO can approve records for today or tomorrow only?
-            if not (dt == yesterday or dt == today or dt == tomorrow):
+            if not (dt == yesterday or dt == today or dt == tomorrow) and not self.can_admin(request):
                 message = "Can only acknowledge burns for yesterday {}, today {}, or tomorrow {}.".format(yesterday, today, tomorrow)
                 self.message_user(request, message, level=messages.ERROR)
                 return HttpResponseRedirect(referrer_url)
@@ -839,7 +844,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "Only regional and state levels can acknowledge {}".format(burn_desc)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-            if not (dt == yesterday or dt == today or dt == tomorrow):
+            if not (dt == yesterday or dt == today or dt == tomorrow) and not self.can_admin(request):
                 message = "Can only acknowledge {} for yesterday {}, today {}, or tomorrow {}.".format(burn_desc, today, tomorrow)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
@@ -874,7 +879,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 self.copy_planned_approved_records(dt)
 
             elif report=='epfp_fireload':
-                self.copy_ongoing_records(dt) # copy yesterdays ongoing active records to today
+                self.copy_ongoing_records(request, dt) # copy yesterdays ongoing active records to today
                 unset_objects = self.check_rolled_records(dt) # check records are correctly set
                 if len(unset_objects) > 0:
                     message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
@@ -942,7 +947,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #    pass
 
         elif action == "Copy Record to Tomorrow":
-            if not (dt >= yesterday or dt <= tomorrow):
+            if not (dt >= yesterday or dt <= tomorrow) and not self.can_admin(request):
                 message = "Can only copy records for yesterday {}, today {}, or tomorrow {}.".format(yesterday, today, tomorrow)
                 msg_type = "danger"
             else:
@@ -971,7 +976,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         View to bulk delete prescribed burns/fires
         """
         referrer_url = request.META.get('HTTP_REFERER')
-        
+
         if self.is_role_based_user(request):
             self.message_user(request, "Role-based user is not permitted to Delete {}. Please login with user credentials".format(
                 'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
@@ -1134,7 +1139,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         }
         return records
 
-    def copy_ongoing_records(self, dt):
+    def copy_ongoing_records(self, request, dt):
         """
         Copy today's 'active' records to tomorrow
 
@@ -1144,7 +1149,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         today = date.today()
         tomorrow = today + timedelta(days=1)
-        if not (dt == today or dt == tomorrow):
+        if not (dt == today or dt == tomorrow) and not self.can_admin(request):
             # Can only copy records for today, or tomorrow
             logger.warn('Ongoing Record: Can only copy records for today or tomorrow (268b today to 268b tomorrow). dt {}, today {}, tomorrow {}'.format(dt, today, tomorrow))
             return

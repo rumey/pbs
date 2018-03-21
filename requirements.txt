@@ -7,7 +7,6 @@ django-reversion==1.8.1
 django-wsgiserver==0.8.0rc1
 django-registration==1.0
 django-dtpanel-htmltidy==0.1.1
-django-smart-selects==1.0.9
 django-chosen==0.1
 Django-Select2==4.2.2
 django-select2-forms==1.1.18
@@ -29,3 +28,14 @@ dj-static==0.0.6
 django-browserid==0.10.1
 https://static.dpaw.wa.gov.au/static/py/dpaw-utils/dist/dpaw-utils-0.3a4.tar.gz
 django-compressor==1.4
+django-tastypie==0.11.0
+ipdb==0.11
+
+# NOTE
+#
+# django-smart-selects==1.0.9 version is required, but no longer available - copy from /prod/uat/dev
+#django-smart-selects==1.0.9
+#
+# cd /var/ww/pbs
+# cp -pr /some_venv/lib/python2.7/site-packages/django_smart_selects-1.0.9-py2.7.egg-info venv/lib/python2.7/site-packages/
+# cp -pr /some_venv/lib/python2.7/site-packages/smart_selects venv/lib/python2.7/site-packages/

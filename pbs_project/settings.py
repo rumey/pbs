@@ -35,7 +35,7 @@ MAX_LOCK_TIME = os.environ.get('MAX_LOCK_TIME', 240)
 DEBUG = os.environ.get('DEBUG', None) in ["True", "on", "1", "DEBUG"]
 TEMPLATE_DEBUG = DEBUG
 #print 'remote ip_address for INTERNAL_IPS: '.format( request.META['REMOTE_ADDR'] )
-INTERNAL_IPS = ['127.0.0.1', '::1', '172.31.58.140']
+INTERNAL_IPS = ['127.0.0.1', '::1', '10.15.200.29']
 if not DEBUG:
     # Localhost, UAT and Production hosts
     ALLOWED_HOSTS = [

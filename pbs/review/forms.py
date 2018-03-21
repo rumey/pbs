@@ -1,13 +1,20 @@
 from django import forms
 from pbs.prescription.models import Prescription, Region, District
 from pbs.review.models import PrescribedBurn, AircraftBurn
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.conf import settings
 from django.forms import ValidationError
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Field, Div
 import requests
+
+def check_date(dt):
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    if dt < today or dt > tomorrow:
+        raise ValidationError("You must enter burn plans for today or tomorrow's date only.")
+
 
 class BurnStateSummaryForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
@@ -59,6 +66,9 @@ class PrescribedBurnForm(forms.ModelForm):
 
             if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to:
                 raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
+
+            if not self.current_user.is_superuser:
+                check_date(dt)
 
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A, location=location)
             if objects:
@@ -129,6 +139,12 @@ class PrescribedBurnEditForm(forms.ModelForm):
             else:
                 return self.cleaned_data['location']
 
+    def clean_date(self):
+        if not self.current_user.is_superuser:
+            dt = self.cleaned_data['date']
+            check_date(dt)
+        return self.cleaned_data['date']
+
     class Meta:
         model = PrescribedBurn
         fields = ('region', 'prescription', 'date', 'planned_area',
@@ -174,6 +190,9 @@ class PrescribedBurnActiveForm(forms.ModelForm):
             prescription = self.cleaned_data['prescription']
             dt = self.cleaned_data['date']
             location = self.cleaned_data['location']
+
+            if not self.current_user.is_superuser:
+                check_date(dt)
 
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
             #objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B)
@@ -249,6 +268,12 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
             else:
                 return self.cleaned_data['location']
 
+    def clean_date(self):
+        if not self.current_user.is_superuser:
+            dt = self.cleaned_data['date']
+            check_date(dt)
+        return self.cleaned_data['date']
+
     class Meta:
         model = PrescribedBurn
         fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location',
@@ -257,7 +282,7 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
 
 
 class ChoiceFieldNoValidation(forms.ChoiceField):
-    """ Because the Choice field decalared is empty, and populaeted by jscript, validation fails - so remove validation """
+    """ Because the Choice field declared is empty, and populated by jscript, validation fails - so remove validation """
     def validate(self, value):
         pass
 
@@ -301,6 +326,9 @@ class FireForm(forms.ModelForm):
             raise ValidationError("You must select a fire number")
 
         dt = self.cleaned_data['date']
+        if not self.current_user.is_superuser:
+            check_date(dt)
+
         pb = PrescribedBurn.objects.filter(fire_id=fire_id, date=dt)
         if pb:
             raise ValidationError("{} already exists for date {}".format(fire_id, dt))
@@ -370,6 +398,12 @@ class FireEditForm(forms.ModelForm):
             return instance.fire_id
         else:
             return self.cleaned_data['fire_id']
+
+    def clean_date(self):
+        if not self.current_user.is_superuser:
+            dt = self.cleaned_data['date']
+            check_date(dt)
+        return self.cleaned_data['date']
 
     class Meta:
         model = PrescribedBurn
