@@ -46,3 +46,6 @@ staticfiles/
 # pgdump
 *.pgdump
 
+#uwsgi.ini
+uwsgi.ini
+
