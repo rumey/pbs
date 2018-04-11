@@ -47,7 +47,7 @@ from pbs.prescription.forms import (
     PrescriptionPriorityForm, BriefingChecklistForm,
     FundingAllocationInlineFormSet)
 from pbs.prescription.models import (
-    Season, Prescription, RegionalObjective, Region, FundingAllocation)
+    Season, Prescription, RegionalObjective, Region, FundingAllocation,EndorsingRole)
 from django.forms.models import inlineformset_factory
 
 from pbs.report.models import Evaluation
@@ -793,6 +793,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         class AdminEndorsingRoleForm(EndorsingRoleForm):
             formfield_callback = partial(
                 self.formfield_for_dbfield, request=request)
+            def __init__(self, *args, **kwargs):
+                super(AdminEndorsingRoleForm,self).__init__(*args,**kwargs)
+                self.fields["endorsing_roles"].queryset = EndorsingRole.objects.filter(archived = False)
 
         obj = self.get_object(request, unquote(object_id))
 
@@ -825,7 +828,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             self.get_readonly_fields(request, obj),
             model_admin=self)
         media = self.media + admin_form.media
-
         context = {
             'title': 'Determine endorsing roles',
             'form': admin_form,
@@ -1602,7 +1604,6 @@ class PrescriptionMixin(object):
             'editable': editable,
         }
         context.update(extra_context or {})
-
         return super(PrescriptionMixin, self).changelist_view(
             request, extra_context=context)
 
