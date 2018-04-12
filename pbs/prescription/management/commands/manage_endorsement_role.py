@@ -70,7 +70,7 @@ Manage endorsement roles
             reserved_pres = []
 
             with transaction.atomic():
-                if not role.archived:
+                if options["action"] == "archive" and not role.archived:
                     role.archived = True
                     role.save()
                 for pre in Prescription.objects.filter(endorsing_roles__id__exact = role.id):
