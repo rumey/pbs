@@ -342,8 +342,7 @@ def archive_documents(modeladmin, request, queryset):
     """
     opts = modeladmin.model._meta
     app_label = opts.app_label
-
-    if not request.user.has_perm('prescription.delete_prescription'):
+    if not request.user.has_perm('document.archive_document'):
         raise PermissionDenied
 
     # The user confirmed they want to carry over the selected burns.

@@ -54,7 +54,7 @@ class DocumentAdmin(SavePrescriptionMixin, PrescriptionMixin,
         if not request.user.has_perm('prescription.delete_prescription'):
             if actions['delete_selected']:
                 del actions['delete_selected']
-        if not request.user.has_perm('prescription.delete_prescription'):
+        if not request.user.has_perm('document.archive_document'):
             if actions['archive_documents']:
                 del actions['archive_documents']
         return actions
