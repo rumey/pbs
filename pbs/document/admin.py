@@ -145,7 +145,9 @@ class DocumentAdmin(SavePrescriptionMixin, PrescriptionMixin,
                     qs = qs.filter(tag__category__name__iexact=category)
                 if tag:
                     tag = tag[0].replace('_', ' ')
-                    qs = qs.filter(tag__name__iexact=tag)
+                    #only show non-archived documents for tag view
+                    qs = qs.filter(tag__name__iexact=tag,document_archived=False)
+              
 
                 return qs
 
