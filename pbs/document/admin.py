@@ -83,12 +83,12 @@ class DocumentAdmin(SavePrescriptionMixin, PrescriptionMixin,
     date_document_created.admin_order_field = "document_created"
 
     def uploaded_by(self, obj):
-        return obj.modifier.get_full_name()
-    uploaded_by.admin_order_field = "modifier"
+        return obj.creator.get_full_name()
+    uploaded_by.admin_order_field = "creator"
 
     def uploaded_on(self, obj):
-        return obj.modified
-    uploaded_on.admin_order_field = "modified"
+        return obj.created
+    uploaded_on.admin_order_field = "created"
 
     def descriptor_download(self, obj):
         return mark_safe('<a href="{0}" target="_blank">'
