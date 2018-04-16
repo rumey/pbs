@@ -349,6 +349,7 @@ def archive_documents(modeladmin, request, queryset):
     if request.POST.get('post'):
         for document in queryset:
             document.document_archived = True
+            document.modifier = request.user
             document.save()
 
         modeladmin.message_user(request,
