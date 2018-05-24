@@ -255,9 +255,16 @@ class PrescriptionSite(AuditSite):
             fromDate = request.GET.get('fromDate')
             fromDate = datetime.datetime.strptime(fromDate, '%d-%m-%Y').date()
         else:
-            # default - beginning of financial year
-            yr = datetime.date.today().year
-            fromDate = datetime.date(yr, 7, 1)
+            # default - beginning of current financial year
+            today = datetime.date.today()
+            financial_year = datetime.date(today.year, 7, 1)
+            if today < financial_year:
+                #today is early than the first day of this year's financial year, set fromDate to last year's financial year
+                fromDate = datetime.date(today.year - 1,7,1)
+            else:
+                #today is later than the first day of this year's financial year, set fromDate to this year's financial year
+                fromDate = financial_year
+            
 
         if request.GET.get('toDate'):
             toDate = request.GET.get('toDate')
