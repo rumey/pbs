@@ -48,3 +48,5 @@ staticfiles/
 #uwsgi.ini
 uwsgi.ini
 
+# eofy data for scripts
+pbs/scripts/eofy_data

@@ -30,6 +30,7 @@ https://static.dpaw.wa.gov.au/static/py/dpaw-utils/dist/dpaw-utils-0.3a4.tar.gz
 django-compressor==1.4
 django-tastypie==0.11.0
 ipdb==0.11
+pytz==2017.2
 
 # NOTE
 #
