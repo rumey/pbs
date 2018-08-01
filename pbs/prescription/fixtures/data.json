@@ -13727,7 +13727,8 @@
   "fields": {
     "name": "FMS Branch Representative",
     "disclaimer": "I have studied the summary and implementation plan of this prescribed fire plan and endorse that it meets DPaW fire requirements for aerial ignition.",
-    "index": 12
+    "index": 12,
+    "archived":true
   }
 },
 {

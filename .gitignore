@@ -34,7 +34,6 @@ log/
 staticfiles/
 
 # everything with local in it
-*local.*
 *local/
 
 # Virtualenv dir
@@ -46,3 +45,8 @@ staticfiles/
 # pgdump
 *.pgdump
 
+#uwsgi.ini
+uwsgi.ini
+
+# eofy data for scripts
+pbs/scripts/eofy_data

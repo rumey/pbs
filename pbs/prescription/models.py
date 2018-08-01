@@ -208,6 +208,7 @@ class EndorsingRole(models.Model):
     index = models.PositiveSmallIntegerField()
     disclaimer = models.TextField()
     objects = EndorsingRoleManager()
+    archived = models.BooleanField(default=False, verbose_name="Role archived?")
 
     def __str__(self):
         return self.name

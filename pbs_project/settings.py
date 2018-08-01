@@ -352,3 +352,12 @@ if DEBUG:
     if os.environ.get('INTERNAL_IP', False):  # Optionally add developer local IP
         INTERNAL_IPS.append(os.environ['INTERNAL_IP'])
     DEBUG_TOOLBAR_PATCH_SETTINGS = True
+
+
+ENV_TYPE = env('ENV_TYPE') or None
+if not ENV_TYPE:
+    try:
+        ENV_TYPE = os.getcwd().split('-')[1].split('.')[0] # will return either 'dev' or 'uat'
+    except:
+        ENV_TYPE = "TEST"
+ENV_TYPE = ENV_TYPE.upper() if ENV_TYPE else "TEST"
