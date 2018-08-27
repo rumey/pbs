@@ -9,12 +9,154 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.utils.html import format_html_join, format_html
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
+
+
 from datetime import date
 
 from .models import Profile
 
 from pbs.prescription.models import District, Region
 
+class RequestMixin(object):
+    def __init__(self,request=None,*args,**kwargs):
+        self.request = request
+        super(RequestMixin,self).__init__(*args,**kwargs)
+
+class SessionPersistenceMixin(object):
+    """
+    Use the following logic to initialize instance
+    1. If data is not null and also if data contains any key in the checking keys, then the form is bounded and use the data to initialize the form; otherwise continue step 2
+    2. Try to load the form status from session, if exist, use that to initialize the form; otherwise continue step 3
+    3. If initial is not null, use initial to initialize the form; otherwise continue step 4
+    4. If default_initial return a non null object, use that to initialize the form, otherwise continue step 5
+    5. Initialize a empty form
+
+
+    if form is partially persistent, the missing field's value will be read from initial or default_initial
+
+    """
+    session_key_prefix = ""
+    def __init__(self,prefix="",checking_keys=None,persistent_fields=None,persistent=True,*args,**kwargs):
+        if not self.request:
+            persistent = False
+
+        if not persistent:
+            #persistent disabled
+            if not kwargs.get("initial"):
+                initial = self.default_initial()
+                if initial:
+                    #has default form initial status
+                    kwargs["initial"] = initial
+
+            super(SessionPersistenceMixin,self).__init__(*args,**kwargs)
+            return
+
+        self.session_key = self.get_session_key(prefix)
+        self.persistent_fields = persistent_fields or self._meta.fields
+        if "data" in kwargs:
+            if kwargs["data"]:
+                if not checking_keys:
+                    checking_keys = self._meta.fields
+                if any([key in kwargs["data"] for key in checking_keys]):
+                    #bounded
+                    super(SessionPersistenceMixin,self).__init__(*args,**kwargs)
+                    default_initial = self.default_initial()
+                    changed = False
+                    for field_name in self.persistent_fields:
+                        value = self[field_name].value()
+                        if not value and not default_initial.get(field_name):
+                            #both none
+                            continue
+                        elif value == default_initial.get(field_name):
+                            #same
+                            continue
+                        elif str(self[field_name].value()) == str(default_initial.get(field_name)):
+                            #same
+                            continue
+                        else:
+                            #field value is different from the value in default initial
+                            changed = True
+                            break
+                    if changed:
+                        #form status is different from default initial,save the form status into session for later reference
+                        self.save_to_session()
+                    else:
+                        #form status is same as default initial,save the form status into session for later reference
+                        self.delete_from_session()
+
+                    return
+            #not bounded
+            kwargs.pop("data")
+
+        #persistent is enabled
+        initial = self.load_from_session()
+        if initial:
+            #form status found in session
+            if persistent_fields:
+                #partial persistent, add missing field value from default_initial
+                for key,value in (kwargs.get("initial") or self.default_initial() or {}).iteritems():
+                    if key not in initial:
+                        initial[key] = value
+
+            kwargs["initial"] = initial
+            super(SessionPersistenceMixin,self).__init__(*args,**kwargs)
+            return
+
+        if kwargs.get("initial"):
+            #has initial form status passed in
+            super(SessionPersistenceMixin,self).__init__(*args,**kwargs)
+            return
+
+        initial = self.default_initial()
+        if initial:
+            #has default form initial status
+            kwargs["initial"] = initial
+            super(SessionPersistenceMixin,self).__init__(*args,**kwargs)
+            return
+
+        super(SessionPersistenceMixin,self).__init__(*args,**kwargs)
+
+
+    def default_initial(self):
+        return None
+
+    def to_dict(self):
+        """
+        Convert form's status into a dictionary object for persistence.
+        """
+        obj = {}
+        for field_name in self.persistent_fields:
+            obj[field_name] = self[field_name].value()
+
+        return obj
+
+    @classmethod
+    def get_session_key(cls,prefix=""):
+        """
+        Return the session key to save the form status into session
+        """
+        prefix = prefix or cls.session_key_prefix
+        return "{}:{}.{}".format(prefix,cls.__module__,cls.__name__) if prefix else "{}.{}".format(cls.__module__,cls.__name__)
+
+
+    def save_to_session(self):
+        """
+        Save the form data into session as dict object for later reference
+        """
+        self.request.session[self.session_key] = self.to_dict()
+
+    def delete_from_session(self):
+        """
+        delete the form data from session if exist
+        """
+        if self.session_key in self.request.session:
+            del self.request.session[self.session_key]
+
+    def load_from_session(self):
+        """
+        load and return the intial form data from session; if not found, return None
+        """
+        return self.request.session.get(self.session_key)
 
 class PbsErrorList(forms.util.ErrorList):
     # custom error classes
