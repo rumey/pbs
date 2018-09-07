@@ -15,10 +15,11 @@ class Profile(models.Model):
     DEFAULT_GROUP = "Users"
 
     user = models.OneToOneField(User)
-    region = models.ForeignKey(Region, blank=True, null=True)
+    region = models.ForeignKey(Region, blank=True, null=True, on_delete=models.PROTECT)
     district = ChainedForeignKey(District,
         chained_field="region", chained_model_field="region",
-        show_all=False, auto_choose=True, blank=True, null=True)
+        show_all=False, auto_choose=True, blank=True, null=True,
+        on_delete=models.PROTECT)
 
     def is_fpc_user(self):
         return self.user.email.lower().endswith(settings.FPC_EMAIL_EXT)

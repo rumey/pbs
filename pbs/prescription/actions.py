@@ -13,7 +13,7 @@ from django.utils.translation import ugettext_lazy, ugettext as _
 from guardian.shortcuts import assign_perm
 
 from pbs.prescription.models import Prescription
-from pbs.utils import get_deleted_objects, update_permissions
+from pbs.utils import get_deleted_objects, update_permissions, support_email
 
 from pbs.document.models import Document, DocumentCategory
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -21,6 +21,9 @@ from django.template.loader import render_to_string
 from django.conf import settings
 import datetime
 import subprocess
+
+import logging
+logger = logging.getLogger('pbs')
 
 
 def delete_selected(modeladmin, request, queryset):
@@ -127,6 +130,9 @@ def delete_approval_endorsement(modeladmin, request, queryset):
     if request.POST.get('post'):
         obj = queryset[0]
         obj.clear_approvals()
+        msg = 'Delete: Clearing Approvals/Endorsements', 'Burn ID: {}, Deleted by: {}'. format(obj.burn_id, request.user.get_full_name())
+        logger.warning(msg)
+        support_email('Delete: Clearing Approvals/Endorsements', msg)
 
         update_permissions(obj, modeladmin.admin_site, "endorsement",
                            assign_perm)
@@ -336,14 +342,14 @@ def archive_documents(modeladmin, request, queryset):
     """
     opts = modeladmin.model._meta
     app_label = opts.app_label
-
-    if not request.user.has_perm('prescription.delete_prescription'):
+    if not request.user.has_perm('document.archive_document'):
         raise PermissionDenied
 
     # The user confirmed they want to carry over the selected burns.
     if request.POST.get('post'):
         for document in queryset:
             document.document_archived = True
+            document.modifier = request.user
             document.save()
 
         modeladmin.message_user(request,

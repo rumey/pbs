@@ -15,6 +15,9 @@ from pbs.document.utils import get_dimensions
 from pbs.prescription.models import Prescription
 import datetime
 
+from south.modelsinspector import add_introspection_rules
+add_introspection_rules([], ["^pbs\.document\.fields\.ContentTypeRestrictedFileField"])
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +67,7 @@ class CategoryManager(models.Manager):
 @python_2_unicode_compatible
 class DocumentTag(models.Model):
     name = models.CharField(verbose_name="Document Tag", max_length=200)
-    category = models.ForeignKey(DocumentCategory)
+    category = models.ForeignKey(DocumentCategory, on_delete=models.PROTECT)
     objects = CategoryManager()
 
     class Meta:
@@ -110,11 +113,11 @@ class TagManager(models.Manager):
 class Document(Audit):
     prescription = models.ForeignKey(
         Prescription, null=True,
-        help_text="Prescription that this document belongs to")
-    category = models.ForeignKey(DocumentCategory, related_name="documents")
+        help_text="Prescription that this document belongs to", on_delete=models.PROTECT)
+    category = models.ForeignKey(DocumentCategory, related_name="documents", on_delete=models.PROTECT)
     tag = ChainedForeignKey(
         DocumentTag, chained_field="category", chained_model_field="category",
-        show_all=False, auto_choose=True, verbose_name="Descriptor")
+        show_all=False, auto_choose=True, verbose_name="Descriptor", on_delete=models.PROTECT)
     custom_tag = models.CharField(
         max_length=64, blank=True, verbose_name="Custom Descriptor")
     document = ContentTypeRestrictedFileField(
@@ -175,6 +178,9 @@ class Document(Audit):
 
     class Meta:
         ordering = ['tag', 'document']
+        permissions = (
+            ("archive_document", "Can archive documents")
+        )
 
     def __str__(self):
         return "{0} - {1}".format(self.prescription, self.document.name)

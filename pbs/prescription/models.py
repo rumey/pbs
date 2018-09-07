@@ -101,7 +101,7 @@ class DistrictManager(models.Manager):
 
 @python_2_unicode_compatible
 class District(models.Model):
-    region = models.ForeignKey(Region)
+    region = models.ForeignKey(Region, on_delete=models.PROTECT)
     name = models.CharField(max_length=200, unique=True)
     code = models.CharField(max_length=3)
     archive_date = models.DateField(
@@ -127,7 +127,7 @@ class ShireManager(models.Manager):
 
 @python_2_unicode_compatible
 class Shire(models.Model):
-    district = models.ForeignKey(District)
+    district = models.ForeignKey(District, on_delete=models.PROTECT)
     name = models.CharField(max_length=200)
     objects = ShireManager()
 
@@ -208,6 +208,7 @@ class EndorsingRole(models.Model):
     index = models.PositiveSmallIntegerField()
     disclaimer = models.TextField()
     objects = EndorsingRoleManager()
+    archived = models.BooleanField(default=False, verbose_name="Role archived?")
 
     def __str__(self):
         return self.name
@@ -332,10 +333,10 @@ class Prescription(Audit):
     burn_id = models.CharField(max_length=7, verbose_name="Burn ID")
     name = models.CharField(max_length=128)
     description = models.TextField(blank=True, null=True)
-    region = models.ForeignKey(Region)
+    region = models.ForeignKey(Region, on_delete=models.PROTECT)
     district = ChainedForeignKey(
         District, chained_field="region", chained_model_field="region",
-        show_all=False, auto_choose=True, blank=True, null=True)
+        show_all=False, auto_choose=True, blank=True, null=True, on_delete=models.PROTECT)
     shires = models.ManyToManyField(Shire, blank=True, null=True)
     planned_year = models.PositiveIntegerField(
         verbose_name="Planned Year", max_length=4, blank=True)
@@ -402,9 +403,9 @@ class Prescription(Audit):
     forecast_areas = models.ManyToManyField(
         ForecastArea, verbose_name="Forecast Areas", null=True, blank=True)
     prescribing_officer = models.ForeignKey(
-        User, verbose_name="Prescribing Officer", blank=True, null=True)
+        User, verbose_name="Prescribing Officer", blank=True, null=True, on_delete=models.PROTECT)
     closure_officer = models.ForeignKey(
-        User, verbose_name="Closure Officer", blank=True, null=True, related_name='closure')
+        User, verbose_name="Closure Officer", blank=True, null=True, related_name='closure', on_delete=models.PROTECT)
     short_code = models.TextField(
         verbose_name="Short Code", blank=True, null=True)
     purposes = models.ManyToManyField(Purpose)
@@ -485,7 +486,7 @@ class Prescription(Audit):
         blocks = " in %s" % self.forest_blocks if self.forest_blocks else ""
 
         try:
-            if self.tenures.count() > 0:
+            if self.fuel_types.count() > 0:
                 veg_type_names = [v.name for v in self.fuel_types.all()]
 
                 if len(veg_type_names) > 1:
@@ -1278,7 +1279,7 @@ class FundingAllocation(models.Model):
         (7204, '72-04 - Recoupable projects'),
     )
 
-    prescription = models.ForeignKey(Prescription)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
     allocation = models.PositiveSmallIntegerField(
         max_length=64, choices=ALLOCATION_CHOICES,
         verbose_name="Program",
@@ -1332,8 +1333,8 @@ class PriorityJustification(Audit):
         (PRIORITY_HIGH, '3'),
     )
 
-    prescription = models.ForeignKey(Prescription, null=True)
-    purpose = models.ForeignKey(Purpose, verbose_name='Burn Purpose')
+    prescription = models.ForeignKey(Prescription, null=True, on_delete=models.PROTECT)
+    purpose = models.ForeignKey(Purpose, verbose_name='Burn Purpose', on_delete=models.PROTECT)
     order = models.PositiveSmallIntegerField(default=0)
     criteria = models.TextField(
         verbose_name="Prioritisation Criteria", blank=True)
@@ -1374,7 +1375,7 @@ class RegionalObjective(Audit):
         (IMPACT_REGION, 'Region'),
         (IMPACT_FMA, 'Fire Management Area')
     )
-    region = models.ForeignKey(Region)
+    region = models.ForeignKey(Region, on_delete=models.PROTECT)
     impact = models.PositiveSmallIntegerField(
         choices=IMPACT_CHOICES, default=IMPACT_REGION,
         help_text="Area of application for objective",
@@ -1401,7 +1402,7 @@ class Objective(Audit):
     """
     objectives = models.TextField(help_text="Prescription Objectives")
     prescription = models.ForeignKey(
-        Prescription, help_text="Prescription this objective belongs to")
+        Prescription, help_text="Prescription this objective belongs to", on_delete=models.PROTECT)
 
     _required_fields = ('objectives', )
 
@@ -1422,7 +1423,7 @@ class SuccessCriteria(Audit):
     criteria = models.TextField(verbose_name="Success Criteria")
     prescription = models.ForeignKey(
         Prescription,
-        help_text="Prescription this success criteria belongs to")
+        help_text="Prescription this success criteria belongs to", on_delete=models.PROTECT)
 
     _required_fields = ('criteria', )
 
@@ -1444,16 +1445,16 @@ class SMEAC(models.Model):
 
 
 class DefaultBriefingChecklist(models.Model):
-    smeac = models.ForeignKey(SMEAC, verbose_name="SMEACS")
+    smeac = models.ForeignKey(SMEAC, verbose_name="SMEACS", on_delete=models.PROTECT)
     title = models.CharField(max_length=200)
 
 
 @python_2_unicode_compatible
 class BriefingChecklist(Audit):
     title = models.TextField(verbose_name="Topic")
-    prescription = models.ForeignKey(Prescription)
-    smeac = models.ForeignKey(SMEAC, verbose_name="SMEACS")
-    action = models.ForeignKey('risk.Action', blank=True, null=True)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
+    smeac = models.ForeignKey(SMEAC, verbose_name="SMEACS", on_delete=models.PROTECT)
+    action = models.ForeignKey('risk.Action', blank=True, null=True, on_delete=models.PROTECT)
     notes = models.TextField(verbose_name="Briefing Notes", blank=True)
 
     class Meta:
@@ -1472,8 +1473,8 @@ class Endorsement(Audit):
         (False, 'Reviewed and not endorsed'),
         (True, 'Endorsed'),
     )
-    prescription = models.ForeignKey(Prescription)
-    role = models.ForeignKey(EndorsingRole)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
+    role = models.ForeignKey(EndorsingRole, on_delete=models.PROTECT)
     endorsed = models.NullBooleanField(choices=ENDORSED_CHOICES, default=None)
 
     def __str__(self):
@@ -1489,14 +1490,14 @@ class Endorsement(Audit):
 
 @python_2_unicode_compatible
 class Approval(Audit):
-    prescription = models.ForeignKey(Prescription)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
     initial_valid_to = models.DateField(
         verbose_name="Valid To (Initial)",
         default=timezone.now() + timezone.timedelta(days=365),
         editable=False)
     # the valid_to.default is redefined in the form to refer to the last day
     # of this prescription's planned season
-    valid_to = models.DateField(verbose_name="Valid To", default=timezone.now)
+    valid_to = models.DateField(verbose_name="Valid To")
     extension_count = models.PositiveSmallIntegerField(
         verbose_name="Extension Count", default=0,
         validators=[MaxValueValidator(3)], editable=False)

@@ -12,13 +12,17 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.forms import ValidationError
 from django.conf import settings
 import sys
+from django.utils import timezone
 
 import logging
 logger = logging.getLogger('pbs')
 
+def current_finyear():
+    return datetime.now().year if datetime.now().month>6 else datetime.now().year-1
+
 class BurnState(models.Model):
-    prescription = models.ForeignKey(Prescription, related_name='burnstate')
-    user = models.ForeignKey(User, help_text="User")
+    prescription = models.ForeignKey(Prescription, related_name='burnstate', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, help_text="User", on_delete=models.PROTECT)
     review_type = models.CharField(max_length=64)
     review_date = models.DateTimeField(auto_now_add=True)
 
@@ -59,8 +63,8 @@ class FireTenure(models.Model):
 
 
 class Acknowledgement(models.Model):
-    burn = models.ForeignKey('PrescribedBurn', related_name='acknowledgements')
-    user = models.ForeignKey(User, help_text="User", null=True, blank=True)
+    burn = models.ForeignKey('PrescribedBurn', related_name='acknowledgements', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, help_text="User", null=True, blank=True, on_delete=models.PROTECT)
     acknow_type = models.CharField(max_length=64, null=True, blank=True)
     acknow_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
@@ -115,31 +119,32 @@ class PrescribedBurn(Audit):
         (FORM_268B, 'Form 268b'),
     )
 
+    '''
+    BUSHFIRE_DISTRICT_ALIASES can be used to override the District's original code from the model. Usage e.g.:
     BUSHFIRE_DISTRICT_ALIASES = {
         'PHS' : 'PH',
         'SWC' : 'SC',
-        'EKM' : 'KIMB',
-        'WKM' : 'KIMB',
-        'KAL' : 'GF',
-        'PIL' : 'PF',
+    }
+    '''
+    BUSHFIRE_DISTRICT_ALIASES = {
     }
 
 
     fmt = "%Y-%m-%d %H:%M"
 
-    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='prescribed_burn', null=True, blank=True)
+    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='prescribed_burn', null=True, blank=True, on_delete=models.PROTECT)
 #    prescription = ChainedForeignKey(
 #        Prescription, chained_field="region", chained_model_field="region",
 #        show_all=False, auto_choose=True, blank=True, null=True)
 
 
     # Required for Fire records
-    fire_id = models.CharField(verbose_name="Fire Number", max_length=8, null=True, blank=True)
+    fire_id = models.CharField(verbose_name="Fire Number", max_length=15, null=True, blank=True)
     fire_name = models.TextField(verbose_name="Name", null=True, blank=True)
     region = models.PositiveSmallIntegerField(choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     district = ChainedForeignKey(
         District, chained_field="region", chained_model_field="region",
-        show_all=False, auto_choose=True, blank=True, null=True)
+        show_all=False, auto_choose=True, blank=True, null=True, on_delete=models.PROTECT)
     fire_tenures = models.ManyToManyField(FireTenure, verbose_name="Tenures", blank=True)
     date = models.DateField(auto_now_add=False)
     form_name = models.PositiveSmallIntegerField(verbose_name="Form Name (268a / 268b)", choices=FORM_NAME_CHOICES, editable=True)
@@ -182,30 +187,15 @@ class PrescribedBurn(Audit):
             self.district = self.prescription.district
 
     def clean_fire_id(self):
-        if not (len(self.fire_id)>=6 and self.fire_id[-4]=='_'): # ignore if this is an edit (field is readonly)
-            if not self.fire_id or str(self.fire_id)[0] in ('-', '+') or not str(self.fire_id).isdigit() or not len(self.fire_id)==3:
-                raise ValidationError("You must enter numeric digit with 3 characters (001 - 999).")
-
-            if int(self.fire_id)<1 or int(self.fire_id)>999:
-                raise ValidationError("Value must be in range (001 - 999).")
-
-            district = self.BUSHFIRE_DISTRICT_ALIASES[self.district.code] if self.BUSHFIRE_DISTRICT_ALIASES.has_key(self.district.code) else self.district.code
-            fire_id = "%s_%s" % (district, self.fire_id)
-            pb = PrescribedBurn.objects.filter(fire_id=fire_id, date=self.date)
-            if pb and pb[0].id != self.id:
-                raise ValidationError("{} already exists for date {}".format(fire_id, self.date))
-
-            self.fire_id = fire_id
-
         # set the Lat/Long to Zero, since Bushfire is not assigning these required fields
         self.latitude = 0.0
         self.longitude = 0.0
 
-    def clean_date(self):
-        today = date.today()
-        tomorrow = today + timedelta(days=1)
-        if not self.pk and (self.date < today or self.date > tomorrow):
-            raise ValidationError("You must enter burn plans for today or tommorow's date only.")
+#    def clean_date(self):
+#        today = date.today()
+#        tomorrow = today + timedelta(days=1)
+#        if not self.pk and (self.date < today or self.date > tomorrow):
+#            raise ValidationError("You must enter burn plans for today or tommorow's date only.")
 
     def clean_planned_distance(self):
         if self.planned_area==None and self.planned_distance==None:
@@ -391,6 +381,97 @@ class PrescribedBurn(Audit):
     def short_str(self):
         return self.prescription.burn_id if self.prescription else self.fire_id
 
+    def copy_ongoing_records(self, dt):
+        """
+        Copy today's 'active' records to tomorrow
+
+        268b - (Automatically) copy all records from yesterday that were Active when 268a Region Endorsement occurs,
+        except for Active and Area Burnt Yesterday
+
+        dt = from date, copied to dt+1
+        """
+
+        tomorrow = dt + timedelta(days=1) # relative to dt
+        #objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)]
+        objects = [self]
+        now = timezone.now()
+        admin = User.objects.get(username='admin')
+        count = 0
+        for obj in objects:
+            if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Ongoing Record Already Exists (Fire) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+                continue
+            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Ongoing Record Already Exists (Burn) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+                continue
+            try:
+                obj.pk = None
+                obj.date = tomorrow
+                obj.area = None
+                obj.status = None
+                obj.approval_268a_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268a_status_modified = now
+                obj.approval_268b_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268b_status_modified = now
+                obj.acknowledgements.all().delete()
+                obj.rolled = True
+                obj.save()
+                count += 1
+                logger.info('Ongoing Record copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+            except:
+                # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                logger.warn('Ongoing Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+
+    def copy_planned_approved_records_adhoc(self, dt):
+        """
+        Copy today's 'planned' records (268a), that have been SDO approved. to tomorrow ongoing (268b)
+
+        set Active and Area Burnt fields to None
+
+        dt = from date, copied to dt+1
+        """
+
+        tomorrow = dt + timedelta(days=1) # relative to dt
+        if not self.formA_sdo_acknowledged:
+            logger.info('Only SDO Acknowledged record can be copied from dt {} to tomorrow {}'.format(dt, tomorrow))
+            return
+
+        #objects = PrescribedBurn.objects.filter(date=dt, acknowledgements__acknow_type__in=['SDO_A'], form_name=PrescribedBurn.FORM_268A)
+        objects = [self]
+        now = timezone.now()
+        count = 0
+        for obj in objects:
+            if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Planned Approved Record Already Exists (Fire) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+                continue
+            if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
+                # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                logger.info('Planned Approved Record Already Exists (Burn) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+                continue
+            try:
+                obj.pk = None
+                obj.date = tomorrow
+                obj.area = None
+                obj.distance = None
+                obj.status = None
+                obj.approval_268a_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268a_status_modified = now
+                obj.approval_268b_status = PrescribedBurn.APPROVAL_DRAFT
+                obj.approval_268b_status_modified = now
+                #obj.acknowledgements.all().delete()
+                obj.form_name=PrescribedBurn.FORM_268B
+                obj.rolled = True
+                obj.save()
+                count += 1
+                logger.info('Planned Approved Record copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
+            except:
+                # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                logger.warn('Planned Approved Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+
+
     def __str__(self):
         return self.prescription.burn_id + ' (Burn)' if self.prescription else self.fire_id + ' (Fire)'
 
@@ -405,8 +486,8 @@ class PrescribedBurn(Audit):
 
 
 class AircraftApproval(models.Model):
-    aircraft_burn = models.ForeignKey('AircraftBurn', related_name='approvals')
-    user = models.ForeignKey(User, help_text="User", null=True, blank=True)
+    aircraft_burn = models.ForeignKey('AircraftBurn', related_name='approvals', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, help_text="User", null=True, blank=True, on_delete=models.PROTECT)
     approval_type = models.CharField(max_length=64, null=True, blank=True)
     approval_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
@@ -442,7 +523,7 @@ class AircraftBurn(Audit):
 
     fmt = "%Y-%m-%d %H:%M"
 
-    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='aircraft_burns', null=True, blank=True)
+    prescription = models.ForeignKey(Prescription, verbose_name="Burn ID", related_name='aircraft_burns', null=True, blank=True, on_delete=models.PROTECT)
     #prescribed_burn = models.ForeignKey(PrescribedBurn, verbose_name="Daily Burn ID", related_name='aircraft_burn', null=True, blank=True)
 
     date = models.DateField(auto_now_add=False)
@@ -496,12 +577,12 @@ class AircraftBurn(Audit):
         )
 
 class AnnualIndicativeBurnProgram(models.Model):
-    ogc_fid = models.IntegerField(primary_key=True)
+    objectid = models.IntegerField(primary_key=True)
     wkb_geometry = models.MultiPolygonField(srid=4326, blank=True, null=True)
     region = models.CharField(max_length=35, blank=True)
     district = models.CharField(max_length=35, blank=True)
     burnid = models.CharField(max_length=30, blank=True)
-    fin_yr = models.CharField(max_length=8, blank=True, null=True)
+    fin_yr = models.CharField(verbose_name='Fin Year', max_length=9, blank=True, null=True)
     location = models.CharField(max_length=254, blank=True)
     status = models.CharField(max_length=254, blank=True)
     priority = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
@@ -547,7 +628,7 @@ class BurnProgramLink(models.Model):
                     obj.longitude = p.longitude
                     obj.latitude = p.latitude
                     obj.perim_km = p.perim_km
-                    obj.trtd_area = p.trtd_area
+                    obj.trtd_area = p.trtd_area if p.trtd_area else 0.0
                     obj.save()
             except:
                 logger.error('ERROR: Assigning AnnulaIndicativeBurnProgram \n{}'.format(sys.exc_info()))
@@ -557,68 +638,102 @@ class BurnProgramLink(models.Model):
         cursor = connection.cursor()
         cursor.execute('''
             create or replace view review_v_dailyburns as
-            select
-              p.burn_id,
-              pb.date as burn_target_date,
-              case
-                when string_agg(pb.form_name::text, ', ') = '1, 2' or string_agg(pb.form_name::text, ', ') = '2, 1' then
-                    'Active - Planned Ignitions Today'
-                when string_agg(pb.form_name::text, ', ') = '2' then
-                    'Active - No Planned Ignitions Today'
-                when string_agg(pb.form_name::text, ', ') = '1' then
-                    'Planned - No Prior Ignitions'
-                else
-                    'Error'
-              end as burn_stat,
-              p.location,
-              p.forest_blocks,
-              link.area_ha AS indicative_area,
-              (select rpb.est_start
-               from review_prescribedburn rpb
-               where
-                    rpb.date = pb.date and
-                    rpb.prescription_id::text = pb.prescription_id::text and
-                    rpb.form_name = 1) AS burn_est_start, -- use time from 268a
-              coalesce(
-                (select rpb.longitude
-                 from review_prescribedburn rpb
-                 where
-                        rpb.date = pb.date and
-                        rpb.prescription_id::text = pb.prescription_id::text and
-                        rpb.form_name = 1),
-                pb.longitude) AS burn_target_long, -- use longitude from 268a, else 268b
-              coalesce(
-                (select rpb.latitude
-                 from review_prescribedburn rpb
-                 where
-                    rpb.date = pb.date and
-                    rpb.prescription_id::text = pb.prescription_id::text and
-                    rpb.form_name = 1),
-                pb.latitude) AS burn_target_lat, -- use latitude from 268a, else 268b
-              (select rpb.planned_area
-               from review_prescribedburn rpb
-               where
-                  rpb.date = pb.date and
-                  rpb.prescription_id::text = pb.prescription_id::text and
-                  rpb.form_name = 1) AS burn_planned_area_today, -- use planned_area from 268a
-              (select rpb.planned_distance
-               from review_prescribedburn rpb
-               where
-                  rpb.date = pb.date and
-                  rpb.prescription_id::text = pb.prescription_id::text and
-                  rpb.form_name = 1) AS burn_planned_distance_today, -- use planned_distance from 268a
-              link.wkb_geometry
-            from
-              (((prescription_prescription p
-                 LEFT JOIN review_prescribedburn  pb ON ((p.id = pb.prescription_id)))
-                 LEFT JOIN review_acknowledgement ack ON ((pb.id = ack.burn_id)))
-                 LEFT JOIN review_burnprogramlink link ON ((p.id = link.prescription_id)))
-            WHERE (
-                (((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1)) OR -- approved 268a
-                ((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))) -- approved active 268b
-            group by
-                p.burn_id, p.location, p.forest_blocks, burn_target_date, indicative_area,
-                burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
-                burn_planned_area_today, burn_planned_distance_today
-            ORDER BY p.burn_id, burn_target_date;
-            create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date = current_date;''')
+			select
+			  p.burn_id,
+			  to_char(pb.date, 'FMDay, DD Mon YYYY') as burn_target_date,
+			  pb.date as burn_target_date_raw,
+			  case
+				when string_agg(pb.form_name::text, ', ') = '1, 2' or string_agg(pb.form_name::text, ', ') = '2, 1' then
+					'Active - Planned Ignitions Today'
+				when string_agg(pb.form_name::text, ', ') = '2' then
+					'Active - No Planned Ignitions Today'
+				when string_agg(pb.form_name::text, ', ') = '1' then
+					'Planned - No Prior Ignitions'
+				else
+					'Error'
+			  end as burn_stat,
+			  case
+				when pb.location like '%|%' then
+					case
+						when p.forest_blocks not like '' then
+							split_part(pb.location, '|', 1) || ', ' || split_part(pb.location, '|', 2) || 'km ' ||
+								split_part(pb.location, '|', 3) || ' of '|| split_part(pb.location, '|', 4) ||
+								' (' || p.forest_blocks || ')'
+						else
+							split_part(pb.location, '|', 1) || ', ' || split_part(pb.location, '|', 2) || 'km ' ||
+								split_part(pb.location, '|', 3) || ' of '|| split_part(pb.location, '|', 4)
+						end
+				else
+					case
+						when p.forest_blocks not like '' then
+							pb.location || ' (' || p.forest_blocks || ')'
+						else
+							pb.location
+						end
+			  end as location,
+			  p.forest_blocks,
+			  link.area_ha AS indicative_area,
+			  coalesce(
+				(select rpb.est_start
+					 from review_prescribedburn rpb
+					 where
+						  rpb.date = pb.date and
+						  rpb.prescription_id::text = pb.prescription_id::text and
+						  rpb.form_name = 1 and
+						  rpb.location = pb.location)::text,
+				'') AS burn_est_start, -- use time from 268a
+			  coalesce(
+				(select rpb.longitude
+				 from review_prescribedburn rpb
+				 where
+						rpb.date = pb.date and
+						rpb.prescription_id::text = pb.prescription_id::text and
+						rpb.form_name = 1 and
+						rpb.location = pb.location),
+				pb.longitude) AS burn_target_long, -- use longitude from 268a, else 268b
+			  coalesce(
+				(select rpb.latitude
+				 from review_prescribedburn rpb
+				 where
+					rpb.date = pb.date and
+					rpb.prescription_id::text = pb.prescription_id::text and
+					rpb.form_name = 1 and
+					rpb.location = pb.location),
+				pb.latitude) AS burn_target_lat, -- use latitude from 268a, else 268b
+			  coalesce(
+				cast((select rpb.planned_area
+				 from review_prescribedburn rpb
+				 where
+					rpb.date = pb.date and
+					rpb.prescription_id::text = pb.prescription_id::text and
+					rpb.form_name = 1 and
+					rpb.location = pb.location) as text),
+				'') AS burn_planned_area_today, -- use planned_area from 268a
+			  coalesce(
+				cast((select rpb.planned_distance
+				 from review_prescribedburn rpb
+				 where
+					rpb.date = pb.date and
+					rpb.prescription_id::text = pb.prescription_id::text and
+					rpb.form_name = 1 and
+					rpb.location = pb.location) as text),
+				'') AS burn_planned_distance_today, -- use planned_distance from 268a
+			  link.wkb_geometry,
+                          coalesce((SELECT array_to_string(array_agg(pp.name),' , ')
+                                    FROM prescription_prescription_purposes ppps JOIN prescription_purpose pp ON ppps.purpose_id = pp.id
+                                    WHERE ppps.prescription_id = p.id)
+                           ,'') AS burn_purpose
+			from
+			  (((prescription_prescription p
+				 LEFT JOIN review_prescribedburn  pb ON ((p.id = pb.prescription_id)))
+				 LEFT JOIN review_acknowledgement ack ON ((pb.id = ack.burn_id)))
+				 LEFT JOIN review_burnprogramlink link ON ((p.id = link.prescription_id)))
+			WHERE (
+				(((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1)) OR -- approved 268a
+				((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))) -- approved active 268b
+			group by
+				p.id,p.burn_id, pb.location, p.forest_blocks, burn_target_date, indicative_area,
+				burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
+				burn_planned_area_today, burn_planned_distance_today, burn_target_date_raw
+			ORDER BY p.burn_id, burn_target_date_raw;
+			create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;''')

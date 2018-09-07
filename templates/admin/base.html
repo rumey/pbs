@@ -78,6 +78,7 @@
 
 </head>
 {% load i18n %}
+{% load pbs_utils %}
 {% url 'admin:index' as home %}
 {% url 'admin:prescription_prescription_changelist' as all_prescriptions %}
 {% url 'admin:review_prescribedburn_add' as add_prescribed_burn %}
@@ -127,7 +128,7 @@
 {% url 'admin:stakeholder_notification_changelist' current.id as notifications %}
 {% endif %}
 {% block body %}
-<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}" style={% page_background %}>
 {% if not is_popup %}
 <div class="navbar navbar-inverse navbar-fixed-top">
   <div class="navbar-inner">

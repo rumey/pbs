@@ -220,10 +220,12 @@ class EndorsingRoleForm(forms.ModelForm):
             ) or []
 
             maximum_risk = prescription.get_maximum_risk
+            """
             if prescription.aircraft_burn:
                 self.required_endorsing_roles.append(
                     EndorsingRole.objects.get(
                         name__iexact="FMS Branch Representative"))
+            """
             if maximum_risk.final_risk_level == maximum_risk.LEVEL_MEDIUM:
                 self.required_endorsing_roles.append(
                     EndorsingRole.objects.get(name__iexact="District Manager"))

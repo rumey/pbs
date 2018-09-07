@@ -14,6 +14,15 @@
 </style>
 {% endblock %}
 
+{% block extrahead %}
+{{ block.super }}
+<script type="text/javascript">
+    $( document ).ready(function() {
+        $('#id_valid_to').datepicker({dateFormat:'yy-mm-dd', changeMonth: true, changeYear: true})
+    });
+</script>
+{% endblock %}
+
 {% block breadcrumbs %}
 <ul class="breadcrumb">
   <li><a href="{% url 'admin:index' %}">{% trans 'Regional Overview' %}</a> <span class="divider">/</span></li>

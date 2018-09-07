@@ -47,7 +47,7 @@ from pbs.prescription.forms import (
     PrescriptionPriorityForm, BriefingChecklistForm,
     FundingAllocationInlineFormSet)
 from pbs.prescription.models import (
-    Season, Prescription, RegionalObjective, Region, FundingAllocation)
+    Season, Prescription, RegionalObjective, Region, FundingAllocation,EndorsingRole)
 from django.forms.models import inlineformset_factory
 
 from pbs.report.models import Evaluation
@@ -55,7 +55,7 @@ from pbs.report.forms import (
     SummaryCompletionStateForm, BurnImplementationStateForm, BurnClosureStateForm)
 
 from pbs.templatetags.pbs_markdown import markdownify
-from pbs.utils import get_deleted_objects, update_permissions
+from pbs.utils import get_deleted_objects, update_permissions, support_email
 from pbs.utils.widgets import CheckboxSelectMultiple
 
 from pbs import mutex, SemaphoreException
@@ -103,8 +103,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     "approval_expiry", "ignition_status", "status",
                     "prescribing_officer_name", "date_modified_local", "contingencies_migrated")
 
-    actions = [delete_selected, 'export_to_csv', delete_approval_endorsement,
-               carry_over_burns, bulk_corporate_approve]
+    actions = [delete_selected, 'export_to_csv', 'burn_summary_to_csv',
+               delete_approval_endorsement, carry_over_burns, bulk_corporate_approve]
 
     form = PrescriptionCreateForm
     edit_form = PrescriptionEditForm
@@ -257,6 +257,24 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             del actions['bulk_corporate_approve']
 
         return actions
+
+    def burn_summary_to_csv(self, request, queryset):
+        response = HttpResponse(content_type="text/csv")
+        response['Content-Disposition'] = "attachment; filename=burn_summary.csv"
+
+        writer = unicodecsv.writer(response, quoting=unicodecsv.QUOTE_ALL)
+        writer.writerow([
+            'Burn ID', 'Name of Burn', 'Area (ha)', 'Area to be treated (%)',
+            'Priority', 'If Priority 1, explanatory comment*'])
+
+        for item in queryset.order_by('priority', 'burn_id'):
+            writer.writerow([
+                item.burn_id, item.name, "%0.1f" % item.area, item.treatment_percentage,
+                item.get_priority_display(), item.rationale if item.priority == 1 else ""
+            ])
+
+        return response
+    burn_summary_to_csv.short_description = ugettext_lazy("Export Burn Summary to CSV")
 
     def export_to_csv(self, request, queryset):
         # TODO: fix up the date/time formatting to use the default template
@@ -700,8 +718,11 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                                "this ePFP.")
                         group = Group.objects.get(name='ePFP Application Administrator')
                     else:
-                        obj.endorsement_status = obj.ENDORSEMENT_DRAFT
-                        obj.endorsement_set.all().delete()
+                        logger.warning('Prescription {} - all endorsements input but "delete all" business logic triggered'.format(obj))
+                        for i in obj.endorsement_set.all():
+                            logger.info('Staff: {}, role: {}, endorsement: {}'.format(i.creator.get_full_name(), i.role, i.endorsed))
+                        #obj.endorsement_status = obj.ENDORSEMENT_DRAFT
+                        #obj.endorsement_set.all().delete()
                         msg = (" All endorsements have been reviewed but some "
                                "of them have not been endorsed on this ePFP.")
                     obj.save()
@@ -749,6 +770,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         if request.method == 'POST':
             # The user has confirmed they wish to delete the endorsement
             endorsement.delete()
+            msg = 'Delete Endorsement', 'Burn ID: {}, Role: {}, Endorsed by: {}, Deleted by: {}'. format(obj.burn_id, endorsement.role, endorsement.modifier.get_full_name(), request.user.get_full_name())
+            logger.warning(msg)
+            support_email('Delete Endorsement', msg)
             self.message_user(request, "Successfully deleted endorsement.")
             url = reverse('admin:prescription_prescription_endorse', args=(obj.id,))
             return HttpResponseRedirect(url)
@@ -769,6 +793,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         class AdminEndorsingRoleForm(EndorsingRoleForm):
             formfield_callback = partial(
                 self.formfield_for_dbfield, request=request)
+            def __init__(self, *args, **kwargs):
+                super(AdminEndorsingRoleForm,self).__init__(*args,**kwargs)
+                self.fields["endorsing_roles"].queryset = EndorsingRole.objects.filter(archived = False)
 
         obj = self.get_object(request, unquote(object_id))
 
@@ -801,7 +828,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             self.get_readonly_fields(request, obj),
             model_admin=self)
         media = self.media + admin_form.media
-
         context = {
             'title': 'Determine endorsing roles',
             'form': admin_form,
@@ -896,6 +922,10 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             elif obj.approval_status == obj.APPROVAL_SUBMITTED:
                 if request.POST.get('_cancel'):
                     obj.clear_approvals()
+                    msg = 'Delete: Clearing Approvals/Endorsements', 'Burn ID: {}, Deleted by: {}'. format(obj.burn_id, request.user.get_full_name())
+                    logger.warning(msg)
+                    support_email('Delete: Clearing Approvals/Endorsements', msg)
+
                     self.message_user(
                         request, "Approval rejected. ePFP is now draft.")
                     return HttpResponseRedirect(url)
@@ -1574,7 +1604,6 @@ class PrescriptionMixin(object):
             'editable': editable,
         }
         context.update(extra_context or {})
-
         return super(PrescriptionMixin, self).changelist_view(
             request, extra_context=context)
 

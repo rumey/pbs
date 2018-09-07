@@ -53,12 +53,14 @@ The maximum level of risk of the ePFP is {{ current.maximum_risk }} and requires
 </div>
 {% endif %}
 {% endwith %}
+{% comment "FMS Branch Representative is not required to endorse a aerial burn anymore" %}
 {% if current.aircraft_burn %}
 <div class="alert">
 <h4>Aerial Burn</h4>
   As this is an aerial burn, a Fire Management Services Branch representative will be required to endorse this burn.
 </div>
 {% endif %}
+{% endcomment %}
 <h4>Additional Endorsing Roles</h4>
 {% if form.form.endorsing_roles.errors %}<div class="alert alert-error"><p>{% for error in form.form.endorsing_roles.errors %}{{ error }}{% endfor %}</p></div>{% endif %}
 <form action="" method="post">{% csrf_token %}

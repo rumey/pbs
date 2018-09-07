@@ -27,7 +27,7 @@ trafficdiagram_storage = FileSystemStorage(
 
 @python_2_unicode_compatible
 class OperationalOverview(Audit):
-    prescription = models.ForeignKey(Prescription)
+    prescription = models.ForeignKey(Prescription, on_delete=models.PROTECT)
     overview = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -113,7 +113,7 @@ class TrafficControlDiagram(models.Model):
 @python_2_unicode_compatible
 class Way(Audit):
     prescription = models.ForeignKey(
-        Prescription, help_text="Prescription this belongs to.")
+        Prescription, help_text="Prescription this belongs to.", on_delete=models.PROTECT)
     name = models.CharField(max_length=300)
     signs_installed = models.DateField(
         verbose_name="Signs Installed", null=True, blank=True)
@@ -139,7 +139,7 @@ class RoadSegment(Way):
         blank=True, verbose_name="Special Traffic Considerations")
     traffic_diagram = models.ForeignKey(
         TrafficControlDiagram, null=True, blank=True,
-        verbose_name="Select Traffic Control Diagram")
+        verbose_name="Select Traffic Control Diagram", on_delete=models.PROTECT)
 
     _required_fields = ('name', 'road_type',)
 
@@ -179,7 +179,7 @@ class TrailSegment(Way):
 @python_2_unicode_compatible
 class SignInspection(Audit):
     way = models.ForeignKey(
-        Way, verbose_name="Road/Track/Trail Name")
+        Way, verbose_name="Road/Track/Trail Name", on_delete=models.PROTECT)
     inspected = models.DateTimeField(
         default=timezone.now, verbose_name="Date Inspected")
     comments = models.TextField()
@@ -201,12 +201,12 @@ class SignInspection(Audit):
 @python_2_unicode_compatible
 class BurningPrescription(Audit):
     prescription = models.ForeignKey(
-        Prescription, help_text="Prescription this fuel schedule belongs to.")
+        Prescription, help_text="Prescription this fuel schedule belongs to.", on_delete=models.PROTECT)
     # NOTE: the fuel_type field will be deprecated in favour of a reference to
     # the VegetationType model in the prescription app.
 
     fuel_type = models.ForeignKey(FuelType,
-        verbose_name="Fuel Type", blank=True, null=True)
+        verbose_name="Fuel Type", blank=True, null=True, on_delete=models.PROTECT)
     scorch = models.PositiveIntegerField(
         help_text="Maximum Scorch Height (m)",
         verbose_name="Scorch Height",
@@ -370,7 +370,7 @@ class BurningPrescription(Audit):
 @python_2_unicode_compatible
 class EdgingPlan(Audit):
     prescription = models.ForeignKey(
-        Prescription, help_text="Prescription this edging plan belongs to.")
+        Prescription, help_text="Prescription this edging plan belongs to.", on_delete=models.PROTECT)
     location = models.TextField(
         verbose_name="Edge Location", blank=True, null=True,
         help_text="Textual description of edge & its location")
@@ -384,7 +384,7 @@ class EdgingPlan(Audit):
     # the VegetationType model in the prescription app.
 
     fuel_type = models.ForeignKey(FuelType,
-        verbose_name="Fuel Type", blank=True, null=True)
+        verbose_name="Fuel Type", blank=True, null=True, on_delete=models.PROTECT)
     ffdi_min = models.PositiveIntegerField(
         verbose_name="Min FFDI", blank=True, null=True)
     ffdi_max = models.PositiveIntegerField(
@@ -453,7 +453,7 @@ class EdgingPlan(Audit):
 class LightingSequence(Audit):
     prescription = models.ForeignKey(
         Prescription,
-        help_text="Prescription this lighting sequence belongs to.")
+        help_text="Prescription this lighting sequence belongs to.", on_delete=models.PROTECT)
     seqno = models.PositiveSmallIntegerField(
         verbose_name="Lighting Sequence Number",
         choices=Prescription.INT_CHOICES)
@@ -583,7 +583,7 @@ class LightingSequence(Audit):
 @python_2_unicode_compatible
 class ExclusionArea(Audit):
     prescription = models.ForeignKey(
-        Prescription, help_text="Prescription this exclusion area belongs to.")
+        Prescription, help_text="Prescription this exclusion area belongs to.", on_delete=models.PROTECT)
     description = models.TextField()
     location = models.TextField()
     detail = models.TextField(verbose_name="How will fire be excluded?")

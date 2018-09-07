@@ -1,6 +1,7 @@
 import dj_database_url
 import ldap
 import os
+from confy import env
 
 from django_auth_ldap.config import (LDAPSearch, GroupOfNamesType,
                                      LDAPSearchUnion)
@@ -21,13 +22,20 @@ SHP_DOWNLOAD_URL = os.environ.get('SHP_DOWNLOAD_URL', 'url')
 TCD_EXCLUSIONS_FILE = os.environ.get('TCD_EXCLUSIONS_FILE', None)
 TCD_EXCLUSIONS = [line.rstrip('\n') for line in open(TCD_EXCLUSIONS_FILE) if not line.rstrip('\n')==''] if TCD_EXCLUSIONS_FILE else []
 
+FROM_EMAIL = env('FROM_EMAIL', 'from_email')
+SUPPORT_EMAIL = env('SUPPORT_EMAIL', None)
+
+BFRS_URL = env('BFRS_URL', 'https://bfrs.dpaw.wa.gov.au/')
+USER_SSO = env('USER_SSO')
+PASS_SSO = env('PASS_SSO')
 
 # PDF MUTEX - file lock max time 4 mins (4*60)
 MAX_LOCK_TIME = os.environ.get('MAX_LOCK_TIME', 240)
 
 DEBUG = os.environ.get('DEBUG', None) in ["True", "on", "1", "DEBUG"]
 TEMPLATE_DEBUG = DEBUG
-INTERNAL_IPS = ['127.0.0.1', '::1']
+#print 'remote ip_address for INTERNAL_IPS: '.format( request.META['REMOTE_ADDR'] )
+INTERNAL_IPS = ['127.0.0.1', '::1', '10.15.200.29']
 if not DEBUG:
     # Localhost, UAT and Production hosts
     ALLOWED_HOSTS = [
@@ -79,6 +87,7 @@ INSTALLED_APPS = (
     'registration',
     'django_wsgiserver',
     'swingers',
+    'tastypie',
 )
 
 
@@ -343,3 +352,12 @@ if DEBUG:
     if os.environ.get('INTERNAL_IP', False):  # Optionally add developer local IP
         INTERNAL_IPS.append(os.environ['INTERNAL_IP'])
     DEBUG_TOOLBAR_PATCH_SETTINGS = True
+
+
+ENV_TYPE = env('ENV_TYPE') or None
+if not ENV_TYPE:
+    try:
+        ENV_TYPE = os.getcwd().split('-')[1].split('.')[0] # will return either 'dev' or 'uat'
+    except:
+        ENV_TYPE = "TEST"
+ENV_TYPE = ENV_TYPE.upper() if ENV_TYPE else "TEST"
