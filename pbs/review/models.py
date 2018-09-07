@@ -736,4 +736,6 @@ class BurnProgramLink(models.Model):
 				burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
 				burn_planned_area_today, burn_planned_distance_today, burn_target_date_raw
 			ORDER BY p.burn_id, burn_target_date_raw;
-			create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;''')
+			create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;
+			create or replace view review_v_yesterdaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date - interval '1 day';
+                        ''')
