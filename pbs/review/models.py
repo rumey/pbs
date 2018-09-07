@@ -718,7 +718,11 @@ class BurnProgramLink(models.Model):
 					rpb.form_name = 1 and
 					rpb.location = pb.location) as text),
 				'') AS burn_planned_distance_today, -- use planned_distance from 268a
-			  link.wkb_geometry
+			  link.wkb_geometry,
+                          coalesce((SELECT array_to_string(array_agg(pp.name),' , ')
+                                    FROM prescription_prescription_purposes ppps JOIN prescription_purpose pp ON ppps.purpose_id = pp.id
+                                    WHERE ppps.prescription_id = p.id)
+                           ,'') AS burn_purpose
 			from
 			  (((prescription_prescription p
 				 LEFT JOIN review_prescribedburn  pb ON ((p.id = pb.prescription_id)))
@@ -728,7 +732,7 @@ class BurnProgramLink(models.Model):
 				(((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1)) OR -- approved 268a
 				((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))) -- approved active 268b
 			group by
-				p.burn_id, pb.location, p.forest_blocks, burn_target_date, indicative_area,
+				p.id,p.burn_id, pb.location, p.forest_blocks, burn_target_date, indicative_area,
 				burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
 				burn_planned_area_today, burn_planned_distance_today, burn_target_date_raw
 			ORDER BY p.burn_id, burn_target_date_raw;
