@@ -2,52 +2,46 @@ import dj_database_url
 import ldap
 import os
 from confy import env
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType, LDAPSearchUnion
 
-from django_auth_ldap.config import (LDAPSearch, GroupOfNamesType,
-                                     LDAPSearchUnion)
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-POSTGIS_VERSION = (2,1)
+SECRET_KEY = env('SECRET_KEY', 'foobar')
+FEX_MAIL = env('FEX_MAIL', 'pbs@dbca.wa.gov.au')
+FEX_SVR_HTTP = env('FEX_SVR_HTTP', 'https://fex.dpaw.wa.gov.au')
+PDF_TO_FEXSRV = env('PDF_TO_FEXSRV', True)
+DAY_ROLLOVER_HOUR = int(env('DAY_ROLLOVER_HOUR', 17))
 
-SECRET_KEY = os.environ['SECRET_KEY']
-FEX_MAIL = os.environ.get('FEX_MAIL', 'pbs@dpaw.wa.gov.au')
-FEX_SVR_HTTP = os.environ.get('FEX_SVR_HTTP', 'https://fex.dpaw.wa.gov.au')
-PDF_TO_FEXSRV = os.environ.get('PDF_TO_FEXSRV', True)
-DAY_ROLLOVER_HOUR = int(os.environ.get('DAY_ROLLOVER_HOUR', 17))
+KMI_DOWNLOAD_URL = env('KMI_DOWNLOAD_URL', 'url')
+CSV_DOWNLOAD_URL = env('CSV_DOWNLOAD_URL', 'url')
+SHP_DOWNLOAD_URL = env('SHP_DOWNLOAD_URL', 'url')
+TCD_EXCLUSIONS_FILE = env('TCD_EXCLUSIONS_FILE', None)
+TCD_EXCLUSIONS = [line.rstrip('\n') for line in open(TCD_EXCLUSIONS_FILE) if not line.rstrip('\n') == ''] if TCD_EXCLUSIONS_FILE else []
 
-KMI_DOWNLOAD_URL = os.environ.get('KMI_DOWNLOAD_URL', 'url')
-CSV_DOWNLOAD_URL = os.environ.get('CSV_DOWNLOAD_URL', 'url')
-SHP_DOWNLOAD_URL = os.environ.get('SHP_DOWNLOAD_URL', 'url')
-TCD_EXCLUSIONS_FILE = os.environ.get('TCD_EXCLUSIONS_FILE', None)
-TCD_EXCLUSIONS = [line.rstrip('\n') for line in open(TCD_EXCLUSIONS_FILE) if not line.rstrip('\n')==''] if TCD_EXCLUSIONS_FILE else []
-
-FROM_EMAIL = env('FROM_EMAIL', 'from_email')
-SUPPORT_EMAIL = env('SUPPORT_EMAIL', None)
+FROM_EMAIL = env('FROM_EMAIL', 'PrescribedBurnSystem@dbca.wa.gov.au')
+SUPPORT_EMAIL = env('SUPPORT_EMAIL', ['OIMSupport@dbca.wa.gov.au'])
 
 BFRS_URL = env('BFRS_URL', 'https://bfrs.dpaw.wa.gov.au/')
-USER_SSO = env('USER_SSO')
-PASS_SSO = env('PASS_SSO')
+USER_SSO = env('USER_SSO', 'username')
+PASS_SSO = env('PASS_SSO', 'password')
 
 # PDF MUTEX - file lock max time 4 mins (4*60)
-MAX_LOCK_TIME = os.environ.get('MAX_LOCK_TIME', 240)
+MAX_LOCK_TIME = env('MAX_LOCK_TIME', 240)
 
-DEBUG = os.environ.get('DEBUG', None) in ["True", "on", "1", "DEBUG"]
+DEBUG = env('DEBUG', False)
 TEMPLATE_DEBUG = DEBUG
-#print 'remote ip_address for INTERNAL_IPS: '.format( request.META['REMOTE_ADDR'] )
 INTERNAL_IPS = ['127.0.0.1', '::1', '10.15.200.29']
 if not DEBUG:
     # Localhost, UAT and Production hosts
     ALLOWED_HOSTS = [
         'localhost',
         '127.0.0.1',
-        'pbs.dpaw.wa.gov.au',
-        'pbs.dpaw.wa.gov.au.',
-        'pbs-training.dpaw.wa.gov.au',
-        'pbs-training.dpaw.wa.gov.au.',
-        'pbs-dev.dpaw.wa.gov.au',
-        'pbs-dev.dpaw.wa.gov.au.'
+        '.dpaw.wa.gov.au',
+        '.dbca.wa.gov.au',
     ]
+else:
+    ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = (
@@ -74,15 +68,12 @@ INSTALLED_APPS = (
     # third-party applications
     'pagination',
     'django_extensions',
-    #'reversion',
     'south',
     'guardian',
     'admin_enhancer',
     'django_select2',
     'chosen',
     'smart_selects',
-    'debug_toolbar',
-    #'debug_toolbar_htmltidy',
     'crispy_forms',
     'registration',
     'django_wsgiserver',
@@ -90,10 +81,8 @@ INSTALLED_APPS = (
     'tastypie',
 )
 
-
 MIDDLEWARE_CLASSES = (
     'pagination.middleware.PaginationMiddleware',
-    #'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -207,9 +196,9 @@ LOGOUT_URL = '/logout/'
 LOGOUT_REDIRECT_URL = LOGOUT_URL
 
 # LDAP settings
-AUTH_LDAP_SERVER_URI = os.environ.get('LDAP_SERVER_URI')
-AUTH_LDAP_BIND_DN = os.environ.get('LDAP_BIND_DN')
-AUTH_LDAP_BIND_PASSWORD = os.environ.get('LDAP_BIND_PASSWORD')
+AUTH_LDAP_SERVER_URI = env('LDAP_SERVER_URI', 'ldap_server')
+AUTH_LDAP_BIND_DN = env('LDAP_BIND_DN', 'ldap_bind')
+AUTH_LDAP_BIND_PASSWORD = env('LDAP_BIND_PASSWORD', 'ldap_password')
 
 AUTH_LDAP_ALWAYS_UPDATE_USER = False
 AUTH_LDAP_AUTHORIZE_ALL_USERS = True
@@ -244,10 +233,10 @@ AUTH_LDAP_USER_ATTR_MAP = {
 }
 
 # Misc settings
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
-EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
-ANNUAL_INDIC_PROGRAM_PATH = os.environ.get("ANNUAL_INDIC_PROGRAM_PATH", "burnprogram.shp")
-SHP_LAYER = os.environ.get("SHP_LAYER", "BPP_AN_Statewide_Albers")
+EMAIL_HOST = env('EMAIL_HOST', 'smtp')
+EMAIL_PORT = env('EMAIL_PORT', 25)
+ANNUAL_INDIC_PROGRAM_PATH = env("ANNUAL_INDIC_PROGRAM_PATH", "burnprogram.shp")
+SHP_LAYER = env("SHP_LAYER", "BPP_AN_Statewide_Albers")
 
 COMPRESS_ENABLED = False
 
@@ -267,10 +256,8 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
     'formatters': {
-        'standard': {
-            'format': '%(asctime)-.19s [%(process)d] [%(levelname)s] '
-                      '%(message)s'
-        },
+        'console': {'format': '%(asctime)s %(levelname)s %(message)s'},
+        'standard': {'format': '%(asctime)-.19s [%(process)d] [%(levelname)s] %(message)s'},
     },
     'handlers': {
         'null': {
@@ -280,7 +267,7 @@ LOGGING = {
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'standard'
+            'formatter': 'console'
         },
         'file': {
             'level': 'DEBUG',
@@ -303,61 +290,32 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['null'],
+            'handlers': ['console'],
             'propagate': True,
             'level': 'INFO',
         },
         'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': False,
         },
         'pbs': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': True
         },
         'pdf_debugging': {
-            'handlers': ['pdf_debugging'],
+            'handlers': ['console', 'pdf_debugging'],
             'level': 'DEBUG'
         }
     }
 }
 
-if DEBUG:
-    # Set up logging differently to give us some more information about what's
-    # going on
-    LOGGING['loggers'] = {
-        'django_auth_ldap': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True
-        },
-        'django.request': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True
-        },
-        'pbs': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': True
-        },
-    }
-
-    TEMPLATE_LOADERS = (
-        'django.template.loaders.filesystem.Loader',
-        'django.template.loaders.app_directories.Loader',
-    )
-    if os.environ.get('INTERNAL_IP', False):  # Optionally add developer local IP
-        INTERNAL_IPS.append(os.environ['INTERNAL_IP'])
-    DEBUG_TOOLBAR_PATCH_SETTINGS = True
-
 
 ENV_TYPE = env('ENV_TYPE') or None
 if not ENV_TYPE:
     try:
-        ENV_TYPE = os.getcwd().split('-')[1].split('.')[0] # will return either 'dev' or 'uat'
+        ENV_TYPE = os.getcwd().split('-')[1].split('.')[0]  # will return either 'dev' or 'uat'
     except:
         ENV_TYPE = "TEST"
 ENV_TYPE = ENV_TYPE.upper() if ENV_TYPE else "TEST"

@@ -1998,7 +1998,3 @@ class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
         response.write(open(directory + filename).read())
         logger.debug("Finally: returning PDF response.")
         return response
-
-
-
-
