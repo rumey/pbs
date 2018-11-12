@@ -304,3 +304,15 @@ div.navbar-fixed-bottom {
     background-color: #eeeeee;
     color: #000000;
 }
+
+
+div.error {
+    background-color: #F2DEDE;
+    padding:3px
+}
+div.freetext {
+    border-style:solid;
+    border-width:1px;
+    border-color:#ddd;
+    white-space:pre;
+}
