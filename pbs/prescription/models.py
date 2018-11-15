@@ -330,6 +330,12 @@ class Prescription(Audit):
         [prev_yr4, prev_yr4],
     ]
 
+    NON_CALM_TENURE_COMPLETE_CHOICES = (
+        (1,"Yes"),
+        (2,"No"),
+        (3,"Yes and No")
+    )
+
     burn_id = models.CharField(max_length=7, verbose_name="Burn ID")
     name = models.CharField(max_length=128)
     description = models.TextField(blank=True, null=True)
@@ -461,7 +467,9 @@ class Prescription(Audit):
     non_calm_tenure = models.NullBooleanField(verbose_name="Non-CALM Act Tenure")
     non_calm_tenure_included = models.TextField(verbose_name="Non-CALM Act Tenure Included", blank=True,null=True)
     non_calm_tenure_value = models.TextField(verbose_name="Public Value in Burn", blank=True,null=True)
-    non_calm_tenure_complete = models.NullBooleanField(verbose_name="Can the burn be completed safely without the inclusion of other tenure?")
+    non_calm_tenure_complete = models.PositiveSmallIntegerField(
+        verbose_name="Can the burn be completed safely without the inclusion of other tenure?",
+        choices=NON_CALM_TENURE_COMPLETE_CHOICES, null=True,blank=True)
     non_calm_tenure_risks = models.TextField(verbose_name="Risks based issues if other tenure not included", blank=True,null=True)
 
     def __str__(self):

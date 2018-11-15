@@ -128,6 +128,7 @@ class PrescriptionEditForm(PrescriptionFormBase):
         prescription = kwargs.get('instance')
 
         super(PrescriptionEditForm, self).__init__(*args, **kwargs)
+        self.fields["non_calm_tenure_complete"].choices = Prescription.NON_CALM_TENURE_COMPLETE_CHOICES
 
         if 'description' in self.fields:
             self.fields['description'].widget.attrs.update({
@@ -158,7 +159,7 @@ class PrescriptionEditForm(PrescriptionFormBase):
     class Meta:
         model = Prescription
         widgets = {
-            "non_calm_tenure_complete":forms.widgets.CheckboxInput(),
+            "non_calm_tenure_complete":forms.widgets.RadioSelect(),
             "non_calm_tenure_included":forms.widgets.Textarea(attrs={"style":"width:90%;"}),
             "non_calm_tenure_value":forms.widgets.Textarea(attrs={"style":"width:90%;"}),
             "non_calm_tenure_risks":forms.widgets.Textarea(attrs={"style":"width:90%;"})

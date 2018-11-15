@@ -187,6 +187,22 @@
                         {% endif %}
                     </div>
                     <div>
+                        <style>
+                            #id_non_calm_tenure_complete {
+                                list-style-type:none;
+                                margin:0px;
+                                padding:0px;
+                            }
+                            #id_non_calm_tenure_complete label {
+                                display:inline;
+                            }
+                            #id_non_calm_tenure_complete li {
+                                display:inline;
+                                padding-left:10px;
+                                padding-right:10px;
+                            }
+                        </style>
+
                         <span style="font-weight:bold">Can the burn be completed safely without the inclusion of other tenure?</span> {{form.form.non_calm_tenure_complete}}
                         {% if form.form.non_calm_tenure_complete.errors %}
                             {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.non_calm_tenure_complete.errors %}

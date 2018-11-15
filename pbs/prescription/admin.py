@@ -306,7 +306,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             'Success Criteria', 'Success Criteria Achieved',
             'Observations Identified', 'Proposed Action',
             'Endorsement Name/s', 'Endorsement Date',
-            'Approval Name/s', 'Approval Date', 'Approved Until',
+            'Approval Name/s', 'Approval Date', 'Approved Until','Overall Rationale',
             'Non-CALM Act Tenure?','Non-CALM Act Tenure Included','Public Value in Burn','Complete Without Other Tenures?','Risks If Exclude Other Tenures'])
 
         for item in queryset:
@@ -422,9 +422,10 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 item.approval_status_modified.astimezone(
                     local_zone).strftime('%d/%m/%Y %H:%M:%S') if item.approval_status_modified else "",
                 approved_until,
+                item.rationale,
                 "Yes" if item.non_calm_tenure else ("Unknown" if item.non_calm_tenure is None else "No"),
                 item.non_calm_tenure_included,item.non_calm_tenure_value,
-                "Yes" if item.non_calm_tenure_complete else ("" if item.non_calm_tenure_complete is None else "No"),
+                ("Yes" if item.non_calm_tenure_complete == 1  else ( "No" if item.non_calm_tenure_complete == 2 else "Yes & No")) if item.non_calm_tenure else "",
                 item.non_calm_tenure_risks
             ])
 
