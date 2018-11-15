@@ -475,6 +475,16 @@ class Prescription(Audit):
     def __str__(self):
         return self.burn_id
 
+
+    @property
+    def non_calm_tenure_complete_name(self):
+        if self.non_calm_tenure_complete:
+            for k,v in self.NON_CALM_TENURE_COMPLETE_CHOICES:
+                if k == self.non_calm_tenure_complete:
+                    return v
+
+        return ""
+
     def purposes_list(self):
         """
         Place 'Bushfire Risk Management' at top of list/string
