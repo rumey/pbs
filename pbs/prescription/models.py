@@ -330,6 +330,12 @@ class Prescription(Audit):
         [prev_yr4, prev_yr4],
     ]
 
+    NON_CALM_TENURE_COMPLETE_CHOICES = (
+        (1,"Yes"),
+        (2,"No"),
+        (3,"Yes and No")
+    )
+
     burn_id = models.CharField(max_length=7, verbose_name="Burn ID")
     name = models.CharField(max_length=128)
     description = models.TextField(blank=True, null=True)
@@ -450,8 +456,34 @@ class Prescription(Audit):
     contingencies_migrated = models.BooleanField(default=False, editable=False)
 #    reviewed = models.BooleanField(verbose_name="Reviewed by FMSB and DRFMS", default=False, editable=False)
 
+    #fields for  Cross Tenure/s 33(1)(f) Ministerial Declaration
+    #Non- CALM Act Tenure - Option to select 'Yes' or 'No'
+    #   If 'Yes' selected, additional mandatory fields to complete
+    #       Non-CALM Act tenure included : (free text field, option to have a drop down list of tenure types to select, but free text is likely more desirable)
+    #       Public value in burn : (free text field)
+    #       Can the burn be completed safely without the inclusion of other tenure? : (Yes or No selection)
+    #       Risk based issues if other tenure not included (free text field)
+    #   If 'No' selected, additional fields are greyed out, and left blank as not applicable
+    non_calm_tenure = models.NullBooleanField(verbose_name="Non-CALM Act Tenure")
+    non_calm_tenure_included = models.TextField(verbose_name="Non-CALM Act Tenure Included", blank=True,null=True)
+    non_calm_tenure_value = models.TextField(verbose_name="Public Value in Burn", blank=True,null=True)
+    non_calm_tenure_complete = models.PositiveSmallIntegerField(
+        verbose_name="Can the burn be completed safely without the inclusion of other tenure?",
+        choices=NON_CALM_TENURE_COMPLETE_CHOICES, null=True,blank=True)
+    non_calm_tenure_risks = models.TextField(verbose_name="Risks based issues if other tenure not included", blank=True,null=True)
+
     def __str__(self):
         return self.burn_id
+
+
+    @property
+    def non_calm_tenure_complete_name(self):
+        if self.non_calm_tenure_complete:
+            for k,v in self.NON_CALM_TENURE_COMPLETE_CHOICES:
+                if k == self.non_calm_tenure_complete:
+                    return v
+
+        return ""
 
     def purposes_list(self):
         """

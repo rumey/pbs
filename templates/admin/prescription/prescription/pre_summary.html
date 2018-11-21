@@ -168,6 +168,76 @@
             <td>{{ form.form.perimeter }}</td>
         </tr>
         <tr>
+            <th>Non-CALM Act Tenure</th>
+            <td colspan="3" >
+                {{form.form.non_calm_tenure}}
+                <div id="id_non_calm_tenure_body">
+                    <div>
+                        <span style="font-weight:bold">Non-CALM Act tenure included *</span>
+                        {{form.form.non_calm_tenure_included}}
+                        {% if form.form.non_calm_tenure_included.errors %}
+                            {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.non_calm_tenure_included.errors %}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <span style="font-weight:bold">Public value in burn * </span>
+                        <br>{{form.form.non_calm_tenure_value}}
+                        {% if form.form.non_calm_tenure_value.errors %}
+                            {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.non_calm_tenure_value.errors %}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <style>
+                            #id_non_calm_tenure_complete {
+                                list-style-type:none;
+                                margin:0px;
+                                padding:0px;
+                            }
+                            #id_non_calm_tenure_complete label {
+                                display:inline;
+                            }
+                            #id_non_calm_tenure_complete li {
+                                display:inline;
+                                padding-left:10px;
+                                padding-right:10px;
+                            }
+                        </style>
+
+                        <span style="font-weight:bold">Can the burn be completed safely without the inclusion of other tenure?</span> {{form.form.non_calm_tenure_complete}}
+                        {% if form.form.non_calm_tenure_complete.errors %}
+                            {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.non_calm_tenure_complete.errors %}
+                        {% endif %}
+                    </div>
+                    <div style="margin-top:3px">
+                        <span style="font-weight:bold">Risk based issues if other tenure not included * </span>
+                        <br>{{form.form.non_calm_tenure_risks}}
+                        {% if form.form.non_calm_tenure_risks.errors %}
+                            {% include "admin/prescription/prescription/display_errors.html" with errors=adminform.form.non_calm_tenure_risks.errors %}
+                        {% endif %}
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    function check_non_calm_tenure() {
+                        if (document.getElementById("id_non_calm_tenure").value === "2") {
+                            $("#id_non_calm_tenure_body").show()
+                            $.each(["#id_non_calm_tenure_included","#id_non_calm_tenure_value","#id_non_calm_tenure_complete","#id_non_calm_tenure_risks"],function(index,id){
+                                $(id).prop('disabled',false)
+                            })
+                        } else {
+                            $("#id_non_calm_tenure_body").hide()
+                            $.each(["#id_non_calm_tenure_included","#id_non_calm_tenure_value","#id_non_calm_tenure_complete","#id_non_calm_tenure_risks"],function(index,id){
+                                $(id).prop('disabled',true)
+                            })
+                        }
+                    }
+                    $(document).ready(function(){
+                        $("#id_non_calm_tenure").change(check_non_calm_tenure);
+                        check_non_calm_tenure()
+                    })
+                </script>
+            </td>
+        </tr>
+        <tr>
             <th>Burn Tenure(s)</th>
             <td colspan="3">{{ form.form.tenures }}<input id="id_tenures" type="hidden"></input></td>
         </tr>
@@ -299,6 +369,24 @@
             <th>Perimeter/Length (kms) *</th>
             <td>{{ current.perimeter }}</td>
         </tr>
+
+        <tr>
+            <th>Non-CALM Act Tenure</th>
+            <td colspan="3" >
+                {{ current.non_calm_tenure | yesno:"Yes,No,Unknown" }}
+                {% if current.non_calm_tenure %}
+                <br><br><span style="font-weight:bold"> Non-CALM Act tenure included * </span>
+                <div class="freetext">{{current.non_calm_tenure_included}}</div>
+                <br><span style="font-weight:bold"> Public value in burn * </span>
+                <div class="freetext">{{current.non_calm_tenure_value}}</div>
+                <br><span style="font-weight:bold"> Can the burn be completed safely without the inclusion of other tenure? </span> {{current.non_calm_tenure_complete_name }}
+                <br><br><span style="font-weight:bold"> Risk based issues if other tenure not included * </span>
+                <div class="freetext">{{current.non_calm_tenure_risks}}</div>
+                {% endif %}
+            </td>
+        </tr>
+
+
         <tr>
             <th>Burn Tenure(s)</th>
             <td colspan="3">{{ current.tenures.all|join:", " }}</tr>

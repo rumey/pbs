@@ -736,4 +736,29 @@ class BurnProgramLink(models.Model):
 				burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
 				burn_planned_area_today, burn_planned_distance_today, burn_target_date_raw
 			ORDER BY p.burn_id, burn_target_date_raw;
-			create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;''')
+			create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;
+			create or replace view review_v_yesterdaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date - interval '1 day';
+                        CREATE  OR REPLACE  FUNCTION review_f_lastdaysburns() RETURNS setof review_v_dailyburns AS $$
+                        DECLARE
+                            last_date review_v_dailyburns.burn_target_date_raw%TYPE;
+                        BEGIN
+                            SELECT max(pb.date) INTO last_date
+                            FROM
+                                review_prescribedburn  pb LEFT JOIN review_acknowledgement ack ON pb.id = ack.burn_id
+                            WHERE (
+                                    (((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1))
+                                    OR
+                                    ((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))
+                                   )
+                                   AND (pb.date < current_date);
+                        
+                            IF last_date IS NULL THEN
+                                RETURN QUERY SELECT * FROM review_v_dailyburns WHERE false;
+                            ELSE
+                                RETURN QUERY SELECT * FROM review_v_dailyburns WHERE burn_target_date_raw = last_date;
+                            END IF;
+                        END;
+                        $$ LANGUAGE plpgsql;
+			create or replace view review_v_lastdaysburns as select * from review_f_lastdaysburns();
+
+                        ''')

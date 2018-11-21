@@ -1,6 +1,7 @@
+from datetime import datetime, timedelta, date
+import requests
+
 from django import forms
-from pbs.prescription.models import Prescription, Region, District
-from pbs.review.models import PrescribedBurn, AircraftBurn
 from datetime import datetime, timedelta, date
 from django.conf import settings
 from django.forms import ValidationError
@@ -8,6 +9,11 @@ from django.forms import ValidationError
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Field, Div
 import requests
+
+
+from pbs.prescription.models import Prescription, Region, District
+from pbs.review.models import PrescribedBurn, AircraftBurn
+from pbs.forms import RequestMixin,SessionPersistenceMixin
 
 def check_date(dt):
     today = date.today()
@@ -411,17 +417,45 @@ class FireEditForm(forms.ModelForm):
         fields = ('region', 'district', 'fire_id', 'fire_name', 'tenures', 'date', 'status', 'area',)
 
 
-class PrescribedBurnFilterForm(forms.ModelForm):
-    approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+class PrescribedBurnFilterForm(RequestMixin,SessionPersistenceMixin,forms.ModelForm):
+    approval_status = forms.MultipleChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+
+    def default_initial(self):
+        return {
+            'region':self.request.user.profile.region.id if self.request and self.request.user.profile.region else None,
+            'district':self.request.user.profile.district.id if self.request and self.request.user.profile.district else None,
+            'approval_status': [c[0] for c in PrescribedBurn.APPROVAL_CHOICES]
+        }
 
     class Meta:
         fields = ('region', 'district', 'approval_status')
         model = PrescribedBurn
 
+class FireSummaryFilterForm(RequestMixin,SessionPersistenceMixin,forms.ModelForm):
 
-class FireLoadFilterForm(forms.ModelForm):
-    fire_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Bushfires')])
-    approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+    def default_initial(self):
+        return {
+            'region':self.request.user.profile.region.id if self.request and self.request.user.profile.region else None,
+            'district':self.request.user.profile.district.id if self.request and self.request.user.profile.district else None,
+        }
+
+    class Meta:
+        fields = ('region', 'district')
+        model = PrescribedBurn
+
+
+
+class FireLoadFilterForm(RequestMixin,SessionPersistenceMixin,forms.ModelForm):
+    fire_type = forms.TypedChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Bushfires')],coerce=lambda val:int(val))
+    approval_status = forms.MultipleChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+
+    def default_initial(self):
+        return {
+            'region':self.request.user.profile.region.id if self.request and self.request.user.profile.region else None,
+            'district':self.request.user.profile.district.id if self.request and self.request.user.profile.district else None,
+            'approval_status': [c[0] for c in PrescribedBurn.APPROVAL_CHOICES],
+            'fire_type':0
+        }
 
     class Meta:
         fields = ('region', 'district', 'fire_type', 'approval_status')

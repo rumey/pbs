@@ -6,7 +6,7 @@ from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement, AircraftApproval, BurnProgramLink, AnnualIndicativeBurnProgram
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
-        PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
+        PrescribedBurnEditActiveForm, FireLoadFilterForm,FireSummaryFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
         AircraftBurnForm, AircraftBurnEditForm, AircraftBurnFilterForm
     )
 from pbs.prescription.models import Prescription, Approval, Region, District
@@ -1037,28 +1037,29 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         if request.REQUEST.has_key('report'):
             report = request.REQUEST.get('report', None)
 
+        dt = None
         if request.REQUEST.has_key('date'):
             dt = request.REQUEST.get('date', None)
             if dt:
                 dt = datetime.strptime(dt, '%Y-%m-%d')
-        else:
+        if not dt:
+            #date is none, set to today
             dt = date.today()
             time_now = datetime.now().time()
             if time_now.hour > settings.DAY_ROLLOVER_HOUR:
                 dt = dt + timedelta(days=1)
 
         yesterday = dt - timedelta(days=1)
-
         qs_burn = PrescribedBurn.objects.filter(date=dt)
         if report=='epfp_planned':
             title = "Today's Planned Burn Program"
             # assumes all burns entered on date dt are planned (for date dt)
             qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268A)
-            form = PrescribedBurnFilterForm(request.GET)
+            form = PrescribedBurnFilterForm(request=request,prefix=report,data=request.GET,persistent_fields=["region","district"])
         elif report=='epfp_fireload':
             title = "Summary of Current Fire Load"
             qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268B)
-            form = FireLoadFilterForm(request.GET)
+            form = FireLoadFilterForm(request=request,prefix=report,data=request.GET,persistent_fields=["region","district"])
         elif report=='epfp_summary':
             # Form 268c contains:
             #   1. SDO Approved Plans (Form A)
@@ -1066,29 +1067,30 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             #   3. Only Burns (No Fires)
             title = "Summary of Current and Planned Fires"
             qs_burn = qs_burn.filter(acknowledgements__acknow_type='SDO_A', date=dt).exclude(prescription__isnull=True)
-            form = PrescribedBurnFilterForm(request.GET)
-
-        fire_type = 0
-        if request.REQUEST.has_key('fire_type'):
-            fire_type = int (request.REQUEST.get('fire_type', None))
+            form = FireSummaryFilterForm(request=request,prefix=report,data=request.GET)
+        fire_type = None
+        if "fire_type" in form.fields:
+            fire_type = form["fire_type"].value()
             if fire_type == 1:
                 qs_burn = qs_burn.filter(fire_id__isnull=True)
             elif fire_type == 2:
                 qs_burn = qs_burn.filter(prescription__isnull=True)
 
-        if request.REQUEST.has_key('region'):
-            region = request.REQUEST.get('region', None)
+        region = None
+        if 'region' in form.fields:
+            region = form['region'].value()
             if region:
                 qs_burn = qs_burn.filter(region=region)
 
-        if request.REQUEST.has_key('district'):
-            district = request.REQUEST.get('district', None)
+        district = None
+        if 'district' in form.fields:
+            district = form["district"].value()
             if district:
                 qs_burn = qs_burn.filter(district=district)
 
-        if request.REQUEST.has_key('approval_status'):
-            approval_status = map(str, request.REQUEST.getlist('approval_status'))
-            if approval_status and len(approval_status)!=4:
+        if 'approval_status' in form.fields:
+            approval_status = form["approval_status"].value()
+            if approval_status and len(approval_status) < len(PrescribedBurn.APPROVAL_CHOICES):
                 if report=='epfp_planned':
                     if len(approval_status)==1 and approval_status[0]=='DRAFT':
                         approval_choices = [i[0]+'_A' for i in PrescribedBurn.APPROVAL_CHOICES if i[0]!='DRAFT']
