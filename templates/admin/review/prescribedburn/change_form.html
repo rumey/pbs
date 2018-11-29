@@ -29,11 +29,12 @@ $(function() {
         $("#id_conditions").attr("disabled", "disabled");
     {% endif %}
 
-    $("#id_district, #id_year").change(function () {
+    $("#id_district, #id_year, #id_include_final_report").change(function () {
         var prescription_view_url = "{% url 'admin:prescription_view' %}";
         var page_form_name = 'add_fire';
         var district_id = '';
         var year = '';
+        var include_final_report = $("#id_include_final_report").prop("checked");
         if ($("#id_year :selected").val() > 0) { year = $("#id_year :selected").text(); }
         if ($("#id_district :selected").val() > 0) { district_id = $("#id_district :selected").val(); }
         $( "#id_bushfire_name").remove()
@@ -48,7 +49,8 @@ $(function() {
                 data: {
                     district_id: district_id,
                     year: year,
-                    form_name: page_form_name
+                    form_name: page_form_name,
+                    include_final_report:include_final_report
                 },
                 success: function(response){
                     var response = JSON.parse(response);

@@ -291,7 +291,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
     def add_view(self, request, form_url='', extra_context=None):
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
-
         if self.is_role_based_user(request):
             self.message_user(request, "Role-based user is not permitted to Add {}. Please login with user credentials".format(
                 'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
@@ -421,6 +420,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     params = '&district_id={}'.format(request.GET.get('district_id'))
                     if request.GET.get('year'):
                         params += '&year={}'.format(request.GET.get('year'))
+                    if request.GET.get('include_final_report') == 'true' :
+                        params += '&include_final_report=true'
                     resp = requests.get(url=bfrs_base_url + 'api/v1/bushfire/fields/fire_number/?format=json' + params, auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO)).json()
                     resp.insert(0, {u'fire_number': u'--------', u'name': u'', u'tenure__name': u'', u'other_tenure': u''})
                 except:

@@ -295,6 +295,7 @@ class ChoiceFieldNoValidation(forms.ChoiceField):
 class FireForm(forms.ModelForm):
     fire_number = ChoiceFieldNoValidation(required=False)
     year = forms.ChoiceField(required=False)
+    include_final_report = forms.BooleanField(label="Show Final Authorised Bushfire Report")
     #year = forms.ChoiceField(choices=((0, '--------'), (1, 2016), (2, 2017)) )
 
     def __init__(self, *args, **kwargs):
@@ -344,7 +345,7 @@ class FireForm(forms.ModelForm):
     class Meta:
         model = PrescribedBurn
         #fields = ('region', 'district', 'year', 'fire_number', 'fire_id','date', 'status', 'area', 'fire_tenures', 'fire_name',)
-        fields = ('region', 'district', 'year', 'fire_number', 'fire_id','date', 'status', 'area', 'fire_name', 'tenures',)
+        fields = ('region', 'district', 'year','include_final_report', 'fire_number', 'fire_id','date', 'status', 'area', 'fire_name', 'tenures',)
 
 
 class FireEditForm(forms.ModelForm):
