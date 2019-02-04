@@ -295,7 +295,7 @@ class ChoiceFieldNoValidation(forms.ChoiceField):
 class FireForm(forms.ModelForm):
     fire_number = ChoiceFieldNoValidation(required=False)
     year = forms.ChoiceField(required=False)
-    include_final_report = forms.BooleanField(label="Show Final Authorised Bushfire Report")
+    include_final_report = forms.BooleanField(label="Show Final Authorised Bushfire Report",required=False)
     #year = forms.ChoiceField(choices=((0, '--------'), (1, 2016), (2, 2017)) )
 
     def __init__(self, *args, **kwargs):
