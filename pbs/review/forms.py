@@ -324,7 +324,7 @@ class FireForm(forms.ModelForm):
         """ Returns tuple eg. ((0,'--------'), (1,2017)) """
         choices = [[0, '--------']]
         bfrs_url = settings.BFRS_URL if settings.BFRS_URL.endswith('/') else settings.BFRS_URL + os.sep
-        years = ['--------'] + requests.get(url=bfrs_url + 'api/v1/bushfire/fields/year/?format=json', auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO)).json()
+        years = ['--------'] + requests.get(url=bfrs_url + 'api/v1/bushfire/fields/year/?format=json', auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO), verify=False).json()
         return tuple([(years.index(i), i) for i in years])
 
     def clean(self):
