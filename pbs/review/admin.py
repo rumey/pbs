@@ -554,7 +554,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 already_acknowledged = []
                 unset_acknowledged = []
                 for obj in objects:
-                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
+                    if (obj.prescription and (obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED or obj.prescription.areaachievement_set.latest('ignition').ignition > (date.today() + timedelta(days=-365)))) or obj.fire_id:
                         if (obj.area>=0 or obj.distance>=0) and obj.status:
                             if obj.formB_isDraft:
                                 if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
