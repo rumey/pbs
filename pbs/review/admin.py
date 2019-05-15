@@ -422,7 +422,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         params += '&year={}'.format(request.GET.get('year'))
                     if request.GET.get('include_final_report') == 'true' :
                         params += '&include_final_report=true'
-                    resp = requests.get(url=bfrs_base_url + 'api/v1/bushfire/fields/fire_number/?format=json' + params, auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO)).json()
+                    resp = requests.get(url=bfrs_base_url + 'api/v1/bushfire/fields/fire_number/?format=json' + params, auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO), verify=False).json()
                     resp.insert(0, {u'fire_number': u'--------', u'name': u'', u'tenure__name': u'', u'other_tenure': u''})
                 except:
                     resp = [{u'fire_number': u'BFRS lookup Failed', u'name': u'', u'tenure__name': u'', u'other_tenure': u''}]
@@ -554,7 +554,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 already_acknowledged = []
                 unset_acknowledged = []
                 for obj in objects:
-                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
+                    if (obj.prescription and (obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED or obj.prescription.areaachievement_set.latest('ignition').ignition > (date.today() + timedelta(days=-365)))) or obj.fire_id:
                         if (obj.area>=0 or obj.distance>=0) and obj.status:
                             if obj.formB_isDraft:
                                 if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:

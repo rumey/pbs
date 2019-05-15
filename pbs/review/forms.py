@@ -295,7 +295,7 @@ class ChoiceFieldNoValidation(forms.ChoiceField):
 class FireForm(forms.ModelForm):
     fire_number = ChoiceFieldNoValidation(required=False)
     year = forms.ChoiceField(required=False)
-    include_final_report = forms.BooleanField(label="Show Final Authorised Bushfire Report",required=False)
+    include_final_report = forms.BooleanField(label="Show Final Authorised Bushfire Report", required=False)
     #year = forms.ChoiceField(choices=((0, '--------'), (1, 2016), (2, 2017)) )
 
     def __init__(self, *args, **kwargs):
@@ -324,7 +324,7 @@ class FireForm(forms.ModelForm):
         """ Returns tuple eg. ((0,'--------'), (1,2017)) """
         choices = [[0, '--------']]
         bfrs_url = settings.BFRS_URL if settings.BFRS_URL.endswith('/') else settings.BFRS_URL + os.sep
-        years = ['--------'] + requests.get(url=bfrs_url + 'api/v1/bushfire/fields/year/?format=json', auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO)).json()
+        years = ['--------'] + requests.get(url=bfrs_url + 'api/v1/bushfire/fields/year/?format=json', auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO), verify=False).json()
         return tuple([(years.index(i), i) for i in years])
 
     def clean(self):
