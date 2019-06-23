@@ -9,6 +9,7 @@ from pbs.prescription.models import (
 
 from pbs.prescription.fields import LocationMultiField
 from pbs.forms import PbsModelForm
+from pbs.widgets import NullBooleanSelect
 from django.utils import timezone
 
 
@@ -159,6 +160,7 @@ class PrescriptionEditForm(PrescriptionFormBase):
     class Meta:
         model = Prescription
         widgets = {
+            "non_calm_tenure":NullBooleanSelect(),
             "non_calm_tenure_complete":forms.widgets.RadioSelect(),
             "non_calm_tenure_included":forms.widgets.Textarea(attrs={"style":"width:90%;"}),
             "non_calm_tenure_value":forms.widgets.Textarea(attrs={"style":"width:90%;"}),
