@@ -373,7 +373,7 @@
         <tr>
             <th>Non-CALM Act Tenure</th>
             <td colspan="3" >
-                {{ current.non_calm_tenure | yesno:"Yes,No,Unknown" }}
+                {{ current.non_calm_tenure | yesno:"Yes,No,--------" }}
                 {% if current.non_calm_tenure %}
                 <br><br><span style="font-weight:bold"> Non-CALM Act tenure included * </span>
                 <div class="freetext">{{current.non_calm_tenure_included}}</div>

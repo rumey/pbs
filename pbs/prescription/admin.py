@@ -423,7 +423,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     local_zone).strftime('%d/%m/%Y %H:%M:%S') if item.approval_status_modified else "",
                 approved_until,
                 item.rationale,
-                "Yes" if item.non_calm_tenure else ("Unknown" if item.non_calm_tenure is None else "No"),
+                "Yes" if item.non_calm_tenure else ("--------" if item.non_calm_tenure is None else "No"),
                 item.non_calm_tenure_included,item.non_calm_tenure_value,
                 ("Yes" if item.non_calm_tenure_complete == 1  else ( "No" if item.non_calm_tenure_complete == 2 else "Yes & No")) if item.non_calm_tenure else "",
                 item.non_calm_tenure_risks
