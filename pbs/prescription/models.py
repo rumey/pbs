@@ -465,6 +465,7 @@ class Prescription(Audit):
     #       Risk based issues if other tenure not included (free text field)
     #   If 'No' selected, additional fields are greyed out, and left blank as not applicable
     non_calm_tenure = models.NullBooleanField(verbose_name="Non-CALM Act Tenure")
+    non_calm_tenure_approved = models.NullBooleanField(verbose_name="Cross Tenure Approved?")
     non_calm_tenure_included = models.TextField(verbose_name="Non-CALM Act Tenure Included", blank=True,null=True)
     non_calm_tenure_value = models.TextField(verbose_name="Public Value in Burn", blank=True,null=True)
     non_calm_tenure_complete = models.PositiveSmallIntegerField(

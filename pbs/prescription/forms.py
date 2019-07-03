@@ -50,6 +50,12 @@ class PrescriptionFormBase(forms.ModelForm):
         else:
             return None
 
+    def clean_non_calm_tenure_approved(self):
+        if self.cleaned_data["non_calm_tenure"]:
+            return self.instance.non_calm_tenure_approved
+        else:
+            return None
+
     def clean_non_calm_tenure_value(self):
         if self.cleaned_data["non_calm_tenure"]:
             value = self.cleaned_data.get("non_calm_tenure_value")
@@ -160,7 +166,8 @@ class PrescriptionEditForm(PrescriptionFormBase):
     class Meta:
         model = Prescription
         widgets = {
-            "non_calm_tenure":NullBooleanSelect(),
+            "non_calm_tenure":NullBooleanSelect(attrs={"autocomplete":"off"}),
+            "non_calm_tenure_approved":forms.widgets.CheckboxInput(attrs={"disabled":True,"autocomplete":"off"}),
             "non_calm_tenure_complete":forms.widgets.RadioSelect(),
             "non_calm_tenure_included":forms.widgets.Textarea(attrs={"style":"width:90%;"}),
             "non_calm_tenure_value":forms.widgets.Textarea(attrs={"style":"width:90%;"}),

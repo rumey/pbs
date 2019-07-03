@@ -59,6 +59,7 @@ from pbs.utils import get_deleted_objects, update_permissions, support_email
 from pbs.utils.widgets import CheckboxSelectMultiple
 
 from pbs import mutex, SemaphoreException
+from pbs.filters import BooleanFieldListFilter,CrossTenureApprovedListFilter,IntChoicesFieldListFilter,RelatedFieldListFilter,StringValuesFieldListFilter
 from django.core.mail import send_mail
 
 from pbs.prescription import fund_allocation
@@ -92,16 +93,17 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         'admin/prescription/prescription/remove_selected_confirmation.html')
 
     changelist_link_detail = True
-    list_filter = ("region", "district", "financial_year",
-                   "contentious", "aircraft_burn",
-                   "priority", "planning_status", "endorsement_status",
-                   "approval_status", "ignition_status", "status", "contingencies_migrated")
+    list_filter = (("region",RelatedFieldListFilter), ("district",RelatedFieldListFilter), ("financial_year",StringValuesFieldListFilter),
+                   ("contentious",BooleanFieldListFilter), ("aircraft_burn",BooleanFieldListFilter),
+                   ("priority",IntChoicesFieldListFilter), ("planning_status",IntChoicesFieldListFilter), ("endorsement_status",IntChoicesFieldListFilter),
+                   ("approval_status",IntChoicesFieldListFilter), ("ignition_status",IntChoicesFieldListFilter), ("status",IntChoicesFieldListFilter), 
+                   ("contingencies_migrated",BooleanFieldListFilter),("non_calm_tenure",BooleanFieldListFilter),("non_calm_tenure_approved",CrossTenureApprovedListFilter))
     list_display = ("burn_id", "name", "region", "district",
                     "financial_year", "contentious", "aircraft_burn",
                     "priority", "remote_sensing_priority",
                     "planning_status", "endorsement_status", "approval_status",
                     "approval_expiry", "ignition_status", "status",
-                    "prescribing_officer_name", "date_modified_local", "contingencies_migrated")
+                    "prescribing_officer_name", "date_modified_local", "contingencies_migrated","_non_calm_tenure","_non_calm_tenure_approved")
 
     actions = [delete_selected, 'export_to_csv', 'burn_summary_to_csv',
                delete_approval_endorsement, carry_over_burns, bulk_corporate_approve]
@@ -133,6 +135,31 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
     )
     filter_horizontal = ('tenures', 'fuel_types', 'shires',
                          'forecast_areas', 'endorsing_roles')
+
+    def _non_calm_tenure(self,obj):
+        if obj.non_calm_tenure:
+            return "Yes"
+        elif obj.non_calm_tenure is None:
+            return "------"
+        else:
+            return "No"
+    _non_calm_tenure.admin_order_field = 'non_calm_tenure'
+    _non_calm_tenure.short_description = 'Non CALM-Act Tenure'
+
+    def _non_calm_tenure_approved(self,obj):
+        if obj.non_calm_tenure:
+            if obj.non_calm_tenure_approved:
+                return "<i class='icon-ok text-success'></i>"
+            elif obj.non_calm_tenure_approved == False:
+                return "<i class='icon-minus text-warning'></i>"
+            else:
+                return ""
+        else:
+            return ""
+    _non_calm_tenure_approved.admin_order_field = 'non_calm_tenure_approved'
+    _non_calm_tenure_approved.short_description = 'Cross Tenure Approved?'
+
+
 
     def queryset(self, request):
         """
@@ -477,7 +504,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                            # TODO: PBS-1551 # 'allocation',
                            'remote_sensing_priority', 'purposes',
                            ('area', 'perimeter', 'treatment_percentage'),
-                           ('non_calm_tenure','non_calm_tenure_included','non_calm_tenure_value','non_calm_tenure_complete','non_calm_tenure_risks')
+                           ('non_calm_tenure','non_calm_tenure_approved','non_calm_tenure_included','non_calm_tenure_value','non_calm_tenure_complete','non_calm_tenure_risks')
                           )
             }), ('Other Attributes', {
                 "fields": ('tenures', 'fuel_types', 'shires',
