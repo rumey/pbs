@@ -109,7 +109,7 @@ $(document).ready(function() {
 
     $("table#result_list thead").find("th").each(function() {
         var newbutton = column_button.clone();
-        var name = $(this).find("a").text();
+        var name = ($(this).find("a").length)? $(this).find("a").text():$(this).text();
         var cclass = $(this).attr("class");
         if (cclass) {
             // Note that the line below fails on an empty query result.
