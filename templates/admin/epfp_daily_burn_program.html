@@ -744,7 +744,7 @@ $(function(){
       $("#id_href").attr("href", urlStr);
     });
 
-
+    {% comment "The tab itself is already a hyperlink" %}
     $("#report-tabs").click(function() {
         var date = $("#id_date").val();
         //console.log("date " + date);
@@ -760,6 +760,7 @@ $(function(){
             },
         });
     });
+    {% endcomment %}
 
     pdf_url = function(form_name) {
         // created to allow region to be passed to admin.py
@@ -961,8 +962,8 @@ $('#_id_approval_status').multiselect();
 $('#id_approval_status').multiselect({
     includeSelectAllOption: true,
 });
-$("#id_approval_status").multiselect('selectAll', false);
-$("#id_approval_status").multiselect('refresh');
+//$("#id_approval_status").multiselect('selectAll', false);
+//$("#id_approval_status").multiselect('refresh');
 
 </script>
 {% endblock %}

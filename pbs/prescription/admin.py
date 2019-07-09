@@ -47,7 +47,7 @@ from pbs.prescription.forms import (
     PrescriptionPriorityForm, BriefingChecklistForm,
     FundingAllocationInlineFormSet)
 from pbs.prescription.models import (
-    Season, Prescription, RegionalObjective, Region, FundingAllocation)
+    Season, Prescription, RegionalObjective, Region, FundingAllocation,EndorsingRole)
 from django.forms.models import inlineformset_factory
 
 from pbs.report.models import Evaluation
@@ -55,7 +55,7 @@ from pbs.report.forms import (
     SummaryCompletionStateForm, BurnImplementationStateForm, BurnClosureStateForm)
 
 from pbs.templatetags.pbs_markdown import markdownify
-from pbs.utils import get_deleted_objects, update_permissions
+from pbs.utils import get_deleted_objects, update_permissions, support_email
 from pbs.utils.widgets import CheckboxSelectMultiple
 
 from pbs import mutex, SemaphoreException
@@ -122,7 +122,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 ('aircraft_burn', 'remote_sensing_priority'),
                 ('priority', 'rationale'),
                 'purposes', 'treatment_percentage',
-                'area', 'perimeter')
+                'area', 'perimeter'
+            )
         }),
     )
     search_fields = ('name', 'burn_id', 'location')
@@ -305,7 +306,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             'Success Criteria', 'Success Criteria Achieved',
             'Observations Identified', 'Proposed Action',
             'Endorsement Name/s', 'Endorsement Date',
-            'Approval Name/s', 'Approval Date', 'Approved Until'])
+            'Approval Name/s', 'Approval Date', 'Approved Until','Overall Rationale',
+            'Non-CALM Act Tenure?','Non-CALM Act Tenure Included','Public Value in Burn','Complete Without Other Tenures?','Risks If Exclude Other Tenures'])
 
         for item in queryset:
             if item.last_season is not None:
@@ -419,7 +421,12 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 approvals,
                 item.approval_status_modified.astimezone(
                     local_zone).strftime('%d/%m/%Y %H:%M:%S') if item.approval_status_modified else "",
-                approved_until
+                approved_until,
+                item.rationale,
+                "Yes" if item.non_calm_tenure else ("Unknown" if item.non_calm_tenure is None else "No"),
+                item.non_calm_tenure_included,item.non_calm_tenure_value,
+                ("Yes" if item.non_calm_tenure_complete == 1  else ( "No" if item.non_calm_tenure_complete == 2 else "Yes & No")) if item.non_calm_tenure else "",
+                item.non_calm_tenure_risks
             ])
 
         return response
@@ -469,7 +476,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                            'aircraft_burn',
                            # TODO: PBS-1551 # 'allocation',
                            'remote_sensing_priority', 'purposes',
-                           ('area', 'perimeter', 'treatment_percentage'))
+                           ('area', 'perimeter', 'treatment_percentage'),
+                           ('non_calm_tenure','non_calm_tenure_included','non_calm_tenure_value','non_calm_tenure_complete','non_calm_tenure_risks')
+                          )
             }), ('Other Attributes', {
                 "fields": ('tenures', 'fuel_types', 'shires',
                            'bushfire_act_zone', 'prohibited_period',
@@ -581,6 +590,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             "form": form,
             "fields": fields,
             "exclude": exclude,
+            "widgets": form._meta.widgets if hasattr(form,"_meta") and hasattr(form._meta,"widgets") else None,
             "formfield_callback": partial(self.formfield_for_dbfield,
                                           request=request),
         }
@@ -770,6 +780,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         if request.method == 'POST':
             # The user has confirmed they wish to delete the endorsement
             endorsement.delete()
+            msg = 'Delete Endorsement', 'Burn ID: {}, Role: {}, Endorsed by: {}, Deleted by: {}'. format(obj.burn_id, endorsement.role, endorsement.modifier.get_full_name(), request.user.get_full_name())
+            logger.warning(msg)
+            support_email('Delete Endorsement', msg)
             self.message_user(request, "Successfully deleted endorsement.")
             url = reverse('admin:prescription_prescription_endorse', args=(obj.id,))
             return HttpResponseRedirect(url)
@@ -790,6 +803,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         class AdminEndorsingRoleForm(EndorsingRoleForm):
             formfield_callback = partial(
                 self.formfield_for_dbfield, request=request)
+            def __init__(self, *args, **kwargs):
+                super(AdminEndorsingRoleForm,self).__init__(*args,**kwargs)
+                self.fields["endorsing_roles"].queryset = EndorsingRole.objects.filter(archived = False)
 
         obj = self.get_object(request, unquote(object_id))
 
@@ -822,7 +838,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             self.get_readonly_fields(request, obj),
             model_admin=self)
         media = self.media + admin_form.media
-
         context = {
             'title': 'Determine endorsing roles',
             'form': admin_form,
@@ -917,6 +932,10 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             elif obj.approval_status == obj.APPROVAL_SUBMITTED:
                 if request.POST.get('_cancel'):
                     obj.clear_approvals()
+                    msg = 'Delete: Clearing Approvals/Endorsements', 'Burn ID: {}, Deleted by: {}'. format(obj.burn_id, request.user.get_full_name())
+                    logger.warning(msg)
+                    support_email('Delete: Clearing Approvals/Endorsements', msg)
+
                     self.message_user(
                         request, "Approval rejected. ePFP is now draft.")
                     return HttpResponseRedirect(url)
@@ -1595,7 +1614,6 @@ class PrescriptionMixin(object):
             'editable': editable,
         }
         context.update(extra_context or {})
-
         return super(PrescriptionMixin, self).changelist_view(
             request, extra_context=context)
 

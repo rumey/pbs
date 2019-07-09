@@ -54,7 +54,7 @@ class DocumentAdmin(SavePrescriptionMixin, PrescriptionMixin,
         if not request.user.has_perm('prescription.delete_prescription'):
             if actions['delete_selected']:
                 del actions['delete_selected']
-        if not request.user.has_perm('prescription.delete_prescription'):
+        if not request.user.has_perm('document.archive_document'):
             if actions['archive_documents']:
                 del actions['archive_documents']
         return actions
@@ -83,12 +83,12 @@ class DocumentAdmin(SavePrescriptionMixin, PrescriptionMixin,
     date_document_created.admin_order_field = "document_created"
 
     def uploaded_by(self, obj):
-        return obj.modifier.get_full_name()
-    uploaded_by.admin_order_field = "modifier"
+        return obj.creator.get_full_name()
+    uploaded_by.admin_order_field = "creator"
 
     def uploaded_on(self, obj):
-        return obj.modified
-    uploaded_on.admin_order_field = "modified"
+        return obj.created
+    uploaded_on.admin_order_field = "created"
 
     def descriptor_download(self, obj):
         return mark_safe('<a href="{0}" target="_blank">'
@@ -145,7 +145,9 @@ class DocumentAdmin(SavePrescriptionMixin, PrescriptionMixin,
                     qs = qs.filter(tag__category__name__iexact=category)
                 if tag:
                     tag = tag[0].replace('_', ' ')
-                    qs = qs.filter(tag__name__iexact=tag)
+                    #only show non-archived documents for tag view
+                    qs = qs.filter(tag__name__iexact=tag,document_archived=False)
+              
 
                 return qs
 

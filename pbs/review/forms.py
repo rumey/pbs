@@ -1,12 +1,26 @@
+from datetime import datetime, timedelta, date
+import requests
+
 from django import forms
-from pbs.prescription.models import Prescription, Region, District
-from pbs.review.models import PrescribedBurn, AircraftBurn
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.conf import settings
 from django.forms import ValidationError
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, Field, Div
+import requests
+
+
+from pbs.prescription.models import Prescription, Region, District
+from pbs.review.models import PrescribedBurn, AircraftBurn
+from pbs.forms import RequestMixin,SessionPersistenceMixin
+
+def check_date(dt):
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    if dt < today or dt > tomorrow:
+        raise ValidationError("You must enter burn plans for today or tomorrow's date only.")
+
 
 class BurnStateSummaryForm(forms.Form):
     region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
@@ -58,6 +72,9 @@ class PrescribedBurnForm(forms.ModelForm):
 
             if hasattr(prescription, "current_approval") and dt > prescription.current_approval.valid_to:
                 raise ValidationError("Date Error: Burn ID  {} is valid to {}".format(prescription.burn_id, prescription.current_approval.valid_to))
+
+            if not self.current_user.is_superuser:
+                check_date(dt)
 
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268A, location=location)
             if objects:
@@ -128,6 +145,12 @@ class PrescribedBurnEditForm(forms.ModelForm):
             else:
                 return self.cleaned_data['location']
 
+    def clean_date(self):
+        if not self.current_user.is_superuser:
+            dt = self.cleaned_data['date']
+            check_date(dt)
+        return self.cleaned_data['date']
+
     class Meta:
         model = PrescribedBurn
         fields = ('region', 'prescription', 'date', 'planned_area',
@@ -173,6 +196,9 @@ class PrescribedBurnActiveForm(forms.ModelForm):
             prescription = self.cleaned_data['prescription']
             dt = self.cleaned_data['date']
             location = self.cleaned_data['location']
+
+            if not self.current_user.is_superuser:
+                check_date(dt)
 
             objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B, location=location)
             #objects = PrescribedBurn.objects.filter(prescription=prescription, date=dt, form_name=PrescribedBurn.FORM_268B)
@@ -248,6 +274,12 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
             else:
                 return self.cleaned_data['location']
 
+    def clean_date(self):
+        if not self.current_user.is_superuser:
+            dt = self.cleaned_data['date']
+            check_date(dt)
+        return self.cleaned_data['date']
+
     class Meta:
         model = PrescribedBurn
         fields = ('region', 'prescription', 'date', 'status', 'ignition_status', 'area', 'distance', 'tenures', 'location',
@@ -255,18 +287,29 @@ class PrescribedBurnEditActiveForm(forms.ModelForm):
             )
 
 
+class ChoiceFieldNoValidation(forms.ChoiceField):
+    """ Because the Choice field declared is empty, and populated by jscript, validation fails - so remove validation """
+    def validate(self, value):
+        pass
+
 class FireForm(forms.ModelForm):
+    fire_number = ChoiceFieldNoValidation(required=False)
+    year = forms.ChoiceField(required=False)
+    include_final_report = forms.BooleanField(label="Show Final Authorised Bushfire Report", required=False)
+    #year = forms.ChoiceField(choices=((0, '--------'), (1, 2016), (2, 2017)) )
+
     def __init__(self, *args, **kwargs):
         super(FireForm, self).__init__(*args, **kwargs)
 
+        self.fields['year'].choices = self.year_choices
         self.fields['region'].required = True
         self.fields['district'].required = True
-        self.fields['fire_id'].required = True
-        self.fields['fire_name'].required = True
+        self.fields['fire_id'].widget = forms.HiddenInput()
+        self.fields['fire_name'].widget = forms.HiddenInput()
+        self.fields['tenures'].widget = forms.HiddenInput()
         self.fields['status'].required = True
         self.fields['area'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
-        self.fields['fire_id'].widget.attrs.update({'placeholder': 'Digits must be between 001-999'})
         now = datetime.now()
         today = now.date()
         tomorrow = today + timedelta(days=1)
@@ -276,21 +319,47 @@ class FireForm(forms.ModelForm):
 
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
 
+    @property
+    def year_choices(self):
+        """ Returns tuple eg. ((0,'--------'), (1,2017)) """
+        choices = [[0, '--------']]
+        bfrs_url = settings.BFRS_URL if settings.BFRS_URL.endswith('/') else settings.BFRS_URL + os.sep
+        years = ['--------'] + requests.get(url=bfrs_url + 'api/v1/bushfire/fields/year/?format=json', auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO), verify=False).json()
+        return tuple([(years.index(i), i) for i in years])
+
+    def clean(self):
+        fire_id = self.cleaned_data['fire_id']
+        if not fire_id or not len(fire_id)==15:
+            raise ValidationError("You must select a fire number")
+
+        dt = self.cleaned_data['date']
+        if not self.current_user.is_superuser:
+            check_date(dt)
+
+        pb = PrescribedBurn.objects.filter(fire_id=fire_id, date=dt)
+        if pb:
+            raise ValidationError("{} already exists for date {}".format(fire_id, dt))
+
+        return self.cleaned_data
+
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
+        #fields = ('region', 'district', 'year', 'fire_number', 'fire_id','date', 'status', 'area', 'fire_tenures', 'fire_name',)
+        fields = ('region', 'district', 'year','include_final_report', 'fire_number', 'fire_id','date', 'status', 'area', 'fire_name', 'tenures',)
 
 
 class FireEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FireEditForm, self).__init__(*args, **kwargs)
         prescribed_burn = kwargs.get('instance')
-        self.initial['fire_id'] = self.initial['fire_id'][-3:]
+        #self.initial['fire_id'] = self.initial['fire_id'][-3:]
 
-        self.fields['fire_name'].required = True
+        #self.fields['fire_name'].required = True
         self.fields['status'].required = True
         self.fields['area'].required = True
         self.fields['area'].label = 'Area Burnt (ha)'
+        self.fields['tenures'].required = False
+        self.fields['tenures'].label = 'Tenure of Ignition Point'
 
         # hack to get the instance choices (region and district) to display read-only/disabled
         region = self.fields['region']
@@ -298,11 +367,12 @@ class FireEditForm(forms.ModelForm):
         region.choices = [region.choices[region_idx]]
         self.fields['region'].widget.attrs['disabled'] = 'disabled'
 
-        district = self.fields['district']
-        self.fields['district'].queryset = district.queryset.filter(name=prescribed_burn.district)
-        self.fields['district'].widget.attrs['readonly'] = True
+        self.initial['district'] = prescribed_burn.district.id
+        self.fields['district'].widget.attrs['disabled'] = 'disabled'
 
         self.fields['fire_id'].widget.attrs['readonly'] = True
+        self.fields['fire_name'].widget.attrs['readonly'] = True
+        self.fields['tenures'].widget.attrs['readonly'] = True
 
         status = self.fields['status']
         status.choices = status.choices[1:]
@@ -319,12 +389,15 @@ class FireEditForm(forms.ModelForm):
         else:
             return self.cleaned_data['region']
 
-#    def clean_district(self):
-#        instance = getattr(self, 'instance', None)
-#        if instance and instance.pk:
-#            return instance.district
-#        else:
-#            return self.cleaned_data['district']
+    def clean_district(self):
+        """
+        need this when widget is disabled
+        """
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.district
+        else:
+            return self.cleaned_data['district']
 
     def clean_fire_id(self):
         instance = getattr(self, 'instance', None)
@@ -333,22 +406,57 @@ class FireEditForm(forms.ModelForm):
         else:
             return self.cleaned_data['fire_id']
 
+    def clean_date(self):
+        if not self.current_user.is_superuser:
+            dt = self.cleaned_data['date']
+            check_date(dt)
+        return self.cleaned_data['date']
+
     class Meta:
         model = PrescribedBurn
-        fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
+        #fields = ('region', 'district', 'fire_id', 'fire_name', 'date', 'status', 'area', 'fire_tenures',)
+        fields = ('region', 'district', 'fire_id', 'fire_name', 'tenures', 'date', 'status', 'area',)
 
 
-class PrescribedBurnFilterForm(forms.ModelForm):
-    approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+class PrescribedBurnFilterForm(RequestMixin,SessionPersistenceMixin,forms.ModelForm):
+    approval_status = forms.MultipleChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+
+    def default_initial(self):
+        return {
+            'region':self.request.user.profile.region.id if self.request and self.request.user.profile.region else None,
+            'district':self.request.user.profile.district.id if self.request and self.request.user.profile.district else None,
+            'approval_status': [c[0] for c in PrescribedBurn.APPROVAL_CHOICES]
+        }
 
     class Meta:
         fields = ('region', 'district', 'approval_status')
         model = PrescribedBurn
 
+class FireSummaryFilterForm(RequestMixin,SessionPersistenceMixin,forms.ModelForm):
 
-class FireLoadFilterForm(forms.ModelForm):
-    fire_type = forms.ChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Bushfires')])
-    approval_status = forms.ChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+    def default_initial(self):
+        return {
+            'region':self.request.user.profile.region.id if self.request and self.request.user.profile.region else None,
+            'district':self.request.user.profile.district.id if self.request and self.request.user.profile.district else None,
+        }
+
+    class Meta:
+        fields = ('region', 'district')
+        model = PrescribedBurn
+
+
+
+class FireLoadFilterForm(RequestMixin,SessionPersistenceMixin,forms.ModelForm):
+    fire_type = forms.TypedChoiceField(required=False, choices=[(0, '------'), (1, 'Burns'), (2, 'Bushfires')],coerce=lambda val:int(val))
+    approval_status = forms.MultipleChoiceField(required=False, choices=PrescribedBurn.APPROVAL_CHOICES)
+
+    def default_initial(self):
+        return {
+            'region':self.request.user.profile.region.id if self.request and self.request.user.profile.region else None,
+            'district':self.request.user.profile.district.id if self.request and self.request.user.profile.district else None,
+            'approval_status': [c[0] for c in PrescribedBurn.APPROVAL_CHOICES],
+            'fire_type':0
+        }
 
     class Meta:
         fields = ('region', 'district', 'fire_type', 'approval_status')

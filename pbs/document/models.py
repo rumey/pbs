@@ -178,6 +178,9 @@ class Document(Audit):
 
     class Meta:
         ordering = ['tag', 'document']
+        permissions = (
+            ("archive_document", "Can archive documents")
+        )
 
     def __str__(self):
         return "{0} - {1}".format(self.prescription, self.document.name)

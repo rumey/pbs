@@ -39,6 +39,46 @@ class PrescriptionFormBase(forms.ModelForm):
             #self.fields['planned_season'].widget.attrs.update({'disabled':'disabled', 'readonly':True})
             self.fields['planned_season'].widget.attrs.update({'readonly':True})
 
+    def clean_non_calm_tenure_included(self):
+        if self.cleaned_data["non_calm_tenure"]:
+            value = self.cleaned_data.get("non_calm_tenure_included")
+            if value:
+                return value
+            else:
+                raise forms.ValidationError("Required.")
+        else:
+            return None
+
+    def clean_non_calm_tenure_value(self):
+        if self.cleaned_data["non_calm_tenure"]:
+            value = self.cleaned_data.get("non_calm_tenure_value")
+            if value:
+                return value
+            else:
+                raise forms.ValidationError("Required.")
+        else:
+            return None
+
+    def clean_non_calm_tenure_complete(self):
+        if self.cleaned_data["non_calm_tenure"]:
+            value = self.cleaned_data.get("non_calm_tenure_complete")
+            if value is None:
+                raise forms.ValidationError("Required.")
+            else:
+                return value
+        else:
+            return None
+
+    def clean_non_calm_tenure_risks(self):
+        if self.cleaned_data["non_calm_tenure"]:
+            value = self.cleaned_data.get("non_calm_tenure_risks")
+            if value:
+                return value
+            else:
+                raise forms.ValidationError("Required.")
+        else:
+            return None
+
     def clean(self):
         cleaned_data = super(PrescriptionFormBase, self).clean()
 
@@ -46,7 +86,7 @@ class PrescriptionFormBase(forms.ModelForm):
         if district is not None and not district:
             self._errors["district"] = self.error_class(
                 ['This field is required.'])
-
+        
         return cleaned_data
 
 
@@ -88,6 +128,7 @@ class PrescriptionEditForm(PrescriptionFormBase):
         prescription = kwargs.get('instance')
 
         super(PrescriptionEditForm, self).__init__(*args, **kwargs)
+        self.fields["non_calm_tenure_complete"].choices = Prescription.NON_CALM_TENURE_COMPLETE_CHOICES
 
         if 'description' in self.fields:
             self.fields['description'].widget.attrs.update({
@@ -115,8 +156,14 @@ class PrescriptionEditForm(PrescriptionFormBase):
             if 'last_year' in self.fields:
                 self.fields['last_year'].widget.attrs['readonly'] = True
 
-    class meta:
+    class Meta:
         model = Prescription
+        widgets = {
+            "non_calm_tenure_complete":forms.widgets.RadioSelect(),
+            "non_calm_tenure_included":forms.widgets.Textarea(attrs={"style":"width:90%;"}),
+            "non_calm_tenure_value":forms.widgets.Textarea(attrs={"style":"width:90%;"}),
+            "non_calm_tenure_risks":forms.widgets.Textarea(attrs={"style":"width:90%;"})
+        }
 
 
 class PrescriptionSummaryForm(forms.ModelForm):
@@ -220,10 +267,12 @@ class EndorsingRoleForm(forms.ModelForm):
             ) or []
 
             maximum_risk = prescription.get_maximum_risk
+            """
             if prescription.aircraft_burn:
                 self.required_endorsing_roles.append(
                     EndorsingRole.objects.get(
                         name__iexact="FMS Branch Representative"))
+            """
             if maximum_risk.final_risk_level == maximum_risk.LEVEL_MEDIUM:
                 self.required_endorsing_roles.append(
                     EndorsingRole.objects.get(name__iexact="District Manager"))

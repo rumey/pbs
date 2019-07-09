@@ -17,6 +17,9 @@ from django.utils import timezone
 import logging
 logger = logging.getLogger('pbs')
 
+def current_finyear():
+    return datetime.now().year if datetime.now().month>6 else datetime.now().year-1
+
 class BurnState(models.Model):
     prescription = models.ForeignKey(Prescription, related_name='burnstate', on_delete=models.PROTECT)
     user = models.ForeignKey(User, help_text="User", on_delete=models.PROTECT)
@@ -116,13 +119,14 @@ class PrescribedBurn(Audit):
         (FORM_268B, 'Form 268b'),
     )
 
+    '''
+    BUSHFIRE_DISTRICT_ALIASES can be used to override the District's original code from the model. Usage e.g.:
     BUSHFIRE_DISTRICT_ALIASES = {
         'PHS' : 'PH',
         'SWC' : 'SC',
-        'EKM' : 'KIMB',
-        'WKM' : 'KIMB',
-        'KAL' : 'GF',
-        'PIL' : 'PF',
+    }
+    '''
+    BUSHFIRE_DISTRICT_ALIASES = {
     }
 
 
@@ -135,7 +139,7 @@ class PrescribedBurn(Audit):
 
 
     # Required for Fire records
-    fire_id = models.CharField(verbose_name="Fire Number", max_length=8, null=True, blank=True)
+    fire_id = models.CharField(verbose_name="Fire Number", max_length=15, null=True, blank=True)
     fire_name = models.TextField(verbose_name="Name", null=True, blank=True)
     region = models.PositiveSmallIntegerField(choices=[(r.id, r.name) for r in Region.objects.all()], null=True, blank=True)
     district = ChainedForeignKey(
@@ -183,30 +187,15 @@ class PrescribedBurn(Audit):
             self.district = self.prescription.district
 
     def clean_fire_id(self):
-        if not (len(self.fire_id)>=6 and self.fire_id[-4]=='_'): # ignore if this is an edit (field is readonly)
-            if not self.fire_id or str(self.fire_id)[0] in ('-', '+') or not str(self.fire_id).isdigit() or not len(self.fire_id)==3:
-                raise ValidationError("You must enter numeric digit with 3 characters (001 - 999).")
-
-            if int(self.fire_id)<1 or int(self.fire_id)>999:
-                raise ValidationError("Value must be in range (001 - 999).")
-
-            district = self.BUSHFIRE_DISTRICT_ALIASES[self.district.code] if self.BUSHFIRE_DISTRICT_ALIASES.has_key(self.district.code) else self.district.code
-            fire_id = "%s_%s" % (district, self.fire_id)
-            pb = PrescribedBurn.objects.filter(fire_id=fire_id, date=self.date)
-            if pb and pb[0].id != self.id:
-                raise ValidationError("{} already exists for date {}".format(fire_id, self.date))
-
-            self.fire_id = fire_id
-
         # set the Lat/Long to Zero, since Bushfire is not assigning these required fields
         self.latitude = 0.0
         self.longitude = 0.0
 
-    def clean_date(self):
-        today = date.today()
-        tomorrow = today + timedelta(days=1)
-        if not self.pk and (self.date < today or self.date > tomorrow):
-            raise ValidationError("You must enter burn plans for today or tommorow's date only.")
+#    def clean_date(self):
+#        today = date.today()
+#        tomorrow = today + timedelta(days=1)
+#        if not self.pk and (self.date < today or self.date > tomorrow):
+#            raise ValidationError("You must enter burn plans for today or tommorow's date only.")
 
     def clean_planned_distance(self):
         if self.planned_area==None and self.planned_distance==None:
@@ -588,12 +577,12 @@ class AircraftBurn(Audit):
         )
 
 class AnnualIndicativeBurnProgram(models.Model):
-    ogc_fid = models.IntegerField(primary_key=True)
+    objectid = models.IntegerField(primary_key=True)
     wkb_geometry = models.MultiPolygonField(srid=4326, blank=True, null=True)
     region = models.CharField(max_length=35, blank=True)
     district = models.CharField(max_length=35, blank=True)
     burnid = models.CharField(max_length=30, blank=True)
-    fin_yr = models.CharField(max_length=8, blank=True, null=True)
+    fin_yr = models.CharField(verbose_name='Fin Year', max_length=9, blank=True, null=True)
     location = models.CharField(max_length=254, blank=True)
     status = models.CharField(max_length=254, blank=True)
     priority = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
@@ -639,7 +628,7 @@ class BurnProgramLink(models.Model):
                     obj.longitude = p.longitude
                     obj.latitude = p.latitude
                     obj.perim_km = p.perim_km
-                    obj.trtd_area = p.trtd_area if p.trtd_area else 0.0
+                    obj.trtd_area = p.trtd_area if p.trtd_area and isinstance(p.trtd_area, float) else 0.0
                     obj.save()
             except:
                 logger.error('ERROR: Assigning AnnulaIndicativeBurnProgram \n{}'.format(sys.exc_info()))
@@ -729,7 +718,11 @@ class BurnProgramLink(models.Model):
 					rpb.form_name = 1 and
 					rpb.location = pb.location) as text),
 				'') AS burn_planned_distance_today, -- use planned_distance from 268a
-			  link.wkb_geometry
+			  link.wkb_geometry,
+                          coalesce((SELECT array_to_string(array_agg(pp.name),' , ')
+                                    FROM prescription_prescription_purposes ppps JOIN prescription_purpose pp ON ppps.purpose_id = pp.id
+                                    WHERE ppps.prescription_id = p.id)
+                           ,'') AS burn_purpose
 			from
 			  (((prescription_prescription p
 				 LEFT JOIN review_prescribedburn  pb ON ((p.id = pb.prescription_id)))
@@ -739,8 +732,33 @@ class BurnProgramLink(models.Model):
 				(((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1)) OR -- approved 268a
 				((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))) -- approved active 268b
 			group by
-				p.burn_id, pb.location, p.forest_blocks, burn_target_date, indicative_area,
+				p.id,p.burn_id, pb.location, p.forest_blocks, burn_target_date, indicative_area,
 				burn_target_long, burn_target_lat, burn_est_start, link.wkb_geometry,
 				burn_planned_area_today, burn_planned_distance_today, burn_target_date_raw
 			ORDER BY p.burn_id, burn_target_date_raw;
-			create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;''')
+			create or replace view review_v_todaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date;
+			create or replace view review_v_yesterdaysburns as select * from review_v_dailyburns where burn_target_date_raw = current_date - interval '1 day';
+                        CREATE  OR REPLACE  FUNCTION review_f_lastdaysburns() RETURNS setof review_v_dailyburns AS $$
+                        DECLARE
+                            last_date review_v_dailyburns.burn_target_date_raw%TYPE;
+                        BEGIN
+                            SELECT max(pb.date) INTO last_date
+                            FROM
+                                review_prescribedburn  pb LEFT JOIN review_acknowledgement ack ON pb.id = ack.burn_id
+                            WHERE (
+                                    (((ack.acknow_type)::text = 'SDO_A'::text) AND (pb.form_name = 1))
+                                    OR
+                                    ((((ack.acknow_type)::text = 'SDO_B'::text) AND (pb.form_name = 2)) AND (pb.status = 1))
+                                   )
+                                   AND (pb.date < current_date);
+                        
+                            IF last_date IS NULL THEN
+                                RETURN QUERY SELECT * FROM review_v_dailyburns WHERE false;
+                            ELSE
+                                RETURN QUERY SELECT * FROM review_v_dailyburns WHERE burn_target_date_raw = last_date;
+                            END IF;
+                        END;
+                        $$ LANGUAGE plpgsql;
+			create or replace view review_v_lastdaysburns as select * from review_f_lastdaysburns();
+
+                        ''')

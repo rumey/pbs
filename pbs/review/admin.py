@@ -6,7 +6,7 @@ from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement, AircraftApproval, BurnProgramLink, AnnualIndicativeBurnProgram
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
-        PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
+        PrescribedBurnEditActiveForm, FireLoadFilterForm,FireSummaryFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
         AircraftBurnForm, AircraftBurnEditForm, AircraftBurnFilterForm
     )
 from pbs.prescription.models import Prescription, Approval, Region, District
@@ -36,7 +36,8 @@ from django.db.models import Q
 import subprocess
 import sys, traceback
 from django.db import IntegrityError
-from django.forms import ModelChoiceField
+from django.forms import ModelChoiceField, ChoiceField
+import requests
 
 import logging
 logger = logging.getLogger('pbs')
@@ -176,18 +177,23 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         if request.GET.has_key('form'):
+            self.form = None
             if request.REQUEST.get('form')=='add_fire':
-                return FireForm
+                self.form = FireForm
             if request.REQUEST.get('form')=='edit_fire':
-                return FireEditForm
+                self.form = FireEditForm
             if request.REQUEST.get('form')=='add_burn':
-                return PrescribedBurnForm
+                self.form = PrescribedBurnForm
             if request.REQUEST.get('form')=='add_active_burn':
-                return PrescribedBurnActiveForm
+                self.form = PrescribedBurnActiveForm
             if request.REQUEST.get('form')=='edit_active_burn':
-                return PrescribedBurnEditActiveForm
+                self.form = PrescribedBurnEditActiveForm
             if request.REQUEST.get('form')=='edit_burn':
-                return PrescribedBurnEditForm
+                self.form = PrescribedBurnEditForm
+
+            if self.form:
+                self.form.current_user = request.user
+            return self.form
 
     def csv_view(self, request):
         """ view to render the FMSB Report form """
@@ -285,7 +291,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
     def add_view(self, request, form_url='', extra_context=None):
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
-
         if self.is_role_based_user(request):
             self.message_user(request, "Role-based user is not permitted to Add {}. Please login with user credentials".format(
                 'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
@@ -307,14 +312,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         today = now.date()
         yesterday = today - timedelta(days=1)
         time_now = now.time()
-        
+
         if self.is_role_based_user(request):
             self.message_user(request, "Role-based user is not permitted to Edit {}. Please login with user credentials".format(
                 'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
             )
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-        if obj.date < yesterday:
+        if obj.date < yesterday and not self.can_admin(request):
             self.message_user(request, "Past burns cannot be edited")
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
@@ -409,15 +414,19 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     }
                 return HttpResponse(json.dumps(d))
 
-            if request.REQUEST.has_key('fire_id'):
-                # calculate and return the bushfire_id string for the FireForm
-                fire_id = str( request.REQUEST.get('fire_id') )
-                district_id = request.REQUEST.get('district')
-                code = District.objects.get(id=district_id).code
-
-                district = PrescribedBurn.BUSHFIRE_DISTRICT_ALIASES[code] if PrescribedBurn.BUSHFIRE_DISTRICT_ALIASES.has_key(code) else code
-                bushfire_id = district + '_' + fire_id
-                return HttpResponse(json.dumps({'bushfire_id': bushfire_id}))
+            if request.REQUEST.has_key('district_id') and request.REQUEST.get('form_name')=='add_fire':
+                try:
+                    bfrs_base_url = settings.BFRS_URL if settings.BFRS_URL.endswith('/') else settings.BFRS_URL + os.sep
+                    params = '&district_id={}'.format(request.GET.get('district_id'))
+                    if request.GET.get('year'):
+                        params += '&year={}'.format(request.GET.get('year'))
+                    if request.GET.get('include_final_report') == 'true' :
+                        params += '&include_final_report=true'
+                    resp = requests.get(url=bfrs_base_url + 'api/v1/bushfire/fields/fire_number/?format=json' + params, auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO), verify=False).json()
+                    resp.insert(0, {u'fire_number': u'--------', u'name': u'', u'tenure__name': u'', u'other_tenure': u''})
+                except:
+                    resp = [{u'fire_number': u'BFRS lookup Failed', u'name': u'', u'tenure__name': u'', u'other_tenure': u''}]
+                return HttpResponse(json.dumps({'fire_numbers': resp}))
 
             if request.REQUEST.has_key('region') and request.REQUEST.get('region') and request.REQUEST.has_key('form_name') and request.REQUEST.get('form_name'):
                 if request.REQUEST.get('form_name') == 'add_burn':
@@ -438,7 +447,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     lastyear = date.today() + timedelta(days=-365)
                     presc_ids = list(set([a.prescription.pk for a in AreaAchievement.objects.filter(ignition__gte=lastyear)]))
                     qs = Prescription.objects.filter(pk__in=presc_ids).exclude(ignition_status=Prescription.IGNITION_NOT_STARTED).distinct()
-                
+
                 qs = qs.filter(region=request.REQUEST.get('region')).order_by('-burn_id')
 
                 #burn_ids = ["<option value={}>{}</option>".format(p.id, p.burn_id) for p in qs]
@@ -500,7 +509,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         if self.is_role_based_user(request):
             message = "Role-based user is not permitted to Acknowledge or Delete. Please login with user credentials"
-            msg_type = messages.ERROR 
+            msg_type = messages.ERROR
 
         elif action == "District Entered" or action == "District Submit":
             count = 0
@@ -545,7 +554,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 already_acknowledged = []
                 unset_acknowledged = []
                 for obj in objects:
-                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
+                    if (obj.prescription and (obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED or obj.prescription.areaachievement_set.latest('ignition').ignition > (date.today() + timedelta(days=-365)))) or obj.fire_id:
                         if (obj.area>=0 or obj.distance>=0) and obj.status:
                             if obj.formB_isDraft:
                                 if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
@@ -667,10 +676,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #today = date(2016,4,12)
         tomorrow = today + timedelta(days=1)
         yesterday = today - timedelta(days=1)
-        
+
         if self.is_role_based_user(request):
             message = "Role-based user is not permitted to Acknowledge or Delete. Please login with user credentials"
-            msg_type = messages.ERROR 
+            msg_type = messages.ERROR
 
         elif action == "Regional Acknowledgement" or action == "Regional Endorsement":
             if not ( self.srm_group in request.user.groups.all() or self.sdo_group in request.user.groups.all() ):
@@ -679,7 +688,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 return HttpResponseRedirect(referrer_url)
 
             # TODO can approve records for today or tomorrow only?
-            if not (dt == yesterday or dt == today or dt == tomorrow):
+            if not (dt == yesterday or dt == today or dt == tomorrow) and not self.can_admin(request):
                 message = "Can only acknowledge burns for yesterday {}, today {}, or tomorrow {}.".format(yesterday, today, tomorrow)
                 self.message_user(request, message, level=messages.ERROR)
                 return HttpResponseRedirect(referrer_url)
@@ -836,7 +845,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 message = "Only regional and state levels can acknowledge {}".format(burn_desc)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-            if not (dt == yesterday or dt == today or dt == tomorrow):
+            if not (dt == yesterday or dt == today or dt == tomorrow) and not self.can_admin(request):
                 message = "Can only acknowledge {} for yesterday {}, today {}, or tomorrow {}.".format(burn_desc, today, tomorrow)
                 return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
@@ -864,14 +873,14 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         message = "record already approved {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
 
+                self.copy_planned_approved_records(dt)
+
                 if not_acknowledged:
                     message = "record already approved {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
 
-                self.copy_planned_approved_records(dt)
-
             elif report=='epfp_fireload':
-                self.copy_ongoing_records(dt) # copy yesterdays ongoing active records to today
+                self.copy_ongoing_records(request, dt) # copy yesterdays ongoing active records to today
                 unset_objects = self.check_rolled_records(dt) # check records are correctly set
                 if len(unset_objects) > 0:
                     message = "Copied burns from previous day have status/area field unset. Must set these before Approval.\n{}".format(
@@ -939,7 +948,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         #    pass
 
         elif action == "Copy Record to Tomorrow":
-            if not (dt >= yesterday or dt <= tomorrow):
+            if not (dt >= yesterday or dt <= tomorrow) and not self.can_admin(request):
                 message = "Can only copy records for yesterday {}, today {}, or tomorrow {}.".format(yesterday, today, tomorrow)
                 msg_type = "danger"
             else:
@@ -968,7 +977,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         View to bulk delete prescribed burns/fires
         """
         referrer_url = request.META.get('HTTP_REFERER')
-        
+
         if self.is_role_based_user(request):
             self.message_user(request, "Role-based user is not permitted to Delete {}. Please login with user credentials".format(
                 'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
@@ -1029,28 +1038,29 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         if request.REQUEST.has_key('report'):
             report = request.REQUEST.get('report', None)
 
+        dt = None
         if request.REQUEST.has_key('date'):
             dt = request.REQUEST.get('date', None)
             if dt:
                 dt = datetime.strptime(dt, '%Y-%m-%d')
-        else:
+        if not dt:
+            #date is none, set to today
             dt = date.today()
             time_now = datetime.now().time()
             if time_now.hour > settings.DAY_ROLLOVER_HOUR:
                 dt = dt + timedelta(days=1)
 
         yesterday = dt - timedelta(days=1)
-
         qs_burn = PrescribedBurn.objects.filter(date=dt)
         if report=='epfp_planned':
             title = "Today's Planned Burn Program"
             # assumes all burns entered on date dt are planned (for date dt)
             qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268A)
-            form = PrescribedBurnFilterForm(request.GET)
+            form = PrescribedBurnFilterForm(request=request,prefix=report,data=request.GET,persistent_fields=["region","district"])
         elif report=='epfp_fireload':
             title = "Summary of Current Fire Load"
             qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268B)
-            form = FireLoadFilterForm(request.GET)
+            form = FireLoadFilterForm(request=request,prefix=report,data=request.GET,persistent_fields=["region","district"])
         elif report=='epfp_summary':
             # Form 268c contains:
             #   1. SDO Approved Plans (Form A)
@@ -1058,29 +1068,30 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             #   3. Only Burns (No Fires)
             title = "Summary of Current and Planned Fires"
             qs_burn = qs_burn.filter(acknowledgements__acknow_type='SDO_A', date=dt).exclude(prescription__isnull=True)
-            form = PrescribedBurnFilterForm(request.GET)
-
-        fire_type = 0
-        if request.REQUEST.has_key('fire_type'):
-            fire_type = int (request.REQUEST.get('fire_type', None))
+            form = FireSummaryFilterForm(request=request,prefix=report,data=request.GET)
+        fire_type = None
+        if "fire_type" in form.fields:
+            fire_type = form["fire_type"].value()
             if fire_type == 1:
                 qs_burn = qs_burn.filter(fire_id__isnull=True)
             elif fire_type == 2:
                 qs_burn = qs_burn.filter(prescription__isnull=True)
 
-        if request.REQUEST.has_key('region'):
-            region = request.REQUEST.get('region', None)
+        region = None
+        if 'region' in form.fields:
+            region = form['region'].value()
             if region:
                 qs_burn = qs_burn.filter(region=region)
 
-        if request.REQUEST.has_key('district'):
-            district = request.REQUEST.get('district', None)
+        district = None
+        if 'district' in form.fields:
+            district = form["district"].value()
             if district:
                 qs_burn = qs_burn.filter(district=district)
 
-        if request.REQUEST.has_key('approval_status'):
-            approval_status = map(str, request.REQUEST.getlist('approval_status'))
-            if approval_status and len(approval_status)!=4:
+        if 'approval_status' in form.fields:
+            approval_status = form["approval_status"].value()
+            if approval_status and len(approval_status) < len(PrescribedBurn.APPROVAL_CHOICES):
                 if report=='epfp_planned':
                     if len(approval_status)==1 and approval_status[0]=='DRAFT':
                         approval_choices = [i[0]+'_A' for i in PrescribedBurn.APPROVAL_CHOICES if i[0]!='DRAFT']
@@ -1131,7 +1142,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         }
         return records
 
-    def copy_ongoing_records(self, dt):
+    def copy_ongoing_records(self, request, dt):
         """
         Copy today's 'active' records to tomorrow
 
@@ -1141,24 +1152,29 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         today = date.today()
         tomorrow = today + timedelta(days=1)
-        if not (dt == today or dt == tomorrow):
+        if not (dt == today or dt == tomorrow) and not self.can_admin(request):
             # Can only copy records for today, or tomorrow
             logger.warn('Ongoing Record: Can only copy records for today or tomorrow (268b today to 268b tomorrow). dt {}, today {}, tomorrow {}'.format(dt, today, tomorrow))
             return
 
 
         tomorrow = dt + timedelta(days=1) # relative to dt
+        logger.info('Copy 268b records from today {} to tomorrow {}'.format(dt, tomorrow))
         objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)]
+        logger.info('Count of 268b records to process should be {}, minus any records that already have a 268b'.format(len(objects)))
         now = timezone.now()
         admin = User.objects.get(username='admin')
         count = 0
+        count_not_updated = 0
         for obj in objects:
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                count_not_updated += 1
                 logger.info('Ongoing Record Already Exists (Fire) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                count_not_updated += 1
                 logger.info('Ongoing Record Already Exists (Burn) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             try:
@@ -1177,7 +1193,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 logger.info('Ongoing Record copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                count_not_updated += 1
                 logger.warn('Ongoing Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+        logger.info('Count of 268b records not processed is {}'.format(count_not_updated))
+        logger.info('Count of 268b records processed is {}'.format(count))
 
     def copy_planned_approved_records(self, dt):
         """
@@ -1194,17 +1213,22 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             return
 
         tomorrow = dt + timedelta(days=1) # relative to dt
+        logger.info('Copy 268a records from today {} to tomorrow {}'.format(dt, tomorrow))
         objects = PrescribedBurn.objects.filter(date=dt, acknowledgements__acknow_type__in=['SDO_A'], form_name=PrescribedBurn.FORM_268A)
+        logger.info('Count of 268a records to process should be {}, minus any records that already have a 268b'.format(len(objects)))
         now = timezone.now()
         admin = User.objects.get(username='admin')
         count = 0
+        count_not_updated = 0
         for obj in objects:
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                count_not_updated += 1
                 logger.info('Planned Approved Record Already Exists (Fire) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                count_not_updated += 1
                 logger.info('Planned Approved Record Already Exists (Burn) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             try:
@@ -1225,7 +1249,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 logger.info('Planned Approved Record copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                count_not_updated += 1
                 logger.warn('Planned Approved Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+        logger.info('Count of 268b records not processed is {}'.format(count_not_updated))
+        logger.info('Count of 268a records processed is {}'.format(count))
 
     def copy_planned_records(self, dt, objects):
         """
