@@ -56,6 +56,9 @@ from decimal import Decimal
 import csv
 from datetime import datetime, date
 import pytz
+
+application = get_wsgi_application()  # This is so models get loaded.
+
 from pbs.prescription.models import Prescription
 
 try:
@@ -63,8 +66,6 @@ try:
 except:
     print('ERROR: Script must be runs from PROJECT BASE_DIR')
     exit()
-
-application = get_wsgi_application()  # This is so models get loaded.
 
 proj_path = os.getcwd()
 sys.path.append(proj_path)
