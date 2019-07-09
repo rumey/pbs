@@ -1,3 +1,53 @@
+''' ----------------------------------------------------------------------------------------
+This script will update the Prescribed Burn System's ePFP data according to txt input
+files found in the relevant scripts folder.
+It requires user input of the Corporate Executive Approval date, which it will then use
+to set PREVIOUS_YEAR, TARGET_YEAR, DATE_APPROVED and DATE_APPROVED_TO variables used by
+relevant functions in the script.
+
+Sample output below:
+
+    Please enter the date that the Burn Program was approved by Corporate Executive (dd/mm/yyyy): 03/07/2019
+    Script will run with the following details:
+    Previous Year: 2018/2019
+    Target Year: 2019/2020
+    Script Data Folder: pbs/scripts/eofy_data/2019
+
+    Do you wish to continue [y/n]? y
+
+    Updating financial year and setting planning status modified date for carry over currently approved ePFPs from 2018/2019.
+    Total prescriptions in query: 331
+    Financial year for ABC_123(2013/2014) is not 2018/2019 or already in 2019/2020.
+    Updated financial year and set planning status modified date for 330 carry over currently approved ePFPs
+
+    Applying corporate approval and setting planning status modified date for ePFPs currently seeking approval in 2019/2020.
+    Total prescriptions in query: 51
+    Applied corporate approval and set planning status modified date for 51 ePFPs that were seeking approval
+
+    Updating financial year only selected ePFPs from 2018/2019
+    Total prescriptions in query: 330
+    Financial year for ABC_123(2013/2014) is not 2018/2019.
+    Updated financial year only for 0 ePFPs
+    329 records already in 2019/2020
+
+    Updating priority for selected ePFPs in 2019/2020
+    Financial year for ABC_123(2013/2014) is not 2019/2020.
+    Updated priority for 412 ePFPs (expected 412)
+
+    Updating area for selected ePFPs in 2019/2020
+    Financial year for ABC_123(2013/2014) is not 2019/2020.
+    Updated area for 412 ePFPs (expected 412)
+
+    Updating perimeters for selected ePFPs in 2019/2020
+    Financial year for ABC_123(2013/2014) is not 2019/2020.
+    Updated perimeter for 412 ePFPs (expected 412)
+
+    Updating overall rationale for selected ePFPs in 2019/2020
+    Financial year for ABC_123(2013/2014) is not 2019/2020.
+    Updated rationale for 168 ePFPs (expected 168)
+
+----------------------------------------------------------------------------------------
+'''
 import os
 import sys
 import confy
@@ -22,15 +72,7 @@ os.chdir(proj_path)
 
 # ----------------------------------------------------------------------------------------
 # Script starts here
-# Make sure to update the constants below with appropriate values prior to running script
 # ----------------------------------------------------------------------------------------
-
-SCRIPT_FOLDER = 'pbs/scripts'
-SCRIPT_DATA_FOLDER = '{}/eofy_data/2019'.format(SCRIPT_FOLDER)
-PREVIOUS_YEAR = '2018/2019'
-TARGET_YEAR = '2019/2020'
-DATE_APPROVED = datetime(2019, 7, 3, tzinfo=pytz.UTC)
-DATE_APPROVED_TO = date(2019, 9, 30)
 
 
 def read_ids(filename):
@@ -259,28 +301,56 @@ def reviewable(prescription):
 
 if __name__ == "__main__":
     try:
-        with transaction.atomic():
-            corp_approved_carryover_ids = read_ids('{}/corp_approved_carryover.txt'.format(SCRIPT_DATA_FOLDER))
-            carryover_currently_approved(corp_approved_carryover_ids)
+        SCRIPT_FOLDER = 'pbs/scripts'
+        DATE_APPROVED_INPUT = raw_input("Please enter the date that the Burn Program was approved "
+                                        "by Corporate Executive (dd/mm/yyyy): ")
+        DATE_APPROVED = datetime.strptime(DATE_APPROVED_INPUT, '%d/%m/%Y').replace(tzinfo=pytz.UTC)
 
-            seeking_approval_ids = read_ids('{}/approve_seeking_approval.txt'.format(SCRIPT_DATA_FOLDER))
-            update_seeking_approval(seeking_approval_ids)
+        if DATE_APPROVED.month != 7 or DATE_APPROVED.year != date.today().year:
+            print('Can only run this script in July of the current year')
+            sys.exit()
 
-            update_financial_year_ids = read_ids('{}/financial_year_only.txt'.format(SCRIPT_DATA_FOLDER))
-            update_financial_year(update_financial_year_ids)
-
-            burn_priority_tuples = read_id_tuples('{}/burn_priority.txt'.format(SCRIPT_DATA_FOLDER))
-            update_burn_priority(burn_priority_tuples)
-
-            burn_area_tuples = read_id_tuples('{}/burn_areas.txt'.format(SCRIPT_DATA_FOLDER))
-            update_burn_areas(burn_area_tuples)
-
-            burn_perimeter_tuples = read_id_tuples('{}/burn_perimeters.txt'.format(SCRIPT_DATA_FOLDER))
-            update_burn_perimeters(burn_perimeter_tuples)
-
-            overall_rationale_tuples = read_id_tuples_pipe_separated('{}/overall_rationales.txt'
-                                                                     .format(SCRIPT_DATA_FOLDER))
-            update_overall_rationales(overall_rationale_tuples)
+        DATE_APPROVED_TO = date(DATE_APPROVED.year, 9, 30)
+        PREVIOUS_YEAR = '{}/{}'.format(DATE_APPROVED.year-1, DATE_APPROVED.year)
+        TARGET_YEAR = '{}/{}'.format(DATE_APPROVED.year, DATE_APPROVED.year+1)
+        SCRIPT_DATA_FOLDER = '{}/eofy_data/{}'.format(SCRIPT_FOLDER, TARGET_YEAR.split('/')[0])
 
     except BaseException:
         print('Error')
+        sys.exit()
+
+    print('\nScript will run with the following details:')
+    print(' - Previous Year: {}'.format(PREVIOUS_YEAR))
+    print(' - Target Year: {}'.format(TARGET_YEAR))
+    print(' - Script Data Folder: {}/'.format(SCRIPT_DATA_FOLDER))
+    CONTINUE_INPUT = raw_input("Do you wish to continue [y/n]? ")
+    if CONTINUE_INPUT == 'y':
+        try:
+            with transaction.atomic():
+                corp_approved_carryover_ids = read_ids('{}/corp_approved_carryover.txt'.format(SCRIPT_DATA_FOLDER))
+                carryover_currently_approved(corp_approved_carryover_ids)
+
+                seeking_approval_ids = read_ids('{}/approve_seeking_approval.txt'.format(SCRIPT_DATA_FOLDER))
+                update_seeking_approval(seeking_approval_ids)
+
+                update_financial_year_ids = read_ids('{}/financial_year_only.txt'.format(SCRIPT_DATA_FOLDER))
+                update_financial_year(update_financial_year_ids)
+
+                burn_priority_tuples = read_id_tuples('{}/burn_priority.txt'.format(SCRIPT_DATA_FOLDER))
+                update_burn_priority(burn_priority_tuples)
+
+                burn_area_tuples = read_id_tuples('{}/burn_areas.txt'.format(SCRIPT_DATA_FOLDER))
+                update_burn_areas(burn_area_tuples)
+
+                burn_perimeter_tuples = read_id_tuples('{}/burn_perimeters.txt'.format(SCRIPT_DATA_FOLDER))
+                update_burn_perimeters(burn_perimeter_tuples)
+
+                overall_rationale_tuples = read_id_tuples_pipe_separated('{}/overall_rationales.txt'
+                                                                         .format(SCRIPT_DATA_FOLDER))
+                update_overall_rationales(overall_rationale_tuples)
+
+        except BaseException:
+            print('Error')
+
+    else:
+        sys.exit()
