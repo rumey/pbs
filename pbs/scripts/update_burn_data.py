@@ -9,9 +9,9 @@ Sample output below:
 
     Please enter the date that the Burn Program was approved by Corporate Executive (dd/mm/yyyy): 03/07/2019
     Script will run with the following details:
-    Previous Year: 2018/2019
-    Target Year: 2019/2020
-    Script Data Folder: pbs/scripts/eofy_data/2019
+     - Previous Year: 2018/2019
+     - Target Year: 2019/2020
+     - Script Data Folder: pbs/scripts/eofy_data/2019
 
     Do you wish to continue [y/n]? y
 
