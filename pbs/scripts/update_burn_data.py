@@ -96,7 +96,7 @@ def read_id_tuples_pipe_separated(filename):
 def carryover_currently_approved(ids):
     # Used to update the financial year of existing corporate approved ePFPs from previous year
     # Also updates the date modified of the Planning Status (approval date)
-    print('\nUpdating financial year and setting planning status'
+    print('\nUpdating financial year and setting planning status '
           'modified date for carry over currently approved ePFPs from {}.'.format(PREVIOUS_YEAR))
     count = 0
     print('Total prescriptions in query: {}'.format(Prescription.objects.filter(burn_id__in=ids).count()))
