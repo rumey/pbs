@@ -51,6 +51,7 @@ Sample output below:
 import os
 import sys
 import confy
+from django.db import transaction
 from django.core.wsgi import get_wsgi_application
 from decimal import Decimal
 import csv
