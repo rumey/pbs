@@ -126,7 +126,7 @@ class BurnStateAdmin(DetailAdmin, BaseAdmin):
             status=Prescription.STATUS_OPEN,
             ignition_status__in=[Prescription.IGNITION_NOT_STARTED, Prescription.IGNITION_COMMENCED],
             pk__in=presc_ids
-        ).order_by('burn_id')
+        ).exclude(Q(non_calm_tenure=True) & ~Q(non_calm_tenure_approved=True)).order_by('burn_id')
 
         # Use the region from the request.
         if request.REQUEST.has_key('region'):
@@ -439,9 +439,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         approval_status=Prescription.APPROVAL_APPROVED,
                         status=Prescription.STATUS_OPEN,
                         burnstate__review_type__in=['FMSB'],
-                        ignition_status__in=[Prescription.IGNITION_NOT_STARTED,
-                            Prescription.IGNITION_COMMENCED]).filter(
-                                burnstate__review_type__in=['DRFMS']).distinct()
+                        ignition_status__in=[Prescription.IGNITION_NOT_STARTED,Prescription.IGNITION_COMMENCED]).filter(
+                        burnstate__review_type__in=['DRFMS']).exclude(Q(non_calm_tenure=True) & ~Q(non_calm_tenure_approved=True)).distinct()
                 else:
                     # Display all prescriptions that have had areaachievement records in past 12 months
                     lastyear = date.today() + timedelta(days=-365)

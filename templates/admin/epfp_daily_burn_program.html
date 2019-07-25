@@ -283,8 +283,6 @@ select, button{
       <th rowspan="2"><div class="text-left">Location <i class="icon-sort"></i></div></th>
       <th nowrap rowspan="2"><div class="text-center">Today's <br>Treatment <i class="icon-sort"></i><br>area/km</div></th>
       <th nowrap rowspan="2"><div class="text-center">Est Start <i class="icon-sort"></i><br>WST</div></th>
-      <th nowrap rowspan="2"><div class="text-center">Non <br>CALM-Act <i class="icon-sort"></i><br>Tenure</div></th>
-      <th nowrap rowspan="2"><div class="text-center">Cross <br>Tenure <i class="icon-sort"></i><br>Approved</div></th>
       <th nowrap colspan="3"><div class="text-center">Approval Status</div></th>
       <th nowrap rowspan="2"><div class="text-center">SDO <br>Special  <i class="icon-sort"></i><br>Conditions</div></th>
       <th rowspan="2"></th>
@@ -308,21 +306,6 @@ select, button{
       <td>{{ qs.location }}</td>
       <td>{% if qs.planned_area == None and qs.planned_distance == None%}<div class="text-center"><font color="red">Unset</font></div>{% else %}<div class="text-center">{{ qs.planned_area_str }}</div>{% endif %}</td>
       <td><div class="text-center">{{ qs.est_start }}</div></td>
-      <td><div class="text-center">{{ qs.prescription.non_calm_tenure | yesno:"Yes,No,------" }}</div></td>
-      <td>
-      {% if qs.prescription.non_calm_tenure %}
-        {% if qs.prescription.non_calm_tenure_approved %}
-          <div class="text-center" data-toggle="tooltip"><span style="display:none">4</span><i class="icon-ok text-success"></i></div>
-        {% elif qs.prescription.non_calm_tenure_approved == False%}
-          <div class="text-center" data-toggle="tooltip"><span style="display:none">3</span><i class="icon-minus text-warning"></i></div>
-        {% else %}
-          <span style="display:none">2</span>
-        {% endif %}
-      {% else %}
-          <span style="display:none">1</span>
-      {% endif %}
-      </td>
-
       <td>{% if qs.user_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.user_a_record }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{% if qs.srm_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_a_record  }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{% if qs.sdo_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_a_record  }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
@@ -336,7 +319,7 @@ select, button{
     </tr>
     <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
 
-      <td colspan="14">
+      <td colspan="12">
           <table class="table table-bordered table-striped table-condensed">
             <tbody>
               <tr>

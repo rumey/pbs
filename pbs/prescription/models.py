@@ -970,7 +970,8 @@ class Prescription(Audit):
             # self.purposes.count() != 0 and self.allocation is not None and
             (self.last_season is not None or self.last_season_unknown) and
             (self.last_year is not None or self.last_year_unknown) and
-            self.contentious is not None
+            self.contentious is not None and
+            self.non_calm_tenure is not None
         )
 
     @property
