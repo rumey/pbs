@@ -1,4 +1,15 @@
 {% extends "latex/base.tex" %}
+{% block preamble %}
+{{block.super}}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ tmargin=8mm,
+ left=8mm,
+ right=8mm,
+ }
+ \usepackage{hyphenat}
+{% endblock %}
 {% block titlepage %}
 {% endblock %}
 {% block content %}
@@ -6,54 +17,66 @@
 \section{Section B9 - Operations Officer's Day of Burn Checklist}
 {\Large{}
 \noindent
-Operations Officer:  \hfill Lighting Number:  \hfill \quad \\
+\noindent Operations Officer: \line(1,0){120} \quad Burn ID: \hspace{5mm}{{ prescription|texify }} \\
+\\
+\noindent Incident Controller: \line(1,0){117} \quad Lighting Date: \line(1,0){120}  \\
 }\vfill
 {
-\setlength{\tabulinesep}{2mm}
+\setlength{\tabulinesep}{1.2mm}
 \noindent
-\begin{tabu} to \linewidth { | X[10] | X | }
+\begin{tabu} to \linewidth { | X[8] | X | }
 \hline
 \rowcolor{infobg}
-\quad \textbf{Activity} & \textbf{Initial Box when complete} \\
+\quad \textbf{Activity} & \textbf{Initial when complete} \\
 \hline
-1. \quad Check forecast, SMC and FDI & \\
+1. \quad \nohyphens{Check forecast, SMC and FDI and other parameters are within prescribed limit.} & \\
 \hline
-2. \quad Agreement with Burn Controller on burn details, ie. Start time, lighting pattern, hazards, resources, Operations Point location. & \\
+2. \quad \nohyphens{Confirm that control lines meet burn requirements and set up Traffic Management Scheme(TMS) as required.} & \\
 \hline
-3. \quad Establish Field Operations Point, arrange pre-ignition check of items listed in Pre-Burn Checklist. & \\
+3. \quad \nohyphens{Agreement with Incident Controller on burn details; Ignition Plan, Resourcing, Communications Plan, Notifications and Water Supply Plan.} & \\
 \hline
-4. \quad Brief Personnel using briefing checklist.  Arrange for post briefing inspection by key personnel. & \\
+4. \quad \nohyphens{Establish Field Operations Point, arrange pre-ignition check of items listed in Pre-Burn and Day of Burn Checklist.} & \\
 \hline
-5. \quad Field check fuel moisture reading, and fire behaviour with a test fire.  Monitor and record weather conditions. & \\
+5. \quad \nohyphens{Brief Personnel using briefing checklist.} & \\
 \hline
-6. \quad Obtain forecast amendments, and review burn strategies with Burn Controller. & \\
+6. \quad \nohyphens{Field check fuel moisture and local weather conditions.} & \\
 \hline
-7. \quad Confirm with Incendiary Operations Supervisor (OIS) on arrival of aircraft, and arrange aerial checks. & \\
+7. \quad \nohyphens{Obtain approval for and ignite a test fire.} & \\
 \hline
-8. \quad Confirm position of all personnel, markers etc.& \\
+8. \quad \nohyphens{Confirm operations plan with Incident Controller and any changes based on field observations.} & \\
 \hline
-9. \quad Advise Burn Controller pre-burn checklist complete; obtain Burn Controller’s approval to commence lighting. & \\
+9. \quad \nohyphens{Once Incendiary Operations Supervisor (IOS) overhead, confirm initial briefing with Incident Controller has been completed, confirm strategies and arrange aerial checks.} & \\
 \hline
-10. \quad Advise Burn Controller of start time. & \\
+10. \quad \nohyphens{Obtain Incident Controller’s approval to commence lighting.} & \\
 \hline
-11. \quad Obtain regular reports from OIS and Sectors on fire behaviour, correct spacing, and problems. & \\
+11. \quad \nohyphens{Advise Incident Controller of start time.} & \\
 \hline
-12. \quad Adjust ignition and redeploy suppression resources as required. & \\
+12. \quad \nohyphens{Obtain regular reports from IOS and/or Sector Commanders on fire behaviour.} & \\
 \hline
-13. \quad Monitor schedule of aircraft and advise Burn Controller of likely delays or early completion. & \\
+13. \quad \nohyphens{Adjust ignition and redeploy resources as required to maintain security and achieve burn objectives.} & \\
 \hline
-14. \quad Inspect sectors and ensure prescribed standards of edging, mopup and patrol. & \\
+14. \quad \nohyphens{Monitor smoke plume, alter TMS and provide smoke information to Incident Controller.} & \\
 \hline
-15. \quad Ensure perimeter is safe prior to departure. & \\
+15. \quad \nohyphens{Monitor schedule of aircraft and advise Incident Controller of likely delays or early completion.} & \\
 \hline
-16. \quad Ensure traffic signs are in place prior to departure from burn. & \\
+16. \quad \nohyphens{Advise Incident Controller when ignition is complete.} & \\
 \hline
-17. \quad Update Prescribed Burn System & \\
+17. \quad \nohyphens{Consider welfare requirements of personnel and discuss logistical requirements with Incident Controller.} & \\
+\hline
+18. \quad \nohyphens{Release aircraft and record total cap count or litres of gel used.} & \\
+\hline
+19. \quad \nohyphens{Ensure burn area and public roads meet relevant security standards prior to departure and discuss anticipated resourcing for next shift with Incident Controller.} & \\
+\hline
+20. \quad \nohyphens{Ensure TMS is appropriate for overnight prior to departure from burn.} & \\
+\hline
+21. \quad \nohyphens{Conduct AAR with personnel.} & \\
 \hline
 \end{tabu}
 }
 \vfill
 \noindent Comments: \\
+\vfill\vfill\vfill
+\noindent Were burn objectives met and success criteria achieved: \\
 \vfill\vfill\vfill
 \noindent Name: \line(1,0){125} \quad Date: \line(1,0){100} \quad Signature: \line(1,0){125} \,
 {% endblock %}
