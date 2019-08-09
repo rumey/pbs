@@ -1,7 +1,11 @@
 import dj_database_url
 import ldap
 import os
+import json
+import pytz
 from confy import env
+from django.utils import timezone
+from datetime import datetime
 
 from django_auth_ldap.config import (LDAPSearch, GroupOfNamesType,
                                      LDAPSearchUnion)
@@ -19,8 +23,6 @@ DAY_ROLLOVER_HOUR = int(os.environ.get('DAY_ROLLOVER_HOUR', 17))
 KMI_DOWNLOAD_URL = os.environ['KMI_DOWNLOAD_URL']
 CSV_DOWNLOAD_URL = os.environ['CSV_DOWNLOAD_URL']
 SHP_DOWNLOAD_URL = os.environ['SHP_DOWNLOAD_URL']
-TCD_EXCLUSIONS_FILE = os.environ.get('TCD_EXCLUSIONS_FILE', None)
-TCD_EXCLUSIONS = [line.rstrip('\n') for line in open(TCD_EXCLUSIONS_FILE) if not line.rstrip('\n')==''] if TCD_EXCLUSIONS_FILE else []
 
 FROM_EMAIL = env('FROM_EMAIL', 'from_email')
 SUPPORT_EMAIL = env('SUPPORT_EMAIL', None)
@@ -361,3 +363,38 @@ if not ENV_TYPE:
     except:
         ENV_TYPE = "TEST"
 ENV_TYPE = ENV_TYPE.upper() if ENV_TYPE else "TEST"
+
+
+try:
+    #TCD_EXCLUSIONS format is '[["go-live date or datetime","filename"],["","filename"]]'
+    tcd_exclusions = os.environ.get("TCD_EXCLUSIONS") or None 
+    if tcd_exclusions:
+        tcd_exclusions = json.loads(tcd_exclusions)
+        tz = pytz.timezone(TIME_ZONE)
+        for tcd_exclusion in tcd_exclusions:
+            #parse tcd_exclusion active date
+            d = None
+            tcd_exclusion[0] = tcd_exclusion[0].strip() if tcd_exclusion[0] else None
+            if tcd_exclusion[0]:
+                for f in ("%Y-%m-%d %H:%M:%S","%Y-%m-%d %H:%M","%Y-%m-%d %H","%Y-%m-%d"):
+                    try:
+                        d = timezone.make_aware(datetime.strptime(tcd_exclusion[0],f),tz)
+                        break
+                    except:
+                        continue
+                if not d:
+                    raise Exception("TCD_EXCLUSIONS({}) is invalid.".format(tcd_exclusion))
+            
+            tcd_exclusion[0] = d
+            #parse tcd_exclusion exclusion list
+            tcd_exclusion[1] = [line.rstrip('\n') for line in open(tcd_exclusion[1]) if not line.rstrip('\n')==''] if tcd_exclusion[1] else []
+            #convert it to json string
+            tcd_exclusion[1] = json.dumps(tcd_exclusion[1])
+
+
+        #sort by active date desc, the active date of the last one shoule be None if have
+        TCD_EXCLUSIONS = sorted(tcd_exclusions,cmp=lambda data1,data2: 0 if data1[0] == data2[0] else (-1 if data1[0] is None else (1 if data2[0] is None else (-1 if data1[0] < data2[0] else 1))),reverse=True)
+    else:
+        TCD_EXCLUSIONS = []
+except Exception as ex:
+    raise Exception("TCD_EXCLUSIONS is invalid.{}".format(str(ex)))

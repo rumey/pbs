@@ -3,6 +3,7 @@ from django.template.defaultfilters import date, time
 from django.utils.safestring import mark_safe
 
 from pbs.admin import BaseAdmin
+from pbs.implementation.models import Prescription
 from pbs.implementation.forms import EdgingPlanForm, LightingSequenceForm
 from pbs.implementation.utils import field_range
 from pbs.prescription.admin import (PrescriptionMixin,
@@ -263,8 +264,14 @@ class RoadSegmentAdmin(PrescriptionMixin, SavePrescriptionMixin,
 
     def changelist_view(self, request, prescription_id, extra_context=None):
         """ Add exclusions to the context """
+        prescription = Prescription.objects.get(id = int(prescription_id))
+        tcd_exclusions = None
+        for tcd_exclusion in settings.TCD_EXCLUSIONS:
+            if not tcd_exclusion[0] or (tcd_exclusion[0] and prescription.created and prescription.created >= tcd_exclusion[0]):
+                tcd_exclusions = tcd_exclusion[1]
+                break
         context = {
-            'tcd_exclusions': json.dumps(settings.TCD_EXCLUSIONS),
+            'tcd_exclusions': tcd_exclusions or "[]"
         }
         context.update(extra_context or {})
 
