@@ -22,7 +22,7 @@ TCD_EXCLUSIONS_FILE = env('TCD_EXCLUSIONS_FILE', None)
 TCD_EXCLUSIONS = [line.rstrip('\n') for line in open(TCD_EXCLUSIONS_FILE) if not line.rstrip('\n') == ''] if TCD_EXCLUSIONS_FILE else []
 
 FROM_EMAIL = env('FROM_EMAIL', 'PrescribedBurnSystem@dbca.wa.gov.au')
-SUPPORT_EMAIL = env('SUPPORT_EMAIL', ['OIMSupport@dbca.wa.gov.au'])
+SUPPORT_EMAIL = env('SUPPORT_EMAIL', 'oim.servicedesk@dbca.wa.gov.au').split(',')
 
 BFRS_URL = env('BFRS_URL', 'https://bfrs.dpaw.wa.gov.au/')
 USER_SSO = env('USER_SSO', 'username')
@@ -33,15 +33,9 @@ MAX_LOCK_TIME = env('MAX_LOCK_TIME', 240)
 
 DEBUG = env('DEBUG', False)
 TEMPLATE_DEBUG = DEBUG
-INTERNAL_IPS = ['127.0.0.1', '::1', '10.15.200.29']
+INTERNAL_IPS = ['127.0.0.1', '::1']
 if not DEBUG:
-    # Localhost, UAT and Production hosts
-    ALLOWED_HOSTS = [
-        'localhost',
-        '127.0.0.1',
-        '.dpaw.wa.gov.au',
-        '.dbca.wa.gov.au',
-    ]
+    ALLOWED_HOSTS = env('ALLOWED_DOMAINS', '').split(',')
 else:
     ALLOWED_HOSTS = ['*']
 
