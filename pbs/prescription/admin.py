@@ -848,19 +848,20 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
 
         regional_objective = obj.regional_objectives.get(pk=unquote(objective_id))
 
-        can_delete = request.user.has_perm('prescription.delete_regionalobjective') or request.user.is_superuser
+        can_delete = request.user.has_perm('prescription.change_prescription') or request.user.is_superuser
         if not can_delete:
             raise PermissionDenied
 
         if request.method == 'POST':
             # The user has confirmed they wish to delete the regional objective
-            regional_objective.delete()
-            self.message_user(request, "Successfully deleted regional objective.")
+            obj.regional_objectives.remove(regional_objective)
+            self.message_user(request, "Successfully removed regional objective from ePFP({}).".format(obj.burn_id))
             url = reverse('admin:risk_context_changelist', args=(obj.id,))
+
             return HttpResponseRedirect(url)
 
         context = {
-            'title': "Delete regional objective",
+            'title': "Remove regional objective from ePFP",
             'current': obj,
             'regional_objective': regional_objective,
             'can_delete': can_delete
@@ -1974,6 +1975,7 @@ class ObjectiveAdmin(PrescriptionMixin, SavePrescriptionMixin,
 class RegionalObjectiveAdmin(admin.ModelAdmin):
     list_display = ("region", "impact", "fma_names", "objectives",)
     list_filter = ("region", "impact")
+    actions = None
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """
