@@ -6,6 +6,7 @@ import subprocess
 import json
 import time
 import unicodecsv
+import humanize
 
 from functools import update_wrapper, partial
 from dateutil import tz
@@ -1316,7 +1317,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                                 context, current_app=self.admin_site.name)
 
     def pdflatex(self, request, object_id):
-        logger = logging.getLogger('pbs')
+        logger = logging.getLogger('pdf_debugging')
         logger.info("_________________________ START ____________________________")
         logger.info("Starting a PDF output: {}".format(request.get_full_path()))
         obj = self.get_object(request, unquote(object_id))
@@ -1368,8 +1369,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 # directory should be a property of prescription model
                 # so caching machinering can put outdated flag in directory
                 # to trigger a cache repop next download
-                directory = os.path.join(
-                    settings.MEDIA_ROOT, 'prescriptions', str(obj.season), obj.burn_id + os.sep)
+                directory = os.path.join(settings.MEDIA_ROOT, 'prescriptions', str(obj.season), obj.burn_id)
                 if not os.path.exists(directory):
                     logger.info("Making a new directory: {}".format(directory))
                     os.makedirs(directory)
@@ -1388,28 +1388,47 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                         err_msg + "\n\n{0}\n\n{1}".format(e, traceback.format_exc()))
                     return error_response
 
-                with open(directory + texname, "w") as f:
+                texpath = os.path.join(directory, texname)
+                with open(texpath, "w") as f:
+                    logger.info('Writing to {}'.format(texpath))
                     f.write(output.encode('utf-8'))
-                    logger.info("Writing to {}".format(directory + texname))
 
                 logger.info("Starting PDF rendering process ...")
-                cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
+                cmd = ['latexmk', '-f', '-silent', '-pdf', '-outdir={}'.format(directory), texpath]
+                #cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
                 logger.info("Running: {0}".format(" ".join(cmd)))
                 subprocess.call(cmd)
 
                 # filesize
-                cmd = ['ls', '-s', '--block-size=M', directory + filename]
-                out = subprocess.check_output(cmd)
-                filesize = int(out.split('M ')[0])
-                if filesize >= 10:
+                pdfpath = os.path.join(directory, filename)
+                filesize = os.path.getsize(pdfpath)
+                if filesize / (1024 * 1024) >= 10:
                     token = '_token_10'
                 else:
                     token = '_token'
-                logger.info('Filesize in MB: {}'.format(filesize))
+                filesize = humanize.naturalsize(filesize)
+                logger.info('Filesize: {}'.format(filesize))
 
                 if settings.PDF_TO_FEXSRV:
-                    file_url = self.pdf_to_fexsvr(
-                        directory + filename, directory + texname, downloadname, request.user.email)
+                    #file_url = self.pdf_to_fexsvr(
+                    #    directory + filename, directory + texname, downloadname, request.user.email)
+                    cmd = [
+                        'ffsend',
+                        'upload',
+                        '--quiet',
+                        '--host', settings.SEND_URL,
+                        '--download-limit', str(settings.SEND_DOWNLOAD_LIMIT),
+                        '--name', downloadname,
+                        pdfpath
+                    ]
+                    logger.info('ffsend cmd: {}'.format(cmd))
+                    file_url = subprocess.check_output(cmd)
+                    logger.info('Sending email notification to user of download URL')
+                    subject = 'Prescribed Burn System: file {}'.format(downloadname)
+                    email_from = settings.FEX_MAIL
+                    message = 'Prescribed Burn System: file {} can be downloaded at:\n\t{}\nFile size: {}\nNo. of times file can be downloaded: {}'.format(
+                        downloadname, file_url, filesize, settings.SEND_DOWNLOAD_LIMIT)
+                    send_mail(subject, message, email_from, [request.user.email])
                     url = request.META.get('HTTP_REFERER')  # redirect back to the current URL
                     logger.info("__________________________ END _____________________________")
                     resp = HttpResponseRedirect(url)
@@ -1420,7 +1439,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     # inline http response - pdf returned to web page
                     response.set_cookie('fileDownloadToken', token)
                     logger.info("__________________________ END _____________________________")
-                    return self.pdf_to_http(directory + filename, response, error_response)
+                    return self.pdf_to_http(pdfpath, response, error_response)
 
         except SemaphoreException as e:
             error_response.write(

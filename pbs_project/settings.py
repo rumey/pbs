@@ -8,8 +8,10 @@ from django_auth_ldap.config import LDAPSearch, GroupOfNamesType, LDAPSearchUnio
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 SECRET_KEY = env('SECRET_KEY', 'foobar')
-FEX_MAIL = env('FEX_MAIL', 'pbs@dbca.wa.gov.au')
+FEX_MAIL = env('FEX_MAIL', 'pbs@dpaw.wa.gov.au')  # Do not update this without also updating fex.id
 FEX_SVR_HTTP = env('FEX_SVR_HTTP', 'https://fex.dpaw.wa.gov.au')
+SEND_URL = env('SEND_URL', 'https://send.dbca.wa.gov.au')
+SEND_DOWNLOAD_LIMIT = env('SEND_DOWNLOAD_LIMIT', 1)  # No. of times that files may be downloaded.
 PDF_TO_FEXSRV = env('PDF_TO_FEXSRV', True)
 DAY_ROLLOVER_HOUR = int(env('DAY_ROLLOVER_HOUR', 17))
 
@@ -249,43 +251,22 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 # Logging configuration
-# Ensure that the logs directory exists:
-if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
-    os.mkdir(os.path.join(BASE_DIR, 'logs'))
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
     'formatters': {
         'console': {'format': '%(asctime)s %(levelname)s %(message)s'},
-        'standard': {'format': '%(asctime)-.19s [%(process)d] [%(levelname)s] %(message)s'},
     },
     'handlers': {
-        'null': {
-            'level': 'DEBUG',
-            'class': 'django.utils.log.NullHandler',
-        },
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'console'
         },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'pbs.log'),
-            'formatter': 'standard',
-            'maxBytes': '16777216'
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-        },
         'pdf_debugging': {
             'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'pdf_debugging.log'),
-            'formatter': 'standard',
-            'maxBytes': '16777216'
+            'class': 'logging.StreamHandler',
+            'formatter': 'console'
         }
     },
     'loggers': {
@@ -294,19 +275,15 @@ LOGGING = {
             'propagate': True,
             'level': 'INFO',
         },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
         'pbs': {
             'handlers': ['console'],
             'level': 'INFO',
-            'propagate': True
+            'propagate': True,
         },
         'pdf_debugging': {
-            'handlers': ['console', 'pdf_debugging'],
-            'level': 'DEBUG'
+            'handlers': ['pdf_debugging'],
+            'level': 'DEBUG',
+            'propagate': True,
         }
     }
 }
