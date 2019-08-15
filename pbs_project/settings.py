@@ -6,6 +6,7 @@ from django_auth_ldap.config import LDAPSearch, GroupOfNamesType, LDAPSearchUnio
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+POSTGIS_VERSION = (2, 4)
 
 SECRET_KEY = env('SECRET_KEY', 'foobar')
 FEX_MAIL = env('FEX_MAIL', 'pbs@dpaw.wa.gov.au')  # Do not update this without also updating fex.id
