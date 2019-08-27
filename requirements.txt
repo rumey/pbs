@@ -19,6 +19,7 @@ python-dateutil==2.2
 Pillow==2.4.0
 django-downloadview==1.6
 unicodecsv==0.9.4
+Markdown==2.4.1
 django-markdown==0.6.1
 django-crispy-forms==1.4.0
 django-guardian==1.2.0
