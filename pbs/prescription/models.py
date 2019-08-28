@@ -703,7 +703,7 @@ class Prescription(Audit):
                     if os.path.exists(doc.document.path):
                         total_size += doc.document.size
                 return round(total_size/1024/1024., 2)
-        except ValueError:
+        except:
             pass
         return 0.0
 
