@@ -25,4 +25,3 @@ variables (in a `.env` file). Required settings are as follows:
     LDAP_ACCESS_DN="ldap-access-dn"
     LDAP_ACCESS_PASSWORD="password"
     LDAP_SEARCH_SCOPE="DC=searchscope"
-    EMAIL_HOST="email.host"
