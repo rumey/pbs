@@ -4,7 +4,7 @@ MAINTAINER asi@dbca.wa.gov.au
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
   && apt-get upgrade -y \
-  && apt-get install -yq git mercurial gcc gdal-bin libsasl2-dev \
+  && apt-get install -yq git mercurial gcc gdal-bin libsasl2-dev libpq-dev \
   python python-setuptools python-dev python-pip \
   fex-utils imagemagick poppler-utils \
   libldap2-dev libssl-dev wget build-essential
@@ -29,11 +29,13 @@ COPY binaries/ffsend /usr/local/bin/
 # Install the project.
 FROM python_libs_pbs
 COPY gunicorn.ini manage.py ./
-COPY dpaw_utils ./dpaw_utils
 COPY fex.id /root/.fex/id
 COPY pbs ./pbs
 COPY pbs_project ./pbs_project
 COPY smart_selects ./smart_selects
 COPY swingers ./swingers
 COPY templates ./templates
+
+COPY .env ./.env
 RUN python manage.py collectstatic --noinput
+RUN rm .env
