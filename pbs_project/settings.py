@@ -22,8 +22,6 @@ DAY_ROLLOVER_HOUR = int(env('DAY_ROLLOVER_HOUR', 17))
 KMI_DOWNLOAD_URL = env('KMI_DOWNLOAD_URL', required=True)
 CSV_DOWNLOAD_URL = env('CSV_DOWNLOAD_URL', required=True)
 SHP_DOWNLOAD_URL = env('SHP_DOWNLOAD_URL', required=True)
-TCD_EXCLUSIONS_FILE = env('TCD_EXCLUSIONS_FILE', None)
-TCD_EXCLUSIONS = [line.rstrip('\n') for line in open(TCD_EXCLUSIONS_FILE) if not line.rstrip('\n') == ''] if TCD_EXCLUSIONS_FILE else []
 
 FROM_EMAIL = env('FROM_EMAIL', 'PrescribedBurnSystem@dbca.wa.gov.au')
 SUPPORT_EMAIL = env('SUPPORT_EMAIL', ['oim.servicedesk@dbca.wa.gov.au'])
