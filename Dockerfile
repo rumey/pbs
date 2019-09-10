@@ -20,9 +20,6 @@ RUN pip install --no-cache-dir -r requirements.txt \
   # Update policy map for Imagemagick (allow it read access to PDFs).
   && sed -i -e 's/policy domain="coder" rights="none" pattern="PDF"/policy domain="coder" rights="read" pattern="PDF"/' /etc/ImageMagick-6/policy.xml \
   && rm -rf /var/lib/{apt,dpkg,cache,log}/ /tmp/* /var/tmp/*
-HEALTHCHECK --interval=1m --timeout=5s --start-period=10s --retries=3 CMD ["wget", "-q", "-O", "-", "http://localhost:8080/"]
-EXPOSE 8080
-CMD ["gunicorn", "pbs_project.wsgi", "--config", "gunicorn.ini"]
 # Copy the ffsend prebuilt binary.
 COPY binaries/ffsend /usr/local/bin/
 
@@ -39,3 +36,7 @@ COPY templates ./templates
 COPY .env ./.env
 RUN python manage.py collectstatic --noinput
 RUN rm .env
+
+HEALTHCHECK --interval=1m --timeout=5s --start-period=10s --retries=3 CMD ["wget", "-q", "-O", "-", "http://localhost:8080/"]
+EXPOSE 8080
+CMD ["gunicorn", "pbs_project.wsgi", "--config", "gunicorn.ini"]
