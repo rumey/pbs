@@ -445,7 +445,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     # Display all prescriptions that have had areaachievement records in past 12 months
                     lastyear = date.today() + timedelta(days=-365)
                     presc_ids = list(set([a.prescription.pk for a in AreaAchievement.objects.filter(ignition__gte=lastyear)]))
-                    qs = Prescription.objects.filter(pk__in=presc_ids).exclude(ignition_status=Prescription.IGNITION_NOT_STARTED).exclude(Q(non_calm_tenure=True) & ~Q(non_calm_tenure_approved=True)).distinct()
+                    qs = Prescription.objects.filter(pk__in=presc_ids).exclude(ignition_status=Prescription.IGNITION_NOT_STARTED).distinct()
 
                 qs = qs.filter(region=request.REQUEST.get('region')).order_by('-burn_id')
 
