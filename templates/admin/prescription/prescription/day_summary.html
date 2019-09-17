@@ -46,15 +46,15 @@
       <td>{% if current.is_draft or perms.prescription.can_admin %}{{ form.actions }}{% else %}{{ current.day_state.actions|yesno:"Complete,Incomplete,Not Applicable" }}{% endif %}</td>
         <td><a value="Section B2 &#x2010; Day of burn actions" class="btn" href="{{ download_pdf }}?template=sectionb2"><i class="icon-print"></i></a></td>
     </tr>
-    <tr class="{% if current.day_state.roads %}success{% else %}{% if current.day_state.roads == None %}info{% else %}error{% endif %}{% endif %}">
-      <th><a href="{{ sectionb3_roads }}">Section B3 &#x2010; Roads</a></th>
-      <td>{% if current.is_draft or perms.prescription.can_admin %}{{ form.roads }}{% else %}{{ current.day_state.roads|yesno:"Complete,Incomplete,Not Applicable" }}{% endif %}</td>
-        <td><a value="Section B3 &#x2010; Roads" class="btn" href="{{ download_pdf }}?template=sectionb3"><i class="icon-print"></i></a></td>
-    </tr>
     <tr class="{% if current.day_state.tracks %}success{% else %}{% if current.day_state.tracks == None %}info{% else %}error{% endif %}{% endif %}">
       <th><a href="{{ sectionb3_trails }}">Section B3 &#x2010; Tracks and Trails</a></th>
       <td>{% if current.is_draft or perms.prescription.can_admin %}{{ form.tracks }}{% else %}{{ current.day_state.tracks|yesno:"Complete,Incomplete,Not Applicable" }}{% endif %}</td>
         <td><a value="Section B3 &#x2010; Tracks and Trails" class="btn" href="{{ download_pdf }}?template=sectionb3"><i class="icon-print"></i></a></td>
+    </tr>
+    <tr class="{% if current.day_state.roads %}success{% else %}{% if current.day_state.roads == None %}info{% else %}error{% endif %}{% endif %}">
+      <th><a href="{{ sectionb3_roads }}">Section B4 &#x2010; Roads</a></th>
+      <td>{% if current.is_draft or perms.prescription.can_admin %}{{ form.roads }}{% else %}{{ current.day_state.roads|yesno:"Complete,Incomplete,Not Applicable" }}{% endif %}</td>
+        <td><a value="Section B4 &#x2010; Roads" class="btn" href="{{ download_pdf }}?template=sectionb3"><i class="icon-print"></i></a></td>
     </tr>
     <tr class="{% if current.day_state.traffic %}success{% else %}{% if current.day_state.traffic == None %}info{% else %}error{% endif %}{% endif %}">
       <th><a href="{{ sectionb3_roads }}">Section B4 &#x2010; Traffic Control Diagrams</a></th>
