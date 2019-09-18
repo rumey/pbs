@@ -6,7 +6,7 @@ from django.template.response import TemplateResponse
 
 from pbs.review.models import BurnState, PrescribedBurn, AircraftBurn, Acknowledgement, AircraftApproval, BurnProgramLink, AnnualIndicativeBurnProgram
 from pbs.review.forms import (BurnStateSummaryForm, PrescribedBurnForm, PrescribedBurnActiveForm, PrescribedBurnEditForm,
-        PrescribedBurnEditActiveForm, FireLoadFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
+        PrescribedBurnEditActiveForm, FireLoadFilterForm,FireSummaryFilterForm, PrescribedBurnFilterForm, FireForm, FireEditForm, CsvForm,
         AircraftBurnForm, AircraftBurnEditForm, AircraftBurnFilterForm
     )
 from pbs.prescription.models import Prescription, Approval, Region, District
@@ -291,7 +291,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
     def add_view(self, request, form_url='', extra_context=None):
         # default form title uses model name - need to do this to change name for the diff forms - since all are using the same model
-
         if self.is_role_based_user(request):
             self.message_user(request, "Role-based user is not permitted to Add {}. Please login with user credentials".format(
                 'Bushfires' if request.GET.get('form') == 'add_fire' else 'Prescribed Burns'), level=messages.ERROR
@@ -421,7 +420,9 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                     params = '&district_id={}'.format(request.GET.get('district_id'))
                     if request.GET.get('year'):
                         params += '&year={}'.format(request.GET.get('year'))
-                    resp = requests.get(url=bfrs_base_url + 'api/v1/bushfire/fields/fire_number/?format=json' + params, auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO)).json()
+                    if request.GET.get('include_final_report') == 'true' :
+                        params += '&include_final_report=true'
+                    resp = requests.get(url=bfrs_base_url + 'api/v1/bushfire/fields/fire_number/?format=json' + params, auth=requests.auth.HTTPBasicAuth(settings.USER_SSO, settings.PASS_SSO), verify=False).json()
                     resp.insert(0, {u'fire_number': u'--------', u'name': u'', u'tenure__name': u'', u'other_tenure': u''})
                 except:
                     resp = [{u'fire_number': u'BFRS lookup Failed', u'name': u'', u'tenure__name': u'', u'other_tenure': u''}]
@@ -553,7 +554,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 already_acknowledged = []
                 unset_acknowledged = []
                 for obj in objects:
-                    if (obj.prescription and obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED) or obj.fire_id:
+                    if (obj.prescription and (obj.prescription.planning_status == obj.prescription.PLANNING_APPROVED or obj.prescription.areaachievement_set.latest('ignition').ignition > (date.today() + timedelta(days=-365)))) or obj.fire_id:
                         if (obj.area>=0 or obj.distance>=0) and obj.status:
                             if obj.formB_isDraft:
                                 if Acknowledgement.objects.filter(burn=obj, acknow_type='USER_B').count() == 0:
@@ -872,11 +873,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                         message = "record already approved {}".format(', '.join(already_acknowledged))
                         msg_type = "danger"
 
+                self.copy_planned_approved_records(dt)
+
                 if not_acknowledged:
                     message = "record already approved {}".format(', '.join(not_acknowledged))
                     return HttpResponse(json.dumps({"redirect": referrer_url, "message": message, "type": "danger"}))
-
-                self.copy_planned_approved_records(dt)
 
             elif report=='epfp_fireload':
                 self.copy_ongoing_records(request, dt) # copy yesterdays ongoing active records to today
@@ -1037,28 +1038,29 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         if request.REQUEST.has_key('report'):
             report = request.REQUEST.get('report', None)
 
+        dt = None
         if request.REQUEST.has_key('date'):
             dt = request.REQUEST.get('date', None)
             if dt:
                 dt = datetime.strptime(dt, '%Y-%m-%d')
-        else:
+        if not dt:
+            #date is none, set to today
             dt = date.today()
             time_now = datetime.now().time()
             if time_now.hour > settings.DAY_ROLLOVER_HOUR:
                 dt = dt + timedelta(days=1)
 
         yesterday = dt - timedelta(days=1)
-
         qs_burn = PrescribedBurn.objects.filter(date=dt)
         if report=='epfp_planned':
             title = "Today's Planned Burn Program"
             # assumes all burns entered on date dt are planned (for date dt)
             qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268A)
-            form = PrescribedBurnFilterForm(request.GET)
+            form = PrescribedBurnFilterForm(request=request,prefix=report,data=request.GET,persistent_fields=["region","district"])
         elif report=='epfp_fireload':
             title = "Summary of Current Fire Load"
             qs_burn = qs_burn.filter(form_name=PrescribedBurn.FORM_268B)
-            form = FireLoadFilterForm(request.GET)
+            form = FireLoadFilterForm(request=request,prefix=report,data=request.GET,persistent_fields=["region","district"])
         elif report=='epfp_summary':
             # Form 268c contains:
             #   1. SDO Approved Plans (Form A)
@@ -1066,29 +1068,30 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             #   3. Only Burns (No Fires)
             title = "Summary of Current and Planned Fires"
             qs_burn = qs_burn.filter(acknowledgements__acknow_type='SDO_A', date=dt).exclude(prescription__isnull=True)
-            form = PrescribedBurnFilterForm(request.GET)
-
-        fire_type = 0
-        if request.REQUEST.has_key('fire_type'):
-            fire_type = int (request.REQUEST.get('fire_type', None))
+            form = FireSummaryFilterForm(request=request,prefix=report,data=request.GET)
+        fire_type = None
+        if "fire_type" in form.fields:
+            fire_type = form["fire_type"].value()
             if fire_type == 1:
                 qs_burn = qs_burn.filter(fire_id__isnull=True)
             elif fire_type == 2:
                 qs_burn = qs_burn.filter(prescription__isnull=True)
 
-        if request.REQUEST.has_key('region'):
-            region = request.REQUEST.get('region', None)
+        region = None
+        if 'region' in form.fields:
+            region = form['region'].value()
             if region:
                 qs_burn = qs_burn.filter(region=region)
 
-        if request.REQUEST.has_key('district'):
-            district = request.REQUEST.get('district', None)
+        district = None
+        if 'district' in form.fields:
+            district = form["district"].value()
             if district:
                 qs_burn = qs_burn.filter(district=district)
 
-        if request.REQUEST.has_key('approval_status'):
-            approval_status = map(str, request.REQUEST.getlist('approval_status'))
-            if approval_status and len(approval_status)!=4:
+        if 'approval_status' in form.fields:
+            approval_status = form["approval_status"].value()
+            if approval_status and len(approval_status) < len(PrescribedBurn.APPROVAL_CHOICES):
                 if report=='epfp_planned':
                     if len(approval_status)==1 and approval_status[0]=='DRAFT':
                         approval_choices = [i[0]+'_A' for i in PrescribedBurn.APPROVAL_CHOICES if i[0]!='DRAFT']
@@ -1156,17 +1159,22 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
 
         tomorrow = dt + timedelta(days=1) # relative to dt
+        logger.info('Copy 268b records from today {} to tomorrow {}'.format(dt, tomorrow))
         objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)]
+        logger.info('Count of 268b records to process should be {}, minus any records that already have a 268b'.format(len(objects)))
         now = timezone.now()
         admin = User.objects.get(username='admin')
         count = 0
+        count_not_updated = 0
         for obj in objects:
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                count_not_updated += 1
                 logger.info('Ongoing Record Already Exists (Fire) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                count_not_updated += 1
                 logger.info('Ongoing Record Already Exists (Burn) - not copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             try:
@@ -1185,7 +1193,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 logger.info('Ongoing Record copied (268b today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                count_not_updated += 1
                 logger.warn('Ongoing Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+        logger.info('Count of 268b records not processed is {}'.format(count_not_updated))
+        logger.info('Count of 268b records processed is {}'.format(count))
 
     def copy_planned_approved_records(self, dt):
         """
@@ -1202,17 +1213,22 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             return
 
         tomorrow = dt + timedelta(days=1) # relative to dt
+        logger.info('Copy 268a records from today {} to tomorrow {}'.format(dt, tomorrow))
         objects = PrescribedBurn.objects.filter(date=dt, acknowledgements__acknow_type__in=['SDO_A'], form_name=PrescribedBurn.FORM_268A)
+        logger.info('Count of 268a records to process should be {}, minus any records that already have a 268b'.format(len(objects)))
         now = timezone.now()
         admin = User.objects.get(username='admin')
         count = 0
+        count_not_updated = 0
         for obj in objects:
             if obj.fire_id and PrescribedBurn.objects.filter(fire_id=obj.fire_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                count_not_updated += 1
                 logger.info('Planned Approved Record Already Exists (Fire) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             if obj.prescription and PrescribedBurn.objects.filter(prescription__burn_id=obj.prescription.burn_id, date=tomorrow, form_name=PrescribedBurn.FORM_268B, location=obj.location):
                 # don't copy if already exists - since record is unique on Prescription (not fire_id)
+                count_not_updated += 1
                 logger.info('Planned Approved Record Already Exists (Burn) - not copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
                 continue
             try:
@@ -1233,7 +1249,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 logger.info('Planned Approved Record copied (268a today to 268b tomorrow). Record {}, today {}, tomorrow {}'.format(obj.fire_idd, dt, tomorrow))
             except:
                 # records already exist - pk (pres, date) will not allow overwrite, so ignore the exception
+                count_not_updated += 1
                 logger.warn('Planned Approved Record not copied. Record {} already exists on day {}'.format(obj.fire_idd, tomorrow))
+        logger.info('Count of 268b records not processed is {}'.format(count_not_updated))
+        logger.info('Count of 268a records processed is {}'.format(count))
 
     def copy_planned_records(self, dt, objects):
         """

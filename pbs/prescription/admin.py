@@ -122,7 +122,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 ('aircraft_burn', 'remote_sensing_priority'),
                 ('priority', 'rationale'),
                 'purposes', 'treatment_percentage',
-                'area', 'perimeter')
+                'area', 'perimeter'
+            )
         }),
     )
     search_fields = ('name', 'burn_id', 'location')
@@ -305,7 +306,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             'Success Criteria', 'Success Criteria Achieved',
             'Observations Identified', 'Proposed Action',
             'Endorsement Name/s', 'Endorsement Date',
-            'Approval Name/s', 'Approval Date', 'Approved Until'])
+            'Approval Name/s', 'Approval Date', 'Approved Until','Overall Rationale',
+            'Non-CALM Act Tenure?','Non-CALM Act Tenure Included','Public Value in Burn','Complete Without Other Tenures?','Risks If Exclude Other Tenures'])
 
         for item in queryset:
             if item.last_season is not None:
@@ -419,7 +421,12 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 approvals,
                 item.approval_status_modified.astimezone(
                     local_zone).strftime('%d/%m/%Y %H:%M:%S') if item.approval_status_modified else "",
-                approved_until
+                approved_until,
+                item.rationale,
+                "Yes" if item.non_calm_tenure else ("Unknown" if item.non_calm_tenure is None else "No"),
+                item.non_calm_tenure_included,item.non_calm_tenure_value,
+                ("Yes" if item.non_calm_tenure_complete == 1  else ( "No" if item.non_calm_tenure_complete == 2 else "Yes & No")) if item.non_calm_tenure else "",
+                item.non_calm_tenure_risks
             ])
 
         return response
@@ -469,7 +476,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                            'aircraft_burn',
                            # TODO: PBS-1551 # 'allocation',
                            'remote_sensing_priority', 'purposes',
-                           ('area', 'perimeter', 'treatment_percentage'))
+                           ('area', 'perimeter', 'treatment_percentage'),
+                           ('non_calm_tenure','non_calm_tenure_included','non_calm_tenure_value','non_calm_tenure_complete','non_calm_tenure_risks')
+                          )
             }), ('Other Attributes', {
                 "fields": ('tenures', 'fuel_types', 'shires',
                            'bushfire_act_zone', 'prohibited_period',
@@ -581,6 +590,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             "form": form,
             "fields": fields,
             "exclude": exclude,
+            "widgets": form._meta.widgets if hasattr(form,"_meta") and hasattr(form._meta,"widgets") else None,
             "formfield_callback": partial(self.formfield_for_dbfield,
                                           request=request),
         }
