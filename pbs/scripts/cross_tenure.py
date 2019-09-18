@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
+from django.db import transaction
 
 from pbs.prescription.models import Prescription
 from pbs.document.models import Document,DocumentCategory,DocumentTag
@@ -37,12 +38,11 @@ def batch_update_approve_status(burnids_file,signed_file,useremail,financial_yea
     processed_burnids = []
     not_existed_burnids = []
     not_cross_tenure_burnids = []
+    already_approved_burnids = []
     doc_already_uploaded_burnids = []
     doc_uploaded_burnids = []
     for burnid in burnids:
         update_fields=["non_calm_tenure_approved"]
-        if burnid == 'KAL_021':
-            import ipdb;ipdb.set_trace()
         try:
             obj = Prescription.objects.get(burn_id=burnid,financial_year=financial_year)
         except ObjectDoesNotExist as ex:
@@ -55,20 +55,25 @@ def batch_update_approve_status(burnids_file,signed_file,useremail,financial_yea
             else:
                 not_cross_tenure_burnids.append(burnid)
                 continue;
-        obj.non_calm_tenure_approved = True
-        obj.save(update_fields=update_fields)
+        elif obj.non_calm_tenure_approved:
+            already_approved_burnids.append(burnid)
+            continue
 
-        if Document.objects.filter(prescription=obj,category=category,tag=tag).count() == 0 or upload_policy == ADD_DOC:
-            signeddoc = Document(prescription=obj,category=category,tag=tag,document=signedcontent,document_created=signed_time,creator=user,created=now,modifier=user,modified=now)
-            signeddoc.save()
-            doc_uploaded_burnids.append(burnid)
-        elif upload_policy == OVERRIDE_EXISTING_DOC:
-            Document.objects.filter(prescription=obj,category=category,tag=tag).delete()
-            signeddoc = Document(prescription=obj,category=category,tag=tag,document=signedcontent,document_created=signed_time,creator=user,created=now,modifier=user,modified=now)
-            signeddoc.save()
-            doc_uploaded_burnids.append(burnid)
-        else:
-            doc_already_uploaded_burnids.append(burnid)
+        with transaction.atomic():
+            obj.non_calm_tenure_approved = True
+            obj.save(update_fields=update_fields)
+    
+            if Document.objects.filter(prescription=obj,category=category,tag=tag).count() == 0 or upload_policy == ADD_DOC:
+                signeddoc = Document(prescription=obj,category=category,tag=tag,document=signedcontent,document_created=signed_time,creator=user,created=now,modifier=user,modified=now)
+                signeddoc.save()
+                doc_uploaded_burnids.append(burnid)
+            elif upload_policy == OVERRIDE_EXISTING_DOC:
+                Document.objects.filter(prescription=obj,category=category,tag=tag).delete()
+                signeddoc = Document(prescription=obj,category=category,tag=tag,document=signedcontent,document_created=signed_time,creator=user,created=now,modifier=user,modified=now)
+                signeddoc.save()
+                doc_uploaded_burnids.append(burnid)
+            else:
+                doc_already_uploaded_burnids.append(burnid)
 
         processed_burnids.append(burnid)
 
@@ -83,6 +88,10 @@ def batch_update_approve_status(burnids_file,signed_file,useremail,financial_yea
 
     if doc_already_uploaded_burnids:
         print("The signed document for the burns({}) are alreay uploaded".format(",".join(doc_already_uploaded_burnids)))
+        print("")
+
+    if already_approved_burnids:
+        print("The burns({}) are already approved".format(",".join(already_approved_burnids)))
         print("")
 
     print("The signed document for the burns({}) are uploaded successfully".format(",".join(doc_uploaded_burnids)))
