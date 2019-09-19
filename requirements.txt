@@ -38,3 +38,4 @@ pytz==2017.2
 # django-smart-selects==1.0.9 version is required, but no longer available. Copy committed to repo.
 gunicorn==19.8.1
 humanize==0.5.1
+docutils
