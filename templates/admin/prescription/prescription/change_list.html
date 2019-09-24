@@ -89,8 +89,8 @@ $(document).ready(function() {
 
     window.hidden_columns = JSON.parse(localStorage.getItem("regional_summary_hidden_columns")) ||
                             ["contentious", "approval_expiry", "aircraft_burn", "allocation",
-                             "status", "prescribing_officer_name", "remote_sense_priority",
-                             "date_modified_local", "contingencies_migrated"];
+                             "status", "prescribing_officer_name", "remote_sensing_priority",
+                             "date_modified_local", "contingencies_migrated","_non_calm_tenure","_non_calm_tenure_approved"];
     var untoggleable_columns = ["action-checkbox-column", "burn_id", "name", "region", "district"];
     localStorage.setItem("regional_summary_hidden_columns", JSON.stringify(hidden_columns));
     var column_button = $("button#template-button");
@@ -109,7 +109,7 @@ $(document).ready(function() {
 
     $("table#result_list thead").find("th").each(function() {
         var newbutton = column_button.clone();
-        var name = $(this).text();
+        var name = ($(this).find("a").length)? $(this).find("a").text():$(this).text();
         var cclass = $(this).attr("class");
         if (cclass) {
             // Note that the line below fails on an empty query result.
@@ -149,7 +149,7 @@ $(document).ready(function() {
             hidden_columns = $.grep(hidden_columns, function(value) {return button.attr("id").search(value) != 7});
         }
         localStorage.setItem("regional_summary_hidden_columns", JSON.stringify(hidden_columns));
-        Vis.setToolsVisibilty(myStore, visKey, toolsVisible);
+        Vis.setToolsVisibility(myStore, visKey, toolsVisible);
     })
     $("div.search-tools").append($("div#toolbar form").css({"margin": 0}));
 

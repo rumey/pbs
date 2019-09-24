@@ -158,7 +158,7 @@ def _has_unique_district(objects):
 
 @register.assignment_tag(takes_context=True)
 def __has_unique_district(context):
-    import ipdb; ipdb.set_trace()
+    #import ipdb; ipdb.set_trace()
     planned_burns = context['qs_burn']
     objs_distinct = [obj.fire_idd for obj in planned_burns.distinct('district')]
     #return [] if objs_distinct==1 else objs_distinct

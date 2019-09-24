@@ -1,8 +1,5 @@
 from __future__ import (division, print_function, unicode_literals,
                         absolute_import)
-import logging
-logger = logging.getLogger("log." + __name__)
-
 from datetime import timedelta
 from datetime import datetime
 from dateutil import tz
@@ -24,9 +21,11 @@ from swingers.models.auth import Audit
 from swingers import models
 from smart_selects.db_fields import ChainedForeignKey
 
-from pbs.risk.models import (
-    Register, Risk, Action, Complexity, Context, Treatment)
+from pbs.risk.models import Register, Risk, Action, Complexity, Context, Treatment
 import os
+import logging
+
+logger = logging.getLogger("log." + __name__)
 
 
 @python_2_unicode_compatible
@@ -161,6 +160,7 @@ class FuelType(models.Model):
 
     def __str__(self):
         return self.name
+
 
 @python_2_unicode_compatible
 class Tenure(models.Model):
@@ -307,9 +307,9 @@ class Prescription(Audit):
     INT_CHOICES = [(i, i) for i in range(1, 100)]
 
     today = timezone.now().date()
-    fin_year =  today.year if today.month <= 6 else today.year + 1
+    fin_year = today.year if today.month <= 6 else today.year + 1
     yr1 = str(fin_year - 1) + '/' + str(fin_year)
-    yr2 = str(fin_year)     + '/' + str(fin_year + 1)
+    yr2 = str(fin_year) + '/' + str(fin_year + 1)
     yr3 = str(fin_year + 1) + '/' + str(fin_year + 2)
     yr4 = str(fin_year + 2) + '/' + str(fin_year + 3)
     FNCL_YEAR_CHOICES = [
@@ -346,8 +346,7 @@ class Prescription(Audit):
     shires = models.ManyToManyField(Shire, blank=True, null=True)
     planned_year = models.PositiveIntegerField(
         verbose_name="Planned Year", max_length=4, blank=True)
-    financial_year = models.CharField(max_length=10, verbose_name="Financial Year",
-        default=yr1)
+    financial_year = models.CharField(max_length=10, verbose_name="Financial Year", default=yr1)
     planned_season = models.PositiveSmallIntegerField(
         verbose_name="Planned Season", max_length=64, default=Season.SEASON_ANNUAL,
         blank=True, null=True)
@@ -454,7 +453,6 @@ class Prescription(Audit):
     # ModelAdmin save_model method.
     # Will probably be removed when all contigency objects have been migrated.
     contingencies_migrated = models.BooleanField(default=False, editable=False)
-#    reviewed = models.BooleanField(verbose_name="Reviewed by FMSB and DRFMS", default=False, editable=False)
 
     #fields for  Cross Tenure/s 33(1)(f) Ministerial Declaration
     #Non- CALM Act Tenure - Option to select 'Yes' or 'No'
@@ -465,6 +463,7 @@ class Prescription(Audit):
     #       Risk based issues if other tenure not included (free text field)
     #   If 'No' selected, additional fields are greyed out, and left blank as not applicable
     non_calm_tenure = models.NullBooleanField(verbose_name="Non-CALM Act Tenure")
+    non_calm_tenure_approved = models.NullBooleanField(verbose_name="Cross Tenure Approved?")
     non_calm_tenure_included = models.TextField(verbose_name="Non-CALM Act Tenure Included", blank=True,null=True)
     non_calm_tenure_value = models.TextField(verbose_name="Public Value in Burn", blank=True,null=True)
     non_calm_tenure_complete = models.PositiveSmallIntegerField(
@@ -489,21 +488,19 @@ class Prescription(Audit):
         """
         Place 'Bushfire Risk Management' at top of list/string
         """
-        #return ', '.join([i.name.strip('Management') for i in self.purposes.all()])
         purposes = [i.name for i in self.purposes.all()]
         if 'Bushfire Risk Management' in purposes:
             return 'Bushfire Risk Management, ' + ', '.join([i for i in purposes if i != 'Bushfire Risk Management'])
         return ', '.join([i for i in purposes])
-
 
     def generate_description(self):
         try:
             if self.tenures.count() > 0:
                 tenure_names = [tenure.name for tenure in self.tenures.all()]
                 if len(tenure_names) > 1:
-                    located  = ', '.join(tenure_names[:-1]) + ' and ' + tenure_names[-1]
+                    located = ', '.join(tenure_names[:-1]) + ' and ' + tenure_names[-1]
                 else:
-                    located  = ', '.join(tenure_names)
+                    located = ', '.join(tenure_names)
 
             else:
                 located = "TBD"
@@ -667,12 +664,6 @@ class Prescription(Audit):
             raise ValidationError("You must enter the Bushfire Act Zone.")
 
     def clean(self):
-#        if ((self.last_year and self.last_season and
-             #self.planned_year and self.planned_season and
-             #self.planned_year < self.last_year)):
-            #raise ValidationError("Last burnt season and year must be before "
-#                                  "planned burn season and year.")
-
         if self.last_year and self.last_year_unknown:
             raise ValidationError("Last year can not be set and marked "
                                   "unknown at the same time.")
@@ -713,9 +704,9 @@ class Prescription(Audit):
         """
         try:
             if len(self.document_set.all()) > 0:
-                return [ (d.document.name, round(d.document.size/1024/1024., 2))
+                return [(d.document.name, round(d.document.size / 1024 / 1024., 2))
                          for d in self.document_set.all()
-                         if os.path.exists(d.document.path) ]
+                         if os.path.exists(d.document.path)]
         except ValueError:
             pass
         return []
@@ -969,7 +960,8 @@ class Prescription(Audit):
             # self.purposes.count() != 0 and self.allocation is not None and
             (self.last_season is not None or self.last_season_unknown) and
             (self.last_year is not None or self.last_year_unknown) and
-            self.contentious is not None
+            self.contentious is not None and
+            self.non_calm_tenure is not None
         )
 
     @property
@@ -1141,7 +1133,6 @@ class Prescription(Audit):
                 Register.LEVEL_HIGH - 1][1]:
             label = 'label-high'
             role = 'Branch Manager FMSB'
-            #role = 'ePFP Application Administrator'
         else:
             label = 'label-very-high'
             role = 'Not available (the risk level is too high)'
@@ -1150,8 +1141,7 @@ class Prescription(Audit):
     @property
     def maximum_risk_role(self):
         maximum_risk, label, role = self._max_risk(self.maximum_risk)
-        risk_role = ('<span id="id_risk_role" class="label {0}">{1}</span>'
-                      .format(label, role))
+        risk_role = '<span id="id_risk_role" class="label {0}">{1}</span>'.format(label, role)
         return mark_safe(risk_role)
 
     @property
@@ -1264,11 +1254,11 @@ class Prescription(Audit):
 
     @property
     def current_fmsb_record(self):
-        return self.burnstate.filter(review_type='FMSB',review_date__gte=self.approval_set.latest().created)
+        return self.burnstate.filter(review_type='FMSB', review_date__gte=self.approval_set.latest().created)
 
     @property
     def current_drfms_record(self):
-        return self.burnstate.filter(review_type='DRFMS',review_date__gte=self.approval_set.latest().created)
+        return self.burnstate.filter(review_type='DRFMS', review_date__gte=self.approval_set.latest().created)
 
     @property
     def fmsb_record(self):

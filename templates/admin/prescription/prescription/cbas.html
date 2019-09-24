@@ -130,6 +130,12 @@
       <th>Program allocation(s)</th>
       <td>{% if not current.allocations %}Program allocation(s) is a required field.{% else %}{{  current.allocations }}{% endif %}</td>
     </tr>
+    {% if current.non_calm_tenure != True and current.non_calm_tenure != False %}
+    <tr class="error">
+      <th>Non-CALM Act Tenure</th>
+      <td>Non-CALM Act Tenure is a required field and must be either Yes or No.</td>
+    </tr>
+    {% endif %}
   </tbody>
 </table>
 {% load i18n admin_urls %}

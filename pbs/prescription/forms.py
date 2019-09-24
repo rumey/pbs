@@ -9,6 +9,7 @@ from pbs.prescription.models import (
 
 from pbs.prescription.fields import LocationMultiField
 from pbs.forms import PbsModelForm
+from pbs.widgets import NullBooleanSelect
 from django.utils import timezone
 
 
@@ -39,8 +40,15 @@ class PrescriptionFormBase(forms.ModelForm):
             #self.fields['planned_season'].widget.attrs.update({'disabled':'disabled', 'readonly':True})
             self.fields['planned_season'].widget.attrs.update({'readonly':True})
 
+    def clean_non_calm_tenure(self):
+        value = self.cleaned_data.get("non_calm_tenure")
+        if value is None:
+            if self.instance and self.instance.planning_status != Prescription.PLANNING_DRAFT:
+                raise forms.ValidationError("Must be either Yes or No")
+        return value
+
     def clean_non_calm_tenure_included(self):
-        if self.cleaned_data["non_calm_tenure"]:
+        if self.cleaned_data.get("non_calm_tenure"):
             value = self.cleaned_data.get("non_calm_tenure_included")
             if value:
                 return value
@@ -49,8 +57,14 @@ class PrescriptionFormBase(forms.ModelForm):
         else:
             return None
 
+    def clean_non_calm_tenure_approved(self):
+        if self.cleaned_data.get("non_calm_tenure"):
+            return self.instance.non_calm_tenure_approved
+        else:
+            return None
+
     def clean_non_calm_tenure_value(self):
-        if self.cleaned_data["non_calm_tenure"]:
+        if self.cleaned_data.get("non_calm_tenure"):
             value = self.cleaned_data.get("non_calm_tenure_value")
             if value:
                 return value
@@ -60,7 +74,7 @@ class PrescriptionFormBase(forms.ModelForm):
             return None
 
     def clean_non_calm_tenure_complete(self):
-        if self.cleaned_data["non_calm_tenure"]:
+        if self.cleaned_data.get("non_calm_tenure"):
             value = self.cleaned_data.get("non_calm_tenure_complete")
             if value is None:
                 raise forms.ValidationError("Required.")
@@ -70,7 +84,7 @@ class PrescriptionFormBase(forms.ModelForm):
             return None
 
     def clean_non_calm_tenure_risks(self):
-        if self.cleaned_data["non_calm_tenure"]:
+        if self.cleaned_data.get("non_calm_tenure"):
             value = self.cleaned_data.get("non_calm_tenure_risks")
             if value:
                 return value
@@ -129,6 +143,8 @@ class PrescriptionEditForm(PrescriptionFormBase):
 
         super(PrescriptionEditForm, self).__init__(*args, **kwargs)
         self.fields["non_calm_tenure_complete"].choices = Prescription.NON_CALM_TENURE_COMPLETE_CHOICES
+        if self.instance and self.instance.planning_status != self.instance.PLANNING_DRAFT:
+            self.fields["non_calm_tenure"].widget=NullBooleanSelect(none=None)
 
         if 'description' in self.fields:
             self.fields['description'].widget.attrs.update({
@@ -159,6 +175,8 @@ class PrescriptionEditForm(PrescriptionFormBase):
     class Meta:
         model = Prescription
         widgets = {
+            "non_calm_tenure":NullBooleanSelect(attrs={"autocomplete":"off"}),
+            "non_calm_tenure_approved":forms.widgets.CheckboxInput(attrs={"disabled":True,"autocomplete":"off"}),
             "non_calm_tenure_complete":forms.widgets.RadioSelect(),
             "non_calm_tenure_included":forms.widgets.Textarea(attrs={"style":"width:90%;"}),
             "non_calm_tenure_value":forms.widgets.Textarea(attrs={"style":"width:90%;"}),
