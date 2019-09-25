@@ -1482,7 +1482,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             'baseurl': request.build_absolute_uri("/")[:-1]
         }
         disposition = "attachment"
-        #disposition = "inline"
         response['Content-Disposition'] = (
             '{0}; filename="{1}"'.format(
                 disposition, downloadname))
@@ -1517,7 +1516,8 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         subprocess.call(cmd)
 
         logger.info("Cleaning up ...")
-        cmd = ['latexmk', '-c', '-outdir={}'.format(directory),texpath]
+        cmd = ['latexmk', '-c', '-outdir={}'.format(directory), texpath]
+        #cmd = ['latexmk', '-cd', '-c', directory + texname]
         logger.info("Running: {0}".format(" ".join(cmd)))
         subprocess.call(cmd)
 
