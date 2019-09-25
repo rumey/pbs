@@ -1,3 +1,5 @@
+import os
+
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.contrib import messages
@@ -237,6 +239,7 @@ def _create_approvals_pdf(prescription, request=None):
     now = datetime.datetime.now()
     date_str = now.strftime('%d%b%Y_%H%M%S')
     texname = '/tmp/parta_approvals-' + date_str + '.tex'
+    directory = os.path.split(texname)[0]
     context = {
         'current': prescription,
         'prescription': prescription,
@@ -252,11 +255,11 @@ def _create_approvals_pdf(prescription, request=None):
     with open(texname, "w") as f:
         f.write(output.encode('utf-8'))
 
-    cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', texname]
+    cmd = ['latexmk', '-f', '-silent', '-pdf', '-outdir={}'.format(directory), texname]
     subprocess.call(cmd)
 
     # clean up
-    cmd = ['latexmk', '-cd', '-c', texname]
+    cmd = ['latexmk', '-c', '-outdir={}'.format(directory),texname]
     subprocess.call(cmd)
 
     with open(texname.replace('tex','pdf')) as f:
