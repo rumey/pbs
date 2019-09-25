@@ -586,19 +586,22 @@ class AnnualIndicativeBurnProgram(models.Model):
     location = models.CharField(max_length=254, blank=True)
     status = models.CharField(max_length=254, blank=True)
     priority = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
-    content = models.CharField(max_length=254, blank=True)
-    issues = models.CharField(max_length=254, blank=True)
+    #content = models.CharField(max_length=254, blank=True)
+    #issues = models.CharField(max_length=254, blank=True)
     treatment = models.DecimalField(max_digits=9, decimal_places=0, blank=True, null=True)
-    purpose_1 = models.CharField(max_length=254, blank=True)
-    program = models.CharField(max_length=254, blank=True)
-    acb = models.CharField(max_length=254, blank=True)
+    #purpose_1 = models.CharField(max_length=254, blank=True)
+    #program = models.CharField(max_length=254, blank=True)
+    #acb = models.CharField(max_length=254, blank=True)
     trtd_area = models.CharField(max_length=254, blank=True)
-    yslb = models.CharField(max_length=254, blank=True)
+    #yslb = models.CharField(max_length=254, blank=True)
     area_ha = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
     perim_km = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
     longitude = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
     latitude = models.DecimalField(max_digits=19, decimal_places=11, blank=True, null=True)
     objects = models.GeoManager()
+
+    class Meta:
+        managed=False
 
 
 class BurnProgramLink(models.Model):
