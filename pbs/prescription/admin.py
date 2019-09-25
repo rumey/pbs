@@ -97,7 +97,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
     list_filter = (("region",RelatedFieldListFilter), ("district",RelatedFieldListFilter), ("financial_year",StringValuesFieldListFilter),
                    ("contentious",BooleanFieldListFilter), ("aircraft_burn",BooleanFieldListFilter),
                    ("priority",IntChoicesFieldListFilter), ("planning_status",IntChoicesFieldListFilter), ("endorsement_status",IntChoicesFieldListFilter),
-                   ("approval_status",IntChoicesFieldListFilter), ("ignition_status",IntChoicesFieldListFilter), ("status",IntChoicesFieldListFilter), 
+                   ("approval_status",IntChoicesFieldListFilter), ("ignition_status",IntChoicesFieldListFilter), ("status",IntChoicesFieldListFilter),
                    ("contingencies_migrated",BooleanFieldListFilter),("non_calm_tenure",BooleanFieldListFilter),("non_calm_tenure_approved",CrossTenureApprovedListFilter))
     list_display = ("burn_id", "name", "region", "district",
                     "financial_year", "contentious", "aircraft_burn",
@@ -1453,6 +1453,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                         'ffsend',
                         'upload',
                         '--quiet',
+                        '--incognito',
                         '--host', settings.SEND_URL,
                         '--download-limit', str(settings.SEND_DOWNLOAD_LIMIT),
                         '--name', downloadname,
