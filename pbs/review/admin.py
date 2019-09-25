@@ -1513,13 +1513,11 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         logger.info("Starting PDF rendering process ...")
         cmd = ['latexmk', '-f', '-silent', '-pdf', '-outdir={}'.format(directory), texpath]
-        #cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
         logger.info("Running: {0}".format(" ".join(cmd)))
         subprocess.call(cmd)
 
         logger.info("Cleaning up ...")
-        cmd = ['latexmk', '-c', '-outdir={}'.format(texpath)]
-        #cmd = ['latexmk', '-cd', '-c', directory + texname]
+        cmd = ['latexmk', '-c', '-outdir={}'.format(directory),texpath]
         logger.info("Running: {0}".format(" ".join(cmd)))
         subprocess.call(cmd)
 
@@ -1996,22 +1994,23 @@ class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
         except Exception as e:
             import traceback
             err_msg = u"PDF tex template render failed (might be missing attachments):"
-            logger.debug(err_msg + "\n{}".format(e))
+            logger.error(err_msg + "\n{}".format(e))
 
             error_response.write(err_msg + "\n\n{0}\n\n{1}".format(e,traceback.format_exc()))
             return error_response
 
-        with open(directory + texname, "w") as f:
+        texpath = os.path.join(directory, texname)
+        with open(texpath, "w") as f:
             f.write(output.encode('utf-8'))
-            logger.debug("Writing to {}".format(directory + texname))
+            logger.debug("Writing to {}".format(texpath))
 
         logger.debug("Starting PDF rendering process ...")
-        cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
+        cmd = ['latexmk', '-f', '-silent', '-pdf', '-outdir={}'.format(directory), texpath]
         logger.debug("Running: {0}".format(" ".join(cmd)))
         subprocess.call(cmd)
 
         logger.debug("Cleaning up ...")
-        cmd = ['latexmk', '-cd', '-c', directory + texname]
+        cmd = ['latexmk', '-c', '-outdir={}'.format(directory),texpath]
         logger.debug("Running: {0}".format(" ".join(cmd)))
         subprocess.call(cmd)
 
