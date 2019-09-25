@@ -1433,7 +1433,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
 
                 logger.info("Starting PDF rendering process ...")
                 cmd = ['latexmk', '-f', '-silent', '-pdf', '-outdir={}'.format(directory), texpath]
-                #cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
                 logger.info("Running: {0}".format(" ".join(cmd)))
                 subprocess.call(cmd)
 
@@ -1468,6 +1467,13 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                         downloadname, file_url, filesize, settings.SEND_DOWNLOAD_LIMIT)
                     send_mail(subject, message, email_from, [request.user.email])
                     url = request.META.get('HTTP_REFERER')  # redirect back to the current URL
+
+
+                    logger.info("Cleaning up ...")
+                    cmd = ['latexmk', '-c', '-outdir={}'.format(directory),texpath]
+                    logger.info("Running: {0}".format(" ".join(cmd)))
+                    subprocess.call(cmd)
+
                     logger.info("__________________________ END _____________________________")
                     resp = HttpResponseRedirect(url)
                     resp.set_cookie('fileDownloadToken', token)
@@ -1515,7 +1521,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             file_url = items[([items.index(i) for i in items if 'Location' in i]).pop()].split(': ')[1]
 
             logger.info("Cleaning up ...")
-            cmd = ['latexmk', '-cd', '-c', texname]
+            cmd = ['latexmk', '-c', '-outdir={}'.format(os.path.split(texname)[0]),texname]
             logger.info("Running: {0}".format(" ".join(cmd)))
             subprocess.call(cmd)
 
