@@ -1396,6 +1396,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
     export_to_csv.short_description = ugettext_lazy("Export to CSV")
 
     def pdflatex(self, request):
+        logger = logging.getLogger('pdf_debugging')
+        logger.info("_________________________ START ____________________________")
+        logger.info("Starting a PDF output: {}".format(request.get_full_path()))
+
         if request.GET.has_key('date'):
             report_date = datetime.strptime(request.GET.get('date'), '%Y-%m-%d').date()
         else:
@@ -1410,7 +1414,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             region = None
             region_name = "Statewide"
 
-
         planned_burns = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268A, acknowledgements__acknow_type__in=['SDO_A']).exclude(prescription__isnull=True)
         fireload = prescribed_burns.filter(form_name=PrescribedBurn.FORM_268B, acknowledgements__acknow_type__in=['SDO_B'])
 
@@ -1421,7 +1424,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
             acknowledgements = Acknowledgement.objects.filter(burn__in=burns, acknow_type=acknow_type).distinct()
             return ', '.join(set([i.user.get_full_name() for i in acknowledgements]))
 
-        acknow_records ={
+        acknow_records = {
             'srm_A': acknow(planned_burns_rdo, 'SRM_A'),
             'sdo_A': acknow(planned_burns, 'SDO_A'),
             'srm_B': acknow(fireload_rdo, 'SRM_B'),
@@ -1430,8 +1433,6 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         obj = Prescription.objects.get(id=620)
         template = request.GET.get("template", "pfp")
         response = HttpResponse(content_type='application/pdf')
-        #texname = template + ".tex"
-        #filename = template + ".pdf"
         texname = template + "_" + request.user.username + ".tex"
         filename = template + "_" + request.user.username + ".pdf"
         now = timezone.localtime(timezone.now())
@@ -1488,10 +1489,10 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         directory = os.path.join(settings.MEDIA_ROOT, 'daily-burn-program' + os.sep)
         if not os.path.exists(directory):
-            logger.debug("Making a new directory: {}".format(directory))
+            logger.info("Making a new directory: {}".format(directory))
             os.makedirs(directory)
 
-        logger.debug('Starting  render_to_string step')
+        logger.info('Starting render_to_string step')
         err_msg = None
         try:
             output = render_to_string(
@@ -1500,28 +1501,31 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         except Exception as e:
             import traceback
             err_msg = u"PDF tex template render failed (might be missing attachments):"
-            logger.debug(err_msg + "\n{}".format(e))
+            logger.error(err_msg + "\n{}".format(e))
 
             error_response.write(err_msg + "\n\n{0}\n\n{1}".format(e,traceback.format_exc()))
             return error_response
 
-        with open(directory + texname, "w") as f:
+        texpath = os.path.join(directory, texname)
+        with open(texpath, "w") as f:
             f.write(output.encode('utf-8'))
-            logger.debug("Writing to {}".format(directory + texname))
+            logger.info("Writing to {}".format(directory + texname))
 
-        logger.debug("Starting PDF rendering process ...")
-        cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
-        logger.debug("Running: {0}".format(" ".join(cmd)))
+        logger.info("Starting PDF rendering process ...")
+        cmd = ['latexmk', '-f', '-silent', '-pdf', '-outdir={}'.format(directory), texpath]
+        #cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
+        logger.info("Running: {0}".format(" ".join(cmd)))
         subprocess.call(cmd)
 
-        logger.debug("Cleaning up ...")
-        cmd = ['latexmk', '-cd', '-c', directory + texname]
-        logger.debug("Running: {0}".format(" ".join(cmd)))
+        logger.info("Cleaning up ...")
+        cmd = ['latexmk', '-c', '-outdir={}'.format(texpath)]
+        #cmd = ['latexmk', '-cd', '-c', directory + texname]
+        logger.info("Running: {0}".format(" ".join(cmd)))
         subprocess.call(cmd)
 
-        logger.debug("Reading PDF output from {}".format(filename))
+        logger.info("Reading PDF output from {}".format(filename))
         response.write(open(directory + filename).read())
-        logger.debug("Finally: returning PDF response.")
+        logger.info("Finally: returning PDF response.")
         return response
 
 
@@ -1541,7 +1545,6 @@ class AircraftBurnAdmin(DetailAdmin, BaseAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         if request.GET.has_key('form'):
-            #import ipdb; ipdb.set_trace()
             if request.REQUEST.get('form')=='add_aircraft_burn':
                 return AircraftBurnForm
             if request.REQUEST.get('form')=='edit_aircraft_burn':
