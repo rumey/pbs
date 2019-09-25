@@ -281,11 +281,12 @@ select, button{
       <th rowspan="2">Burn ID <i class="icon-sort"></i></th>
       <th rowspan="2">Name <i class="icon-sort"></i></th>
       <th rowspan="2"><div class="text-left">Location <i class="icon-sort"></i></div></th>
-      <th nowrap rowspan="2"><div class="text-center">Today's treatment <i class="icon-sort"></i><br>area/km</div></th>
+      <th nowrap rowspan="2"><div class="text-center">Today's <br>Treatment <i class="icon-sort"></i><br>area/km</div></th>
       <th nowrap rowspan="2"><div class="text-center">Est Start <i class="icon-sort"></i><br>WST</div></th>
       <th nowrap colspan="3"><div class="text-center">Approval Status</div></th>
-      <th nowrap rowspan="2"><div class="text-center">SDO Special  <i class="icon-sort"></i><br>Conditions</div></th>
-      <th></th>
+      <th nowrap rowspan="2"><div class="text-center">SDO <br>Special  <i class="icon-sort"></i><br>Conditions</div></th>
+      <th rowspan="2"></th>
+      <th rowspan="2"></th>
     </tr>
     <tr>
         <th nowrap><div class="text-center" data-toggle="tooltip" title="District Nomination">District <i class="icon-sort"></i><br>Submit</div></th>
@@ -309,12 +310,16 @@ select, button{
       <td>{% if qs.srm_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.srm_a_record  }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td>{% if qs.sdo_a_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.sdo_a_record  }}"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
       <td >{% if qs.has_conditions %}<div class="text-center" data-toggle="tooltip" title="Click on row to open / close additional details"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
-      <td><a data-toggle="tooltip" title="Edit" id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a></td>
-      <td><a data-toggle="tooltip" title="Delete" id="delete-plannedburn" href="{% url 'admin:bulk_delete' %}?object_ids={{qs.id}}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a></td>
+      <td>
+        <a data-toggle="tooltip" title="Edit" id="edit-plannedburn" href="{% url 'admin:review_prescribedburn_change' qs.id %}?form=edit_burn" class="btn btn-mini alert-error"><i class="icon-edit"></i></a>
+      </td>
+      <td>
+        <a data-toggle="tooltip" title="Delete" id="delete-plannedburn" href="{% url 'admin:bulk_delete' %}?object_ids={{qs.id}}" class="btn btn-mini alert-error"><i class="icon-trash"></i></a>
+      </td>
     </tr>
     <tr class="myCollapse row-details expand-child" id="{{qs.id}}">
 
-      <td colspan="10">
+      <td colspan="12">
           <table class="table table-bordered table-striped table-condensed">
             <tbody>
               <tr>

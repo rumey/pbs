@@ -170,7 +170,7 @@
         <tr>
             <th>Non-CALM Act Tenure</th>
             <td colspan="3" >
-                {{form.form.non_calm_tenure}}
+                {{form.form.non_calm_tenure}}<span id="id_non_calm_tenure_approved_container" style="padding-left:100px">{{form.form.non_calm_tenure_approved}} Cross Tenure approved</span>
                 <div id="id_non_calm_tenure_body">
                     <div>
                         <span style="font-weight:bold">Non-CALM Act tenure included *</span>
@@ -219,13 +219,15 @@
                 <script type="text/javascript">
                     function check_non_calm_tenure() {
                         if (document.getElementById("id_non_calm_tenure").value === "2") {
+                            $("#id_non_calm_tenure_approved_container").show()
                             $("#id_non_calm_tenure_body").show()
-                            $.each(["#id_non_calm_tenure_included","#id_non_calm_tenure_value","#id_non_calm_tenure_complete","#id_non_calm_tenure_risks"],function(index,id){
+                            $.each(["#id_non_calm_tenure_included","#id_non_calm_tenure_value","input[name='non_calm_tenure_complete']","#id_non_calm_tenure_risks"],function(index,id){
                                 $(id).prop('disabled',false)
                             })
                         } else {
+                            $("#id_non_calm_tenure_approved_container").hide()
                             $("#id_non_calm_tenure_body").hide()
-                            $.each(["#id_non_calm_tenure_included","#id_non_calm_tenure_value","#id_non_calm_tenure_complete","#id_non_calm_tenure_risks"],function(index,id){
+                            $.each(["#id_non_calm_tenure_included","#id_non_calm_tenure_value","input[name='non_calm_tenure_complete']","#id_non_calm_tenure_risks"],function(index,id){
                                 $(id).prop('disabled',true)
                             })
                         }
@@ -373,8 +375,9 @@
         <tr>
             <th>Non-CALM Act Tenure</th>
             <td colspan="3" >
-                {{ current.non_calm_tenure | yesno:"Yes,No,Unknown" }}
+                {{ current.non_calm_tenure | yesno:"Yes,No,--------" }}
                 {% if current.non_calm_tenure %}
+                <span style="padding-left:100px"><span style="font-weight:bold">Cross Tenure Approved</span> {{ current.non_calm_tenure_approved | yesno:"Yes,No,No" }}</span>
                 <br><br><span style="font-weight:bold"> Non-CALM Act tenure included * </span>
                 <div class="freetext">{{current.non_calm_tenure_included}}</div>
                 <br><span style="font-weight:bold"> Public value in burn * </span>
@@ -556,6 +559,11 @@ var ajaxPost = function(evt) {
         } else {
             $('div#id_pageerrors').addClass('alert alert-success').text(
                 ' ' + data.message).prepend($('<i>').addClass('icon-ok'));
+
+            //if not cross tenure, reset corss_tenure_approved to False
+            if (document.getElementById("id_non_calm_tenure").value !== "2") {
+                $("#id_non_calm_tenure_approved").prop("checked",false)
+            }
         };
         $( "#id_description"  ).text( data.description );
         viewPort.update();

@@ -290,9 +290,10 @@
                   <li{% if request.get_full_path == actions %} class="active"{% endif %}><a href="{{ actions }}">B1 - Plan Actions</a></li>
                   <li{% if actions|add:"?pre_burn=true" in request.get_full_path %} class="active"{% endif %}><a href="{{ actions }}?pre_burn=true">B1 - Pre-burn actions</a></li>
                   <li{% if actions|add:"?day_of_burn=true" in request.get_full_path %} class="active"{% endif %}><a href="{{ actions }}?day_of_burn=true">B2 - Day of burn actions</a></li>
-                  <li{% if request.path == sectionb3_roads %} class="active"{% endif %}><a href="{{ sectionb3_roads }}">B3 - Roads</a></li>
                   <li{% if request.path == sectionb3_trails %} class="active"{% endif %}><a href="{{ sectionb3_trails }}">B3 - Tracks and Trails</a></li>
                   <li{% if request.path == sectionb3_inspection %} class="active"{% endif %}><a href="{{ sectionb3_inspection }}">B3 - Sign Inspection & Surveillance</a></li>
+                  <li{% if request.path == sectionb3_roads  %} class="active"{% endif %}><a href="{{ sectionb3_roads }}">B4 - Roads</a></li>
+                  <li{% if request.path == sectionb3_roads  %} class="active"{% endif %}><a href="{{ sectionb3_roads }}">B4 - Traffic Control Diagrams</a></li>
                   <li{% if request.path == burning_prescription %} class="active"{% endif %}><a href="{{ burning_prescription }}">B5 - Burning Prescription</a></li>
                   <li{% if request.path == edging_plan %} class="active"{% endif %}><a href="{{ edging_plan }}">B5 - Edging Plan</a></li>
                   <li{% if request.path == lighting_sequence%} class="active"{% endif %}><a href="{{ lighting_sequence }}">B5 - Lighting Sequence</a></li>

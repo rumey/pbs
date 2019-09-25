@@ -6,6 +6,7 @@ import subprocess
 import json
 import time
 import unicodecsv
+import humanize
 
 from functools import update_wrapper, partial
 from dateutil import tz
@@ -47,7 +48,7 @@ from pbs.prescription.forms import (
     PrescriptionPriorityForm, BriefingChecklistForm,
     FundingAllocationInlineFormSet)
 from pbs.prescription.models import (
-    Season, Prescription, RegionalObjective, Region, FundingAllocation,EndorsingRole)
+    Season, Prescription, RegionalObjective, Region, FundingAllocation, EndorsingRole)
 from django.forms.models import inlineformset_factory
 
 from pbs.report.models import Evaluation
@@ -59,6 +60,7 @@ from pbs.utils import get_deleted_objects, update_permissions, support_email
 from pbs.utils.widgets import CheckboxSelectMultiple
 
 from pbs import mutex, SemaphoreException
+from pbs.filters import BooleanFieldListFilter,CrossTenureApprovedListFilter,IntChoicesFieldListFilter,RelatedFieldListFilter,StringValuesFieldListFilter
 from django.core.mail import send_mail
 
 from pbs.prescription import fund_allocation
@@ -92,16 +94,17 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         'admin/prescription/prescription/remove_selected_confirmation.html')
 
     changelist_link_detail = True
-    list_filter = ("region", "district", "financial_year",
-                   "contentious", "aircraft_burn",
-                   "priority", "planning_status", "endorsement_status",
-                   "approval_status", "ignition_status", "status", "contingencies_migrated")
+    list_filter = (("region",RelatedFieldListFilter), ("district",RelatedFieldListFilter), ("financial_year",StringValuesFieldListFilter),
+                   ("contentious",BooleanFieldListFilter), ("aircraft_burn",BooleanFieldListFilter),
+                   ("priority",IntChoicesFieldListFilter), ("planning_status",IntChoicesFieldListFilter), ("endorsement_status",IntChoicesFieldListFilter),
+                   ("approval_status",IntChoicesFieldListFilter), ("ignition_status",IntChoicesFieldListFilter), ("status",IntChoicesFieldListFilter), 
+                   ("contingencies_migrated",BooleanFieldListFilter),("non_calm_tenure",BooleanFieldListFilter),("non_calm_tenure_approved",CrossTenureApprovedListFilter))
     list_display = ("burn_id", "name", "region", "district",
                     "financial_year", "contentious", "aircraft_burn",
                     "priority", "remote_sensing_priority",
                     "planning_status", "endorsement_status", "approval_status",
                     "approval_expiry", "ignition_status", "status",
-                    "prescribing_officer_name", "date_modified_local", "contingencies_migrated")
+                    "prescribing_officer_name", "date_modified_local", "contingencies_migrated","_non_calm_tenure","_non_calm_tenure_approved")
 
     actions = [delete_selected, 'export_to_csv', 'burn_summary_to_csv',
                delete_approval_endorsement, carry_over_burns, bulk_corporate_approve]
@@ -133,6 +136,31 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
     )
     filter_horizontal = ('tenures', 'fuel_types', 'shires',
                          'forecast_areas', 'endorsing_roles')
+
+    def _non_calm_tenure(self,obj):
+        if obj.non_calm_tenure:
+            return "Yes"
+        elif obj.non_calm_tenure is None:
+            return "------"
+        else:
+            return "No"
+    _non_calm_tenure.admin_order_field = 'non_calm_tenure'
+    _non_calm_tenure.short_description = 'Non CALM-Act Tenure'
+
+    def _non_calm_tenure_approved(self,obj):
+        if obj.non_calm_tenure:
+            if obj.non_calm_tenure_approved:
+                return "<i class='icon-ok text-success'></i>"
+            elif obj.non_calm_tenure_approved == False:
+                return "<i class='icon-minus text-warning'></i>"
+            else:
+                return ""
+        else:
+            return ""
+    _non_calm_tenure_approved.admin_order_field = 'non_calm_tenure_approved'
+    _non_calm_tenure_approved.short_description = 'Cross Tenure Approved?'
+
+
 
     def queryset(self, request):
         """
@@ -423,7 +451,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                     local_zone).strftime('%d/%m/%Y %H:%M:%S') if item.approval_status_modified else "",
                 approved_until,
                 item.rationale,
-                "Yes" if item.non_calm_tenure else ("Unknown" if item.non_calm_tenure is None else "No"),
+                "Yes" if item.non_calm_tenure else ("--------" if item.non_calm_tenure is None else "No"),
                 item.non_calm_tenure_included,item.non_calm_tenure_value,
                 ("Yes" if item.non_calm_tenure_complete == 1  else ( "No" if item.non_calm_tenure_complete == 2 else "Yes & No")) if item.non_calm_tenure else "",
                 item.non_calm_tenure_risks
@@ -477,7 +505,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                            # TODO: PBS-1551 # 'allocation',
                            'remote_sensing_priority', 'purposes',
                            ('area', 'perimeter', 'treatment_percentage'),
-                           ('non_calm_tenure','non_calm_tenure_included','non_calm_tenure_value','non_calm_tenure_complete','non_calm_tenure_risks')
+                           ('non_calm_tenure','non_calm_tenure_approved','non_calm_tenure_included','non_calm_tenure_value','non_calm_tenure_complete','non_calm_tenure_risks')
                           )
             }), ('Other Attributes', {
                 "fields": ('tenures', 'fuel_types', 'shires',
@@ -637,8 +665,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             if request.POST.get('_cancel'):
                 return HttpResponseRedirect(url)
             if request.POST.get('_save'):
-                if ((obj.planning_status == obj.PLANNING_DRAFT
-                     and obj.can_corporate_approve)):
+                if (obj.planning_status == obj.PLANNING_DRAFT and obj.can_corporate_approve):
                     obj.planning_status = obj.PLANNING_SUBMITTED
                     obj.planning_status_modified = timezone.now()
                     obj.save()
@@ -689,8 +716,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                           args=[str(obj.id)])
             if request.POST.get('_cancel'):
                 return HttpResponseRedirect(url)
-            if ((obj.endorsement_status == obj.ENDORSEMENT_DRAFT
-                 and obj.can_endorse)):
+            if obj.endorsement_status == obj.ENDORSEMENT_DRAFT and obj.can_endorse:
                 obj.endorsement_status = obj.ENDORSEMENT_SUBMITTED
                 obj.endorsement_status_modified = timezone.now()
                 obj.save()
@@ -731,8 +757,6 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                         logger.warning('Prescription {} - all endorsements input but "delete all" business logic triggered'.format(obj))
                         for i in obj.endorsement_set.all():
                             logger.info('Staff: {}, role: {}, endorsement: {}'.format(i.creator.get_full_name(), i.role, i.endorsed))
-                        #obj.endorsement_status = obj.ENDORSEMENT_DRAFT
-                        #obj.endorsement_set.all().delete()
                         msg = (" All endorsements have been reviewed but some "
                                "of them have not been endorsed on this ePFP.")
                     obj.save()
@@ -803,9 +827,10 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         class AdminEndorsingRoleForm(EndorsingRoleForm):
             formfield_callback = partial(
                 self.formfield_for_dbfield, request=request)
+
             def __init__(self, *args, **kwargs):
-                super(AdminEndorsingRoleForm,self).__init__(*args,**kwargs)
-                self.fields["endorsing_roles"].queryset = EndorsingRole.objects.filter(archived = False)
+                super(AdminEndorsingRoleForm, self).__init__(*args, **kwargs)
+                self.fields["endorsing_roles"].queryset = EndorsingRole.objects.filter(archived=False)
 
         obj = self.get_object(request, unquote(object_id))
 
@@ -860,19 +885,20 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
 
         regional_objective = obj.regional_objectives.get(pk=unquote(objective_id))
 
-        can_delete = request.user.has_perm('prescription.delete_regionalobjective') or request.user.is_superuser
+        can_delete = request.user.has_perm('prescription.change_prescription') or request.user.is_superuser
         if not can_delete:
             raise PermissionDenied
 
         if request.method == 'POST':
-            # The user has confirmed they wish to delete the regional objective
-            regional_objective.delete()
-            self.message_user(request, "Successfully deleted regional objective.")
+            # The user has confirmed they wish to delete the regional objective from ePFP
+            obj.regional_objectives.remove(regional_objective)
+            self.message_user(request, "Successfully removed regional objective from ePFP({}).".format(obj.burn_id))
             url = reverse('admin:risk_context_changelist', args=(obj.id,))
+
             return HttpResponseRedirect(url)
 
         context = {
-            'title': "Delete regional objective",
+            'title': "Remove regional objective from ePFP",
             'current': obj,
             'regional_objective': regional_objective,
             'can_delete': can_delete
@@ -1329,9 +1355,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                                 context, current_app=self.admin_site.name)
 
     def pdflatex(self, request, object_id):
-        logger = logging.getLogger('pbs')
-        logger.debug("_________________________ START ____________________________")
-        logger.debug("Starting a PDF output: {}".format(request.get_full_path()))
+        logger = logging.getLogger('pdf_debugging')
+        logger.info("_________________________ START ____________________________")
+        logger.info("Starting a PDF output: {}".format(request.get_full_path()))
         obj = self.get_object(request, unquote(object_id))
         template = request.GET.get("template", "pfp")
         response = HttpResponse(content_type='application/pdf')
@@ -1347,7 +1373,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         errortxt = downloadname.replace(".pdf", ".errors.txt.html")
         error_response['Content-Disposition'] = '{0}; filename="{1}"'.format("inline", errortxt)
         try:
-            with mutex('pbs'+str(object_id), 1, obj.burn_id, request.user):
+            with mutex('pbs' + str(object_id), 1, obj.burn_id, request.user):
                 subtitles = {
                     "parta": "Part A - Summary and Approval",
                     "partb": "Part B - Burn Implementation Plan",
@@ -1381,15 +1407,12 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 # directory should be a property of prescription model
                 # so caching machinering can put outdated flag in directory
                 # to trigger a cache repop next download
-                directory = os.path.join(settings.MEDIA_ROOT, 'prescriptions',
-                                         str(obj.season), obj.burn_id + os.sep)
+                directory = os.path.join(settings.MEDIA_ROOT, 'prescriptions', str(obj.season), obj.burn_id)
                 if not os.path.exists(directory):
-                    logger.debug("Making a new directory: {}".format(directory))
+                    logger.info("Making a new directory: {}".format(directory))
                     os.makedirs(directory)
-                # os.chdir(directory)
-                # logger.debug("Changing directory: {}".format(directory))
 
-                logger.debug('Starting  render_to_string step')
+                logger.info('Starting render_to_string step')
                 err_msg = None
                 try:
                     output = render_to_string(
@@ -1398,34 +1421,54 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 except Exception as e:
                     import traceback
                     err_msg = u"PDF tex template render failed (might be missing attachments):"
-                    logger.debug(err_msg + "\n{}".format(e))
-
-                    error_response.write(err_msg + "\n\n{0}\n\n{1}".format(e, traceback.format_exc()))
+                    logger.exception(err_msg + "\n{}".format(e))
+                    error_response.write(
+                        err_msg + "\n\n{0}\n\n{1}".format(e, traceback.format_exc()))
                     return error_response
 
-                with open(directory + texname, "w") as f:
+                texpath = os.path.join(directory, texname)
+                with open(texpath, "w") as f:
+                    logger.info('Writing to {}'.format(texpath))
                     f.write(output.encode('utf-8'))
-                    logger.debug("Writing to {}".format(directory + texname))
 
-                logger.debug("Starting PDF rendering process ...")
-                cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
-                logger.debug("Running: {0}".format(" ".join(cmd)))
+                logger.info("Starting PDF rendering process ...")
+                cmd = ['latexmk', '-f', '-silent', '-pdf', '-outdir={}'.format(directory), texpath]
+                #cmd = ['latexmk', '-cd', '-f', '-silent', '-pdf', directory + texname]
+                logger.info("Running: {0}".format(" ".join(cmd)))
                 subprocess.call(cmd)
 
                 # filesize
-                cmd = ['ls', '-s', '--block-size=M', directory + filename]
-                out = subprocess.check_output(cmd)
-                filesize = int(out.split('M ')[0])
-                if filesize >= 10:
+                pdfpath = os.path.join(directory, filename)
+                filesize = os.path.getsize(pdfpath)
+                if filesize / (1024 * 1024) >= 10:
                     token = '_token_10'
                 else:
                     token = '_token'
-                logger.info('Filesize in MB: {}'.format(filesize))
+                filesize = humanize.naturalsize(filesize)
+                logger.info('Filesize: {}'.format(filesize))
 
                 if settings.PDF_TO_FEXSRV:
-                    file_url = self.pdf_to_fexsvr(directory + filename, directory + texname, downloadname, request.user.email)
+                    #file_url = self.pdf_to_fexsvr(
+                    #    directory + filename, directory + texname, downloadname, request.user.email)
+                    cmd = [
+                        'ffsend',
+                        'upload',
+                        '--quiet',
+                        '--host', settings.SEND_URL,
+                        '--download-limit', str(settings.SEND_DOWNLOAD_LIMIT),
+                        '--name', downloadname,
+                        pdfpath
+                    ]
+                    logger.info('ffsend cmd: {}'.format(cmd))
+                    file_url = subprocess.check_output(cmd)
+                    logger.info('Sending email notification to user of download URL')
+                    subject = 'Prescribed Burn System: file {}'.format(downloadname)
+                    email_from = settings.FEX_MAIL
+                    message = 'Prescribed Burn System: file {} can be downloaded at:\n\t{}\nFile size: {}\nNo. of times file can be downloaded: {}'.format(
+                        downloadname, file_url, filesize, settings.SEND_DOWNLOAD_LIMIT)
+                    send_mail(subject, message, email_from, [request.user.email])
                     url = request.META.get('HTTP_REFERER')  # redirect back to the current URL
-                    logger.debug("__________________________ END _____________________________")
+                    logger.info("__________________________ END _____________________________")
                     resp = HttpResponseRedirect(url)
                     resp.set_cookie('fileDownloadToken', token)
                     resp.set_cookie('fileUrl', file_url)
@@ -1433,24 +1476,26 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 else:
                     # inline http response - pdf returned to web page
                     response.set_cookie('fileDownloadToken', token)
-                    logger.debug("__________________________ END _____________________________")
-                    return self.pdf_to_http(directory + filename, response, error_response)
+                    logger.info("__________________________ END _____________________________")
+                    return self.pdf_to_http(pdfpath, response, error_response)
 
         except SemaphoreException as e:
-            error_response.write("The PDF is locked. It is probably in the process of being created by another user. <br/><br/>{}".format(e))
+            error_response.write(
+                """The PDF is locked. It is probably in the process of being created by """
+                """another user. <br/><br/>{}""".format(e))
             return error_response
 
     def pdf_to_http(self, filename, response, error_response):
         # Did a PDF actually get generated?
         if not os.path.exists(filename):
-            logger.debug("No PDF appeared to be rendered, returning the contents of the log instead.")
+            logger.info("No PDF appeared to be rendered, returning the contents of the log instead.")
             filename = filename.replace(".pdf", ".log")
             error_response.write(open(filename).read())
             return error_response
 
-        logger.debug("Reading PDF output from {}".format(filename))
+        logger.info("Reading PDF output from {}".format(filename))
         response.write(open(filename).read())
-        logger.debug("Finally: returning PDF response.")
+        logger.info("Finally: returning PDF response.")
         return response
 
     def pdf_to_fexsvr(self, filename, texname, downloadname, email):
@@ -1459,8 +1504,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
         recipient = settings.FEX_MAIL
         if os.path.exists(filename):
             logger.info("Sending file to FEX server {} ...".format(filename))
-
-            cmd = ['fexsend', '-={}'.format(downloadname), filename, recipient]  # rename from filename to downloadname on fexsrv
+            # Rename from filename to downloadname on fexsrv
+            cmd = ['fexsend', '-={}'.format(downloadname), filename, recipient]
             logger.info("FEX cmd: {}".format(cmd))
 
             p = subprocess.check_output(cmd)
@@ -1469,9 +1514,9 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             logger.info('ITEMS: {}'.format(items))
             file_url = items[([items.index(i) for i in items if 'Location' in i]).pop()].split(': ')[1]
 
-            logger.debug("Cleaning up ...")
+            logger.info("Cleaning up ...")
             cmd = ['latexmk', '-cd', '-c', texname]
-            logger.debug("Running: {0}".format(" ".join(cmd)))
+            logger.info("Running: {0}".format(" ".join(cmd)))
             subprocess.call(cmd)
 
             # confirm file exists on FEX server
@@ -1953,7 +1998,6 @@ class SavePrescriptionMixin(object):
             assign_perm("%s.%s" % (opts.app_label, perm), group, obj)
 
 
-
 class ObjectiveAdmin(PrescriptionMixin, SavePrescriptionMixin,
                      BaseAdmin):
     list_display = ("objectives",)
@@ -1968,6 +2012,7 @@ class ObjectiveAdmin(PrescriptionMixin, SavePrescriptionMixin,
 class RegionalObjectiveAdmin(admin.ModelAdmin):
     list_display = ("region", "impact", "fma_names", "objectives",)
     list_filter = ("region", "impact")
+    actions = None
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """
@@ -1985,7 +2030,6 @@ class RegionalObjectiveAdmin(admin.ModelAdmin):
         obj.creator = request.user
         obj.modifier = request.user
         obj.save()
-
 
 class SuccessCriteriaAdmin(PrescriptionMixin, SavePrescriptionMixin,
                            BaseAdmin):
