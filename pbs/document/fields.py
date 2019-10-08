@@ -49,9 +49,8 @@ class ContentTypeRestrictedFileField(FileField):
                     subprocess.check_output(["convert", os.path.join(workdir, fname), os.path.join(workdir, pdfname)])
                     fname = pdfname
                 except subprocess.CalledProcessError:
-                    raise ValidationError("File {0} appears to be corrupt, "
-                                          "please check and try again." % (
-                                              fname))
+                    raise ValidationError("File {} appears to be corrupt, "
+                                          "please check and try again.".format(fname))
             try:
                 subprocess.check_output(["pdfinfo", "-box", os.path.join(workdir, fname)])
             except subprocess.CalledProcessError:
