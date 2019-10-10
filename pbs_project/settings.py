@@ -150,7 +150,7 @@ SOUTH_TESTS_MIGRATE = False
 SKIP_SOUTH_TESTS = True
 
 # Application version number
-APPLICATION_VERSION_NO = '1.6.4'
+APPLICATION_VERSION_NO = '1.6.5'
 
 # Application title
 SITE_TITLE = 'Prescribed Burn System'
