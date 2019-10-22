@@ -1456,6 +1456,7 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                         '--incognito',
                         '--host', settings.SEND_URL,
                         '--download-limit', str(settings.SEND_DOWNLOAD_LIMIT),
+                        '--force',
                         '--name', downloadname,
                         pdfpath
                     ]
