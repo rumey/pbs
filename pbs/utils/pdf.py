@@ -178,8 +178,10 @@ def download_pdf(request, prescription):
                     'ffsend',
                     'upload',
                     '--quiet',
+                    '--incognito',
                     '--host', settings.SEND_URL,
                     '--download-limit', str(settings.SEND_DOWNLOAD_LIMIT),
+                    '--force',
                     '--name', downloadname,
                     pdfresult.pdf_file
                 ]
