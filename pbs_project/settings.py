@@ -150,7 +150,7 @@ SOUTH_TESTS_MIGRATE = False
 SKIP_SOUTH_TESTS = True
 
 # Application version number
-APPLICATION_VERSION_NO = '1.4.9'
+APPLICATION_VERSION_NO = '1.6.6'
 
 # Application title
 SITE_TITLE = 'Prescribed Burn System'
@@ -310,7 +310,7 @@ try:
                         continue
                 if not d:
                     raise Exception("TCD_EXCLUSIONS({}) is invalid.".format(tcd_exclusion))
-            
+
             tcd_exclusion[0] = d
             #parse tcd_exclusion exclusion list
             tcd_exclusion[1] = [line.rstrip('\n') for line in open(tcd_exclusion[1]) if not line.rstrip('\n')==''] if tcd_exclusion[1] else []
