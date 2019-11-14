@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
@@ -23,6 +24,8 @@ from django.template.loader import render_to_string
 from django.conf import settings
 import datetime
 import subprocess
+
+from pbs.utils import pdflatex
 
 import logging
 logger = logging.getLogger('pbs')
@@ -196,6 +199,19 @@ def carry_over_burns(modeladmin, request, queryset):
     # The user confirmed they want to carry over the selected burns.
     if request.POST.get('post'):
         for prescription in queryset:
+            #archive prescription before carry over
+            now = timezone.localtime(timezone.now())
+            timestamp = now.strftime("%Y-%m-%dT%H%M%S")
+            archivename = "{0}_pre_carry_over_{1}".format(prescription.burn_id,timestamp)
+            with pdflatex(prescription,template="pfp",downloadname=archivename,embed=True,headers=True,title="Prescribed Fire Plan") as pdfresult:
+                if pdfresult.succeed:
+                    directory = os.path.join(settings.MEDIA_ROOT, 'snapshots', prescription.financial_year.replace("/","-"), prescription.burn_id)
+                    if not os.path.exists(directory):
+                        os.makedirs(directory)
+                    shutil.move(pdfresult.pdf_file,os.path.join(directory,archivename))
+                else:
+                    raise Exception(pdfresult.errormessage)
+
             prescription.clear_approvals()
             prescription.carried_over = True
             prescription.planning_status = prescription.PLANNING_DRAFT

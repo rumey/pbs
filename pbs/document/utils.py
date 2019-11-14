@@ -24,12 +24,15 @@ def get_dimensions(path, format='PDF', width=0, height=0, units='pt'):
             #]).split(",")[0].strip().split("x")
             # NOTE: The above command was not handling an execption by Imagemagick that returned the document dimension
             # plus an error message. The additional steps below are to handle this edge case as well as normal operation.
-            out = subprocess.check_output(["identify", "-format", "%Wx%H,", path]).strip()
-            out = out.split('\n')
-            first = out[-1].strip().split(',')[0]
-            width, height = first.split('x')
-            width = int(width)
-            height = int(height)
+            try:
+                out = subprocess.check_output(["identify", "-format", "%Wx%H,", path]).strip()
+                out = out.split('\n')
+                first = out[-1].strip().split(',')[0]
+                width, height = first.split('x')
+                width = int(width)
+                height = int(height)
+            except:
+                pass
         else:
             # Try to open the image and extract its properties
             try:

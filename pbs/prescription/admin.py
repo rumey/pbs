@@ -56,7 +56,7 @@ from pbs.report.forms import (
     SummaryCompletionStateForm, BurnImplementationStateForm, BurnClosureStateForm)
 
 from pbs.templatetags.pbs_markdown import markdownify
-from pbs.utils import get_deleted_objects, update_permissions, support_email
+from pbs.utils import get_deleted_objects, update_permissions, support_email,download_pdf
 from pbs.utils.widgets import CheckboxSelectMultiple
 
 from pbs import mutex, SemaphoreException
@@ -267,6 +267,10 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
             'regions': Region.objects.all(),
             'seasons': Season.SEASON_CHOICES
         }
+        #set the baseurl if it is not configured, 
+        #this is the home page and also is the most used url, so this is the best place to set the baseurl
+        if not settings.BASE_URL:
+            settings.BASE_URL = request.build_absolute_uri("/")[:-1]
 
         context.update(extra_context or {})
         response = super(PrescriptionAdmin, self).changelist_view(
@@ -1355,215 +1359,8 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                                 context, current_app=self.admin_site.name)
 
     def pdflatex(self, request, object_id):
-        logger = logging.getLogger('pdf_debugging')
-        logger.info("_________________________ START ____________________________")
-        logger.info("Starting a PDF output: {}".format(request.get_full_path()))
-        obj = self.get_object(request, unquote(object_id))
-        template = request.GET.get("template", "pfp")
-        response = HttpResponse(content_type='application/pdf')
-        texname = template + ".tex"
-        filename = template + ".pdf"
-        now = timezone.localtime(timezone.now())
-        timestamp = now.isoformat().rsplit(
-            ".")[0].replace(":", "")
-        downloadname = "{0}_{1}_{2}_{3}".format(
-            obj.season.replace('/', '-'), obj.burn_id, timestamp, filename).replace(
-                ' ', '_')
-        error_response = HttpResponse(content_type='text/html')
-        errortxt = downloadname.replace(".pdf", ".errors.txt.html")
-        error_response['Content-Disposition'] = '{0}; filename="{1}"'.format("inline", errortxt)
-        try:
-            with mutex('pbs' + str(object_id), 1, obj.burn_id, request.user):
-                subtitles = {
-                    "parta": "Part A - Summary and Approval",
-                    "partb": "Part B - Burn Implementation Plan",
-                    "partc": "Part C - Burn Closure and Evaluation",
-                    "partd": "Part D - Supporting Documents and Maps"
-                }
-                embed = False if request.GET.get("embed") == "false" else True
-                context = {
-                    'current': obj,
-                    'prescription': obj,
-                    'embed': embed,
-                    'headers': request.GET.get("headers", True),
-                    'title': request.GET.get("title", "Prescribed Fire Plan"),
-                    'subtitle': subtitles.get(template, ""),
-                    'timestamp': now,
-                    'downloadname': downloadname,
-                    'settings': settings,
-                    'baseurl': request.build_absolute_uri("/")[:-1]
-                }
-                if request.GET.get("download", False) is False:
-                    disposition = "inline"
-                else:
-                    disposition = "attachment"
-                response['Content-Disposition'] = (
-                    '{0}; filename="{1}"'.format(
-                        disposition, downloadname))
-
-                # used by JQuery to block page until download completes
-                # response.set_cookie('fileDownloadToken', '_token')
-
-                # directory should be a property of prescription model
-                # so caching machinering can put outdated flag in directory
-                # to trigger a cache repop next download
-                directory = os.path.join(settings.MEDIA_ROOT, 'prescriptions', str(obj.season), obj.burn_id)
-                if not os.path.exists(directory):
-                    logger.info("Making a new directory: {}".format(directory))
-                    os.makedirs(directory)
-
-                logger.info('Starting render_to_string step')
-                err_msg = None
-                try:
-                    output = render_to_string(
-                        "latex/" + template + ".tex", context,
-                        context_instance=RequestContext(request))
-                except Exception as e:
-                    import traceback
-                    err_msg = u"PDF tex template render failed (might be missing attachments):"
-                    logger.exception(err_msg + "\n{}".format(e))
-                    error_response.write(
-                        err_msg + "\n\n{0}\n\n{1}".format(e, traceback.format_exc()))
-                    return error_response
-
-                texpath = os.path.join(directory, texname)
-                with open(texpath, "w") as f:
-                    logger.info('Writing to {}'.format(texpath))
-                    f.write(output.encode('utf-8'))
-
-                logger.info("Starting PDF rendering process ...")
-                cmd = ['latexmk', '-f', '-silent', '-pdf', '-outdir={}'.format(directory), texpath]
-                logger.info("Running: {0}".format(" ".join(cmd)))
-                subprocess.call(cmd)
-
-                # filesize
-                pdfpath = os.path.join(directory, filename)
-                filesize = os.path.getsize(pdfpath)
-                if filesize / (1024 * 1024) >= 10:
-                    token = '_token_10'
-                else:
-                    token = '_token'
-                filesize = humanize.naturalsize(filesize)
-                logger.info('Filesize: {}'.format(filesize))
-
-                if settings.PDF_TO_FEXSRV:
-                    #file_url = self.pdf_to_fexsvr(
-                    #    directory + filename, directory + texname, downloadname, request.user.email)
-                    cmd = [
-                        'ffsend',
-                        'upload',
-                        '--quiet',
-                        '--host', settings.SEND_URL,
-                        '--download-limit', str(settings.SEND_DOWNLOAD_LIMIT),
-                        '--name', downloadname,
-                        pdfpath
-                    ]
-                    logger.info('ffsend cmd: {}'.format(cmd))
-                    file_url = subprocess.check_output(cmd)
-                    logger.info('Sending email notification to user of download URL')
-                    subject = 'Prescribed Burn System: file {}'.format(downloadname)
-                    email_from = settings.FEX_MAIL
-                    message = 'Prescribed Burn System: file {} can be downloaded at:\n\t{}\nFile size: {}\nNo. of times file can be downloaded: {}'.format(
-                        downloadname, file_url, filesize, settings.SEND_DOWNLOAD_LIMIT)
-                    send_mail(subject, message, email_from, [request.user.email])
-                    url = request.META.get('HTTP_REFERER')  # redirect back to the current URL
-
-
-                    logger.info("Cleaning up ...")
-                    cmd = ['latexmk', '-c', '-outdir={}'.format(directory),texpath]
-                    logger.info("Running: {0}".format(" ".join(cmd)))
-                    subprocess.call(cmd)
-
-                    logger.info("__________________________ END _____________________________")
-                    resp = HttpResponseRedirect(url)
-                    resp.set_cookie('fileDownloadToken', token)
-                    resp.set_cookie('fileUrl', file_url)
-                    return resp
-                else:
-                    # inline http response - pdf returned to web page
-                    response.set_cookie('fileDownloadToken', token)
-                    logger.info("__________________________ END _____________________________")
-                    return self.pdf_to_http(pdfpath, response, error_response)
-
-        except SemaphoreException as e:
-            error_response.write(
-                """The PDF is locked. It is probably in the process of being created by """
-                """another user. <br/><br/>{}""".format(e))
-            return error_response
-
-    def pdf_to_http(self, filename, response, error_response):
-        # Did a PDF actually get generated?
-        if not os.path.exists(filename):
-            logger.info("No PDF appeared to be rendered, returning the contents of the log instead.")
-            filename = filename.replace(".pdf", ".log")
-            error_response.write(open(filename).read())
-            return error_response
-
-        logger.info("Reading PDF output from {}".format(filename))
-        response.write(open(filename).read())
-        logger.info("Finally: returning PDF response.")
-        return response
-
-    def pdf_to_fexsvr(self, filename, texname, downloadname, email):
-        err_msg = None
-        fex_filename = downloadname
-        recipient = settings.FEX_MAIL
-        if os.path.exists(filename):
-            logger.info("Sending file to FEX server {} ...".format(filename))
-            # Rename from filename to downloadname on fexsrv
-            cmd = ['fexsend', '-={}'.format(downloadname), filename, recipient]
-            logger.info("FEX cmd: {}".format(cmd))
-
-            p = subprocess.check_output(cmd)
-            time.sleep(2)  # allow some time to upload to FEX Svr
-            items = p.split('\n')
-            logger.info('ITEMS: {}'.format(items))
-            file_url = items[([items.index(i) for i in items if 'Location' in i]).pop()].split(': ')[1]
-
-            logger.info("Cleaning up ...")
-            cmd = ['latexmk', '-c', '-outdir={}'.format(os.path.split(texname)[0]),texname]
-            logger.info("Running: {0}".format(" ".join(cmd)))
-            subprocess.call(cmd)
-
-            # confirm file exists on FEX server
-            cmd = ['fexsend', '-l', '|', 'grep', downloadname]
-            logger.info("Checking FEX server for file: {0}".format(" ".join(cmd)))
-            fex_tokens = subprocess.check_output(cmd)
-
-            filesize = None
-            expiry = None
-            for token in fex_tokens.split('#'):
-                if downloadname in token:
-                    logger.info('FEX_TOKENS: {}'.format(token))
-                    filesize = ' '.join(token.split(' [')[0].split(' ')[-2:])
-                    expiry = token.split('[')[1].split(']')[0].split(' ')[0]
-                    fex_filename = token.strip().split(' ')[-1].strip('\n')
-
-            if filesize == '0 MB':
-                # Needed because FEX rounds down to '0 MB'
-                cmd = ['ls', '-s', '--block-size=K', filename]
-                out = subprocess.check_output(cmd)
-                filesize = out.split('K ')[0] + ' KB'
-                logger.info('Filesize in KB: {}'.format(filesize))
-
-            subject = 'PBS: PDF File {}'.format(fex_filename)
-            email_from = recipient
-            email_to = [email]
-
-            logger.info("Sending Email notification to user (of location of FEX file) ...")
-            message = 'PDF File  "{0}",  can be downloaded from:\n\n\t{1}\n\nFile will be available for {2} days.\nFilesize: {3}'.format(
-                fex_filename, file_url, expiry.strip('d'), filesize)
-            send_mail(subject, message, email_from, email_to)
-            return file_url
-
-        else:
-            err_msg = "Error: PDF tex template render failed (might be missing attachments) {0}".format(fex_filename)
-            logger.error("FAILED: Sending Email notification to user ... \n" + err_msg)
-            message = 'FAILED: PDF File "{}" failed to create.\n\n{}'.format(fex_filename, err_msg + '(' + downloadname + ')')
-            email_from = recipient
-            email_to = [email]
-            send_mail(subject, message, email_from, email_to)
-
+        prescription = self.get_object(request, unquote(object_id))
+        return download_pdf(request,prescription)
 
 class PrescriptionMixin(object):
     prescription_filter_field = "prescription"

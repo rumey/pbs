@@ -10,6 +10,7 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 import os
 
+from .pdf import pdflatex,download_pdf
 
 def get_deleted_objects(objs, opts, user, admin_site, using):
     """
