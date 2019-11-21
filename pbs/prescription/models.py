@@ -1711,6 +1711,6 @@ def archive_prescription(sender,instance,created,**kwargs):
             directory = os.path.join(settings.MEDIA_ROOT, 'snapshots', instance.financial_year.replace("/","-"), instance.burn_id)
             if not os.path.exists(directory):
                 os.makedirs(directory)
-            shutil.move(pdfresult.pdf_file,os.path.join(directory,archivename))
+            shutil.move(pdfresult.pdf_file,os.path.join(directory,"{}.pdf".format(archivename)))
         else:
             raise Exception(pdfresult.errormessage)

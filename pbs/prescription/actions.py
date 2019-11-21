@@ -208,7 +208,7 @@ def carry_over_burns(modeladmin, request, queryset):
                     directory = os.path.join(settings.MEDIA_ROOT, 'snapshots', prescription.financial_year.replace("/","-"), prescription.burn_id)
                     if not os.path.exists(directory):
                         os.makedirs(directory)
-                    shutil.move(pdfresult.pdf_file,os.path.join(directory,archivename))
+                    shutil.move(pdfresult.pdf_file,os.path.join(directory,"{}.pdf".format(archivename)))
                 else:
                     raise Exception(pdfresult.errormessage)
 
