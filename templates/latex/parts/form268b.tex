@@ -24,7 +24,7 @@
 {% if pb.prescription %}
    \textbf{ {{ pb.short_str|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
-    {% if pb.active %}Yes{% else %}No{% endif %} & 
+    {% if pb.status == 1 %}Yes{% elif pb.status == 3 %}Monitored{% else %}No{% endif %} & 
     {% if pb.further_ignitions_req %}Yes{% else %}No{% endif %} & 
     {{ pb.area_str }} & 
     {{ pb.tenures_str }} & 
@@ -48,7 +48,7 @@
 {% if not pb.prescription %}
    \textbf{ {{ pb.short_str|texify|safe }}} & 
     {{ pb.name|texify|safe }} & 
-    {% if pb.active %}Yes{% else %}No{% endif %} & 
+    {% if pb.status == 1 %}Yes{% elif pb.status == 3 %}Monitored{% else %}No{% endif %} &
     {{ pb.area_str }} & 
     {{ pb.tenures_str }} & 
     {{ pb.external_assist_str }}\\

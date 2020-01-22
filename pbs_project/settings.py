@@ -108,6 +108,18 @@ WSGI_APPLICATION = 'pbs_project.wsgi.application'
 
 # Database
 DATABASES = {'default': dj_database_url.config()}
+"""DATABASES = {
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME':'pbs_dev_patrickm2',
+        'USER':'fire',
+        'PASSWORD':'MarchingH4ppiness',
+        'HOST':'kens-mate-001',
+        'PORT': ''
+     }
+    }
+"""    
+     
 CONN_MAX_AGE = None
 
 # Internationalization

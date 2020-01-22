@@ -1125,19 +1125,34 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
         return TemplateResponse(request, "admin/epfp_daily_burn_program.html", context)
 
     def active_records(self, dt, region=None):
-        qs_active = PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, form_name=PrescribedBurn.FORM_268B, date=dt).distinct('prescription', 'fire_id')
+        #qs_active = PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_ACTIVE, form_name=PrescribedBurn.FORM_268B, date=dt).distinct('prescription', 'fire_id')
+        qs_active = PrescribedBurn.objects.filter(status__in=[PrescribedBurn.BURN_ACTIVE, PrescribedBurn.BURN_MONITORED], form_name=PrescribedBurn.FORM_268B, date=dt).distinct('prescription', 'fire_id')
+        
+        active_burns_statewide = qs_active.exclude(prescription__isnull=True).exclude(status=PrescribedBurn.BURN_MONITORED)
+        active_fires_statewide = qs_active.exclude(fire_id__isnull=True).exclude(status=PrescribedBurn.BURN_MONITORED)
+        # Added by PWM 7-Jan-2020:
+        qs_monitored = PrescribedBurn.objects.filter(status=PrescribedBurn.BURN_MONITORED, form_name=PrescribedBurn.FORM_268B, date=dt).distinct('prescription', 'fire_id')
 
-        active_burns_statewide = qs_active.exclude(prescription__isnull=True)
-        active_fires_statewide = qs_active.exclude(fire_id__isnull=True)
-
+        monitored_burns_statewide = qs_monitored.exclude(prescription__isnull=True).exclude(status=PrescribedBurn.BURN_ACTIVE)
+        monitored_fires_statewide = qs_monitored.exclude(fire_id__isnull=True).exclude(status=PrescribedBurn.BURN_ACTIVE)
+        # End of added code; also added the 'monitored-... lines in records dict below
         records = {
             "active_burns_statewide": active_burns_statewide.count(),
-            "active_burns_non_statewide": qs_active.filter(region__in=[6, 7, 8]).exclude(prescription__isnull=True).count(),
+            "active_burns_non_statewide": active_burns_statewide.filter(region__in=[6, 7, 8]).count(),
             "active_fires_statewide": active_fires_statewide.count(),
-            "active_fires_non_statewide": qs_active.filter(region__in=[6, 7, 8]).exclude(fire_id__isnull=True).count(),
+            "active_fires_non_statewide": active_fires_statewide.filter(region__in=[6, 7, 8]).count(),
 
             "active_burns_region": active_burns_statewide.count() if not region else active_burns_statewide.filter(region=region).count(),
             "active_fires_region": active_fires_statewide.count() if not region else active_fires_statewide.filter(region=region).count(),
+
+            "monitored_burns_statewide": monitored_burns_statewide.count(),
+            "monitored_burns_non_statewide": monitored_burns_statewide.filter(region__in=[6, 7, 8]).count(),
+            "monitored_fires_statewide": monitored_fires_statewide.count(),
+            "monitored_fires_non_statewide": monitored_fires_statewide.filter(region__in=[6, 7, 8]).count(),
+
+            "monitored_burns_region": monitored_burns_statewide.count() if not region else active_burns_statewide.filter(region=region).count(),
+            "monitored_fires_region": monitored_fires_statewide.count() if not region else active_fires_statewide.filter(region=region).count(),
+
         }
         return records
 
@@ -1159,7 +1174,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
 
         tomorrow = dt + timedelta(days=1) # relative to dt
         logger.info('Copy 268b records from today {} to tomorrow {}'.format(dt, tomorrow))
-        objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status=PrescribedBurn.BURN_ACTIVE)]
+        objects = [obj for obj in PrescribedBurn.objects.filter(date=dt, status__in=[PrescribedBurn.BURN_ACTIVE, PrescribedBurn.BURN_MONITORED])]
         logger.info('Count of 268b records to process should be {}, minus any records that already have a 268b'.format(len(objects)))
         now = timezone.now()
         admin = User.objects.get(username='admin')

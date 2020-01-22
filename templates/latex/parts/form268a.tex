@@ -1,4 +1,4 @@
-  \fancyhead[R] {
+ \fancyhead[R] {
     {\bfseries FIRE268a} \break
     {\bfseries Fire Management Services Branch} \break
     \textsc{\Small
@@ -32,8 +32,34 @@
         \end{tabular}
 
     \end{minipage} 
+
 \end{tabular}
 \end{table}
+
+\begin{table}[h]
+\begin{tabular}{cc}
+    \begin{minipage}{.4\linewidth}
+        \raggedright
+        \begin{tabular} { | l | r | }
+        \hline
+        \textbf{No. of Monitored Burns} & {{ active_records.monitored_burns_region }} \\
+        \hline
+        \end{tabular}
+    \end{minipage} &
+
+    \begin{minipage}{.45\linewidth}
+        \raggedleft
+        \begin{tabular} { | l | r | }
+        \hline
+        \textbf{No. of Monitored Fires} & {{ active_records.monitored_fires_region }} \\
+        \hline
+        \end{tabular}
+
+    \end{minipage}
+
+\end{tabular}
+\end{table}
+
 
 The following Burns are proposed for ignition today subject to the approval of the State Duty Officer. The burns will be conducted in accordance with the approved burn plan.
 \footnotesize

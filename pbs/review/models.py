@@ -89,9 +89,11 @@ class Acknowledgement(models.Model):
 class PrescribedBurn(Audit):
     BURN_ACTIVE = 1
     BURN_INACTIVE = 2
+    BURN_MONITORED = 3
     BURN_CHOICES = (
         (BURN_ACTIVE, 'Yes'),
         (BURN_INACTIVE, 'No'),
+        (BURN_MONITORED, 'Monitored'),
     )
 
     IGNITION_STATUS_REQUIRED = 1
@@ -296,7 +298,8 @@ class PrescribedBurn(Audit):
 
     @property
     def active(self):
-        if self.status==self.BURN_ACTIVE:
+       # if self.status==self.BURN_ACTIVE:
+        if self.status==self.BURN_ACTIVE or self.status==self.BURN_MONITORED:
             return True
         elif self.status==self.BURN_INACTIVE:
             return False

@@ -74,20 +74,26 @@ select, button{
             <tr>
                 <th nowrap id="name">Date: {{ date }}</th>
                 <th nowrap id="active_burns">Active Burns</th>
+                <th nowrap id="monitored_burns">Monitored Burns</th>
                 <th nowrap id="active_fires">Active Bushfires</th>
+                <th nowrap id="monitored_fires">Monitored Bushfires</th>
             </tr>
         </thead>
 
         <tbody>
         <tr>
-            <th>Active Burns and Bushfires - Statewide</th>
+            <th>Active and Monitored Burns and Bushfires - Statewide</th>
             <td>{{active_records.active_burns_statewide}}</td>
+            <td>{{active_records.monitored_burns_statewide}}</td>
             <td>{{active_records.active_fires_statewide}}</td>
+            <td>{{active_records.monitored_fires_statewide}}</td>
         </tr>
         <tr>
-            <th>Active Burns and Bushfires - Southwest Bushfire Risk Zone</th>
+            <th>Active and Monitored Burns and Bushfires - Southwest Bushfire Risk Zone</th>
             <td>{{active_records.active_burns_non_statewide}}</td>
+            <td>{{active_records.monitored_burns_non_statewide}}</td>
             <td>{{active_records.active_fires_non_statewide}}</td>
+            <td>{{active_records.monitored_fires_non_statewide}}</td>
         </tr>
         </tbody>
 
@@ -128,6 +134,7 @@ select, button{
 
                 <label for="id_district" class="control-label">District</label>
                 {{ form.district }}
+
                 <button type="submit" class="btn btn-primary">Update</button>
 
                 <br>
@@ -483,7 +490,9 @@ select, button{
       <td><div data-toggle="tooltip" title="Click on row to open / close additional details">{{ qs.name }}</div></td>
       <td>{{ qs.fire_type }}</td>
 
-      <td>{% if qs.active %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% elif qs.active == None %}<span style="display:none">1</span><font color="red">Unset</font>{% else %}<div class="text-center"><span style="display:none">0</span><i class="icon-remove text-error"></i></div>{% endif %}</td>
+      <!--td>{% if qs.active %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% elif qs.active == None %}<span style="display:none">1</span><font color="red">Unset</font>{% else %}<div class="text-center"><span style="display:none">0</span><i class="icon-remove text-error"></i></div>{% endif %}</td-->
+      <td>{% if qs.status == 1 %}<div class="text-center"><span style="display:none">2</span>Active </div>{% elif qs.status == 3 %}<div class="text-center"><span style="display:none">2</span>Monitored</div>{% elif qs.status == 2 %}<div class="text-center"><span style="display:none">2</span>Not Active</div>{% endif %}</td>
+
       <td>{% if qs.further_ignitions_req %}<div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
 
       <td>{% if qs.user_b_record %}<div class="text-center" data-toggle="tooltip" title="{{ qs.user_b_record  }}"><div class="text-center"><span style="display:none">2</span><i class="icon-ok text-success"></i></div>{% else %}<span style="display:none">1</span>{% endif %}</td>
@@ -957,16 +966,13 @@ $('#update-button').click(function(){
         })
     }
 
-});
-
-$('[data-toggle="tooltip"]').tooltip();
-
-$('#id_approval_status').prop("multiple", "multiple");
-$('#_id_approval_status').multiselect();
-
-$('#id_approval_status').multiselect({
-    includeSelectAllOption: true,
-});
+}); 
+$('[data-toggle="tooltip"]').tooltip(); 
+$('#id_approval_status').prop("multiple", "multiple");  
+$('#_id_approval_status').multiselect();    
+$('#id_approval_status').multiselect({  
+        includeSelectAllOption: true,   
+}); 
 //$("#id_approval_status").multiselect('selectAll', false);
 //$("#id_approval_status").multiselect('refresh');
 
