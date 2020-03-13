@@ -8,20 +8,42 @@ Troubleshooting and support page on Confluence:
 
 # Installation
 
-Create a new virtualenv and install required libraries using `pip`:
-
-    pip install -r requirements.txt
+mkdir projects
+cd projects/
+git clone https://github.com/dbca-wa/pbs.git
+cd pbs/
+pwd
+    /home/patrickm/projects/pbs
+virtualenv venv
+. venv/bin/activate
+pip install -r requirements.txt 
 
 # Environment variables
+cp /var/www/pbs/.env . (or create .env file) - [This project uses `django-confy` to set environment variables (in a `.env` file)]
 
-This project uses `django-confy` to set environment
-variables (in a `.env` file). Required settings are as follows:
+	DEBUG=True
+	DATABASE_URL="postgis://db_user:db_passwd@localhost/db_name"
+	SECRET_KEY="my_secret_key"
+	KMI_DOWNLOAD_URL="http://kmi.dpaw.wa.gov.au/geoserver/public/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=public:todays_burns&outputFormat=application%2Fvnd.google-earth.kml%2Bxml&SRSNAME=EPSG:4283"
+	CSV_DOWNLOAD_URL="http://kmi.dpaw.wa.gov.au/geoserver/public/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=public:todays_burns&outputFormat=csv&SRSNAME=EPSG:4283"
+	SHP_DOWNLOAD_URL="http://kmi.dpaw.wa.gov.au/geoserver/public/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=public:todays_burns&outputFormat=SHAPE-ZIP&SRSNAME=EPSG:4283"
+	USER_SSO='SSO_user'
+	PASS_SSO='SSO_passwd'
+	ENV_TYPE="dev"
 
-    DJANGO_SETTINGS_MODULE="pbs_project.settings"
-    DEBUG=True
-    DATABASE_URL="postgis://USER:PASSWORD@HOST:PORT/DATABASE_NAME"
-    SECRET_KEY="ThisIsASecretKey"
-    LDAP_SERVER_URI="ldap://URL"
-    LDAP_ACCESS_DN="ldap-access-dn"
-    LDAP_ACCESS_PASSWORD="password"
-    LDAP_SEARCH_SCOPE="DC=searchscope"
+# Manual Django module fix
+vi /home/patrickm/projects/pbs/venv/local/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py (version issue in Django - requires manual fix)
+change line:
+	ver = geos_version().decode()
+to:
+	ver = geos_version().decode().split()[0]
+
+# The above DB can be created from existing, as follows:
+sudo -u postgres pg_dump -Fc -c pbs_dev > ../tmp/pbs_dev_07Jan2020.pgdump
+dropdb -U fire -h localhost pbs_dev_patrickm
+createdb -U fire -h localhost -O fire pbs_dev_patrickm
+sudo -u postgres pg_restore -v -d pbs_dev_patrickm ../tmp/pbs_dev_07Jan2020.pgdump 
+
+# To test:
+./manage.py runserver 0.0.0.0:8499
+

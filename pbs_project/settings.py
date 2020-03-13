@@ -108,6 +108,7 @@ WSGI_APPLICATION = 'pbs_project.wsgi.application'
 
 # Database
 DATABASES = {'default': dj_database_url.config()}
+     
 CONN_MAX_AGE = None
 
 # Internationalization
