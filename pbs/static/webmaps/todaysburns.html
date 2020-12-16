@@ -33,10 +33,11 @@
           map.addSource("mapbox-terrain-rgb", { "type": "raster-dem", "url": "mapbox://mapbox.terrain-rgb" });
           map.setTerrain({ 'source': 'mapbox-terrain-rgb', 'exaggeration': 2 });
           // wms layer docs https://docs.mapbox.com/mapbox-gl-js/example/wms/
-          map.addSource('raster', { 'type': 'raster', tileSize: 256, 'tiles': [mapconfig.rasterurl] });
-          map.addLayer({ 'id': 'todaysburns', 'type': 'raster', 'source': 'raster' });
+          map.addSource('wmts', { 'type': 'raster', tileSize: 256, 'tiles': [mapconfig.rasterurl] });
+          map.addLayer({ 'id': 'rasteroverlay', 'type': 'raster', 'source': 'wmts' });
           // poly layer with hover and popups
-          map.addSource('geojson', { 'type': 'geojson', 'generateId': true, 'data': mapconfig.geojsonurl });
+          map.addSource('geojson', { 'type': 'geojson', 'generateId': true, 'data': mapconfig.geojsonurl});
+          fetch(mapconfig.geojsonurl).then(response => response.json()).then(data => mapconfig.geojsondata = data);
           map.addLayer({
             'id': 'vectoroverlay', 'type': 'fill', 'source': 'geojson',
             'paint': {
