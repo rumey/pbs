@@ -23,7 +23,7 @@
         geojsonurl: 'https://kmi.dpaw.wa.gov.au/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&outputFormat=application/json&typeName=public:yesterdays_burns,public:todays_burns'
       };
       window.onload = (event) => {
-        var map = new mapboxgl.Map({ container: 'map', style: mapconfig.basemap, center: [120, -25], zoom: 4 }); // Western Australia
+        window.map = new mapboxgl.Map({ container: 'map', style: mapconfig.basemap, center: [120, -25], zoom: 4 }); // Western Australia
         map.addControl(new MapboxGeocoder({ accessToken: mapboxgl.accessToken, mapboxgl: mapboxgl, bbox: [105.7, -38.5, 130.5, -10.6] })); // WA bounding box
         map.addControl(new mapboxgl.GeolocateControl());
         map.addControl(new mapboxgl.FullscreenControl(), "top-left");
@@ -35,58 +35,61 @@
           // wms layer docs https://docs.mapbox.com/mapbox-gl-js/example/wms/
           map.addSource('wmts', { 'type': 'raster', tileSize: 256, 'tiles': [mapconfig.rasterurl] });
           map.addLayer({ 'id': 'rasteroverlay', 'type': 'raster', 'source': 'wmts' });
-          // poly layer with hover and popups
-          map.addSource('geojson', { 'type': 'geojson', 'generateId': true, 'data': mapconfig.geojsonurl});
-          fetch(mapconfig.geojsonurl).then(response => response.json()).then(data => mapconfig.geojsondata = data);
-          map.addLayer({
-            'id': 'vectoroverlay', 'type': 'fill', 'source': 'geojson',
-            'paint': {
-              'fill-color': '#627BC1',
-              'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0]
-            }
-          });
+          // delay loading json data after main initialisation event for speed
+          fetch(mapconfig.geojsonurl).then(response => response.json()).then(geojsondata => {
+            mapconfig.geojsondata = geojsondata;
+            // poly layer with hover and popups
+            map.addSource('geojson', { 'type': 'geojson', 'generateId': true, 'data': mapconfig.geojsondata });
+            map.addLayer({
+              'id': 'vectoroverlay', 'type': 'fill', 'source': 'geojson',
+              'paint': {
+                'fill-color': '#627BC1',
+                'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0]
+              }
+            });
 
-          // hover docs https://docs.mapbox.com/mapbox-gl-js/example/hover-styles/
-          var hoveredBurnId = null;
-          map.on('mousemove', 'vectoroverlay', function (e) {
-            if (e.features.length > 0) {
+            // hover docs https://docs.mapbox.com/mapbox-gl-js/example/hover-styles/
+            var hoveredBurnId = null;
+            map.on('mousemove', 'vectoroverlay', function (e) {
+              if (e.features.length > 0) {
+                if (hoveredBurnId) { map.setFeatureState({ source: 'geojson', id: hoveredBurnId }, { hover: false }); }
+                hoveredBurnId = e.features[0].id;
+                map.setFeatureState({ source: 'geojson', id: hoveredBurnId }, { hover: true });
+              }
+            });
+            map.on('mouseleave', 'vectoroverlay', function () {
               if (hoveredBurnId) { map.setFeatureState({ source: 'geojson', id: hoveredBurnId }, { hover: false }); }
-              hoveredBurnId = e.features[0].id;
-              map.setFeatureState({ source: 'geojson', id: hoveredBurnId }, { hover: true });
-            }
-          });
-          map.on('mouseleave', 'vectoroverlay', function () {
-            if (hoveredBurnId) { map.setFeatureState({ source: 'geojson', id: hoveredBurnId }, { hover: false }); }
-            hoveredBurnId = null;
-          });
+              hoveredBurnId = null;
+            });
 
-          // popup docs https://docs.mapbox.com/mapbox-gl-js/example/polygon-popup-on-click/
-          map.on('click', 'vectoroverlay', function (e) {
-            // titlecase popup contents
-            var popupHTML = '<table style="text-transform: capitalize;"><tbody>';
-            for (const [key, value] of Object.entries(e.features[0].properties)) {
-              // exclude some properties
-              if (key.match(/raw|forest/)) { continue }
-              // underscores to spaces
-              popupHTML += `<tr><td><b>${key.replaceAll('_', ' ')}:</b></td><td>${value}</td></tr>`;
-            }
-            popupHTML += "</tbody></table>";
-            // improve readability
-            popupHTML = popupHTML.replaceAll("burn target date", "updated on");
-            popupHTML = popupHTML.replaceAll("area today", "area today (ha)");
-            popupHTML = popupHTML.replaceAll("indicative area", "indicative area (ha)");
-            popupHTML = popupHTML.replaceAll("distance today", "distance today (km)");
-            new mapboxgl.Popup({ maxWidth: "none" }).setLngLat(e.lngLat).setHTML(popupHTML).addTo(map);
-          });
+            // popup docs https://docs.mapbox.com/mapbox-gl-js/example/polygon-popup-on-click/
+            map.on('click', 'vectoroverlay', function (e) {
+              // titlecase popup contents
+              var popupHTML = '<table style="text-transform: capitalize;"><tbody>';
+              for (const [key, value] of Object.entries(e.features[0].properties)) {
+                // exclude some properties
+                if (key.match(/raw|forest/)) { continue }
+                // underscores to spaces
+                popupHTML += `<tr><td><b>${key.replaceAll('_', ' ')}:</b></td><td>${value}</td></tr>`;
+              }
+              popupHTML += "</tbody></table>";
+              // improve readability
+              popupHTML = popupHTML.replaceAll("burn target date", "updated on");
+              popupHTML = popupHTML.replaceAll("area today", "area today (ha)");
+              popupHTML = popupHTML.replaceAll("indicative area", "indicative area (ha)");
+              popupHTML = popupHTML.replaceAll("distance today", "distance today (km)");
+              new mapboxgl.Popup({ maxWidth: "none" }).setLngLat(e.lngLat).setHTML(popupHTML).addTo(map);
+            });
 
-          // Change the cursor to a pointer when the mouse is over the burns vectors.
-          map.on('mouseenter', 'vectoroverlay', function () {
-            map.getCanvas().style.cursor = 'pointer';
-          });
+            // Change the cursor to a pointer when the mouse is over the burns vectors.
+            map.on('mouseenter', 'vectoroverlay', function () {
+              map.getCanvas().style.cursor = 'pointer';
+            });
 
-          // Change it back to a pointer when it leaves.
-          map.on('mouseleave', 'vectoroverlay', function () {
-            map.getCanvas().style.cursor = '';
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'vectoroverlay', function () {
+              map.getCanvas().style.cursor = '';
+            });
           });
         });
       };
