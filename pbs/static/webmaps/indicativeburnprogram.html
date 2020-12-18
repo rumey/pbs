@@ -34,8 +34,8 @@
           map.addSource("mapbox-terrain-rgb", { "type": "raster-dem", "url": "mapbox://mapbox.terrain-rgb" });
           map.setTerrain({ 'source': 'mapbox-terrain-rgb', 'exaggeration': 2 });
           // wms layer docs https://docs.mapbox.com/mapbox-gl-js/example/wms/
-          map.addSource('raster', { 'type': 'raster', tileSize: 256, 'tiles': [mapconfig.rasterurl] });
-          map.addLayer({ 'id': 'rasteroverlay', 'type': 'raster', 'source': 'raster' });
+          map.addSource('wmts', { 'type': 'raster', tileSize: 256, 'tiles': [mapconfig.rasterurl] });
+          map.addLayer({ 'id': 'rasteroverlay', 'type': 'raster', 'source': 'wmts' });
           // delay loading json data after main initialisation event for speed
           fetch(mapconfig.indicativeburnurl).then(response => response.json()).then(
             jsondata => {
