@@ -15,12 +15,13 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.5.1/mapbox-gl-geocoder.css"
       rel='stylesheet' />
     <div id='map' style='width: 100%; height: 70vh;'></div>
+    <div id='map-info'></div>
     <script>
       mapboxgl.accessToken = 'pk.eyJ1IjoiZHBhd2FzaSIsImEiOiJja2loeXp2cnUyMjdoMnhwZW82eDhucG84In0.KlcGctisTvc4_Oso2OmY8w';
       var mapconfig = {
         basemap: 'mapbox://styles/dpawasi/ckigwmxrx606g19msw0g882gj',
         rasterurl: 'https://kmi.dbca.wa.gov.au/geoserver/public/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&tiled=true&STYLES=public:latest_indicative_burn_program2.ShowPinpoint&LAYERS=public:latest_indicative_burn_program2&WIDTH=256&HEIGHT=256&SRS=EPSG:3857&BBOX={bbox-epsg-3857}',
-        geojsonurl: 'https://kmi.dpaw.wa.gov.au/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&outputFormat=application/json&typeName=public:latest_indicative_burn_program2'
+        indicativeburnurl: 'https://kmi.dpaw.wa.gov.au/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&outputFormat=application/json&typeName=public:latest_indicative_burn_program2'
       };
       window.onload = (event) => {
         var map = new mapboxgl.Map({ container: 'map', style: mapconfig.basemap, center: [120, -25], zoom: 4 }); // Western Australia
@@ -34,15 +35,22 @@
           map.setTerrain({ 'source': 'mapbox-terrain-rgb', 'exaggeration': 2 });
           // wms layer docs https://docs.mapbox.com/mapbox-gl-js/example/wms/
           map.addSource('raster', { 'type': 'raster', tileSize: 256, 'tiles': [mapconfig.rasterurl] });
-          map.addLayer({ 'id': 'todaysburns', 'type': 'raster', 'source': 'raster' });
-          // poly layer with hover and popups
-          map.addSource('geojson', { 'type': 'geojson', 'generateId': true, 'data': mapconfig.geojsonurl });
-          map.addLayer({
-            'id': 'vectoroverlay', 'type': 'fill', 'source': 'geojson',
-            'paint': {
-              'fill-color': '#627BC1',
-              'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0]
-            }
+          map.addLayer({ 'id': 'rasteroverlay', 'type': 'raster', 'source': 'raster' });
+          // delay loading json data after main initialisation event for speed
+          fetch(mapconfig.indicativeburnurl).then(response => response.json()).then(
+            jsondata => {
+              mapconfig.indicativeburndata = jsondata;
+              // describe counts using map-info div
+              document.getElementById('map-info').innerHTML = `Total Indicative Burning Program: ${mapconfig.indicativeburndata.totalFeatures}`;
+              // poly layer with hover and popups
+              map.addSource('geojson', { 'type': 'geojson', 'generateId': true, 'data': mapconfig.indicativeburndata });
+              map.addLayer({
+                'id': 'vectoroverlay', 'type': 'fill', 'source': 'geojson',
+                'paint': {
+                  'fill-color': '#627BC1',
+                  'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.3, 0]
+                }
+              });
           });
 
           // hover docs https://docs.mapbox.com/mapbox-gl-js/example/hover-styles/
