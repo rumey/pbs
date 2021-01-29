@@ -291,6 +291,7 @@ if not ENV_TYPE:
         ENV_TYPE = "TEST"
 ENV_TYPE = ENV_TYPE.upper() if ENV_TYPE else "TEST"
 
+BASE_URL = env("BASE_URL","")
 
 try:
     #TCD_EXCLUSIONS format is '[["go-live date or datetime","filename"],["","filename"]]'

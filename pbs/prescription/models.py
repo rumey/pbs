@@ -4,12 +4,16 @@ from datetime import timedelta
 from datetime import datetime
 from dateutil import tz
 from decimal import Decimal
+import os
+import shutil
+import logging
 
 from django.contrib.auth.models import User, Group
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Q, Max, Sum
-from django.db.models.signals import post_save, m2m_changed
+from django.db.models.signals import post_save, m2m_changed,pre_save
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.template.defaultfilters import truncatewords
@@ -22,8 +26,6 @@ from swingers import models
 from smart_selects.db_fields import ChainedForeignKey
 
 from pbs.risk.models import Register, Risk, Action, Complexity, Context, Treatment
-import os
-import logging
 
 logger = logging.getLogger("log." + __name__)
 
@@ -1643,3 +1645,72 @@ def update_briefing_checklist_save(sender, instance, created, **kwargs):
             bc.save()
         else:
             BriefingChecklist.objects.filter(**kwargs).delete()
+
+
+status_keys = ("status","ignition_status","approval_status","endorsement_status","planning_status")
+status_modified_map = {
+    "status":"status_modified",
+    "ignition_status":"ignition_status_modified",
+    "approval_status":"approval_status_modified",
+    "endorsement_status":"endorsement_status_modified",
+    "planning_status":"planning_status_modified"
+}
+
+
+status_display_map = {
+    "status":lambda s:next((c[1] for c in Prescription.STATUS_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
+    "ignition_status":lambda s:next((c[1] for c in Prescription.IGNITION_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
+    "approval_status":lambda s:next((c[1] for c in Prescription.APPROVAL_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
+    "endorsement_status":lambda s:next((c[1] for c in Prescription.ENDORSEMENT_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
+    "planning_status":lambda s:next((c[1] for c in Prescription.PLANNING_CHOICES if c[0] == s),str(s)).lower().replace(" ","-")
+}
+@receiver(pre_save,sender=Prescription)
+def prepare_archive_prescription(sender,instance,update_fields=None,**kwargs):
+    if instance.pk and (not update_fields or any(k in update_fields for k in  status_keys)):
+        try:
+            prescription = Prescription.objects.get(pk = instance.pk)
+            previous_status = {}
+            for key in status_keys:
+                previous_status[key] = getattr(prescription,key)
+            setattr(instance,"previous_status",previous_status)
+        except:
+            #ignore
+            pass
+
+@receiver(post_save,sender=Prescription)
+def archive_prescription(sender,instance,created,**kwargs):
+    from pbs.utils import pdflatex
+    if created:
+        return
+    elif not hasattr(instance,"previous_status"):
+        return
+    
+    changed_status = None
+    for key in status_keys:
+        if getattr(instance,key) != instance.previous_status[key]:
+            changed_status = key
+            break
+
+    if not changed_status:
+        return
+
+    changed_status_modified = status_modified_map[changed_status]
+    status = status_display_map[changed_status](getattr(instance,changed_status))
+    previous_status = status_display_map[changed_status](instance.previous_status[changed_status])
+
+    if changed_status_modified:
+        modified = timezone.localtime(getattr(instance,changed_status_modified))
+    else:
+        modified = timezone.localtime(timezone.now())
+
+    timestamp = modified.strftime("%Y-%m-%dT%H%M%S")
+    archivename = "{0}_{1}_{2}_{3}_{4}".format(instance.burn_id,changed_status,previous_status,status,timestamp)
+
+    with pdflatex(instance,template="pfp",downloadname=archivename,embed=True,headers=True,title="Prescribed Fire Plan") as pdfresult:
+        if pdfresult.succeed:
+            directory = os.path.join(settings.MEDIA_ROOT, 'snapshots', instance.financial_year.replace("/","-"), instance.burn_id)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            shutil.move(pdfresult.pdf_file,os.path.join(directory,"{}.pdf".format(archivename)))
+        else:
+            raise Exception(pdfresult.errormessage)
