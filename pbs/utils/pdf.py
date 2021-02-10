@@ -5,12 +5,15 @@ import shutil
 import humanize
 import subprocess
 import os
+import time
+import webbrowser
 
 from django.utils import timezone
 from django.conf import settings
 from django.http import HttpResponse,HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
+from django.contrib import messages
 
 logger = logging.getLogger('pdf')
 
@@ -79,6 +82,8 @@ class PdflatexResult(object):
 
 def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=True,title="Prescribed Fire Plan",baseurl=None):
     logger = logging.getLogger('pdf_debugging')
+    #for doc in prescription.document_set.all():
+     #  logger.info('85 prescription.document_set:' + str(doc.category) + ', ' + str(doc.tag) + ', ' + str(doc.custom_tag))
     logger.info("_________________________ START ____________________________")
     logger.info("Starting a PDF output for {}".format(prescription.burn_id))
     baseurl = baseurl or settings.BASE_URL
@@ -124,28 +129,34 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
             return result
 
         directory = tempfile.mkdtemp(prefix="pbs_pdflatex")
+        directory = os.path.join(settings.MEDIA_ROOT, 'test')
+        if not os.path.exists(directory):
+            os.mkdir(directory)
         result.directory = directory
-
         texpath = os.path.join(directory, texname)
         with open(texpath, "w") as f:
             logger.info('Writing to {}'.format(texpath))
             f.write(output.encode('utf-8'))
-
+        #cmd = ['cp', texpath, os.path.join(settings.MEDIA_ROOT, texname)]
+        #subprocess.call(cmd)
+        #logger.info('140 ' + texname + ' copied')
         result.template_file = texpath
 
         logger.info("Starting PDF rendering process ...")
         cmd = ['latexmk', '-f', '-silent', '-pdf', '-outdir={}'.format(directory), texpath]
         logger.info("Running: {0}".format(" ".join(cmd)))
         subprocess.call(cmd)
-
+        
         pdffile = os.path.join(directory, filename)
         if os.path.exists(pdffile):
             result.pdf_file = pdffile
-
+            
+            #cmd = ['cp', pdffile, os.path.join(settings.MEDIA_ROOT, filename)]
+            #subprocess.call(cmd)
+            #logger.info('153 ' + filename + ' copied')
         logfile = os.path.join(directory, logfilename)
         if os.path.exists(logfile):
             result.log_file = logfile
-
         return result
     except Exception as e:
         traceback.print_exc()
@@ -155,6 +166,8 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
         return result
 
 def download_pdf(request, prescription):
+    logger = logging.getLogger('pdf_debugging')
+    logger.info('157: download_pdf called')
     template = request.GET.get("template", "pfp")
     embed = False if request.GET.get("embed","true").lower() == "false" else True
     title = request.GET.get("title", "Prescribed Fire Plan"),
@@ -172,7 +185,6 @@ def download_pdf(request, prescription):
             else:
                 token = '_token'
             logger.info('Filesize: {}'.format(pdfresult.humanize_filesize))
-
             if settings.PDF_TO_FEXSRV:
                 cmd = [
                     'ffsend',

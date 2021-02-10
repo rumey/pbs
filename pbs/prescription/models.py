@@ -1275,6 +1275,19 @@ class Prescription(Audit):
 
     def drfms_group(self):
         return Group.objects.get(name='Director Fire and Regional Services')
+        
+    def financial_year_reformatted(self):
+        return self.financial_year.replace("/","-")
+    
+    def archived_pdf_directory(self):
+        directory = os.path.join(settings.MEDIA_ROOT, 'snapshots', self.financial_year_reformatted(), self.burn_id)
+        return directory
+    
+    def archived_pdfs(self):
+        #directory = os.path.join(settings.MEDIA_ROOT, 'snapshots', self.financial_year.replace("/","-"), self.burn_id)
+        directory = self.archived_pdf_directory()
+        archived_pdfs = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and f.endswith('.pdf')]
+        return archived_pdfs
 
     class Meta:
         verbose_name = 'Prescribed Fire Plan'
@@ -1659,7 +1672,8 @@ status_modified_map = {
 
 status_display_map = {
     "status":lambda s:next((c[1] for c in Prescription.STATUS_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
-    "ignition_status":lambda s:next((c[1] for c in Prescription.IGNITION_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
+    #"ignition_status":lambda s:next((c[1] for c in Prescription.IGNITION_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
+    "ignition_status":lambda s:next((c[1] for c in Prescription.IGNITION_STATUS_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
     "approval_status":lambda s:next((c[1] for c in Prescription.APPROVAL_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
     "endorsement_status":lambda s:next((c[1] for c in Prescription.ENDORSEMENT_CHOICES if c[0] == s),str(s)).lower().replace(" ","-"),
     "planning_status":lambda s:next((c[1] for c in Prescription.PLANNING_CHOICES if c[0] == s),str(s)).lower().replace(" ","-")
