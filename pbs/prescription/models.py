@@ -1278,16 +1278,28 @@ class Prescription(Audit):
         
     def financial_year_reformatted(self):
         return self.financial_year.replace("/","-")
+        
+    def financial_year_reformatted_2(self):
+        return self.financial_year.replace("/","_")
     
     def archived_pdf_directory(self):
         directory = os.path.join(settings.MEDIA_ROOT, 'snapshots', self.financial_year_reformatted(), self.burn_id)
         return directory
     
     def archived_pdfs(self):
-        #directory = os.path.join(settings.MEDIA_ROOT, 'snapshots', self.financial_year.replace("/","-"), self.burn_id)
         directory = self.archived_pdf_directory()
         archived_pdfs = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and f.endswith('.pdf')]
         return archived_pdfs
+
+    def uploaded_doc_directory(self):
+        directory = os.path.join(settings.MEDIA_ROOT, 'uploads', self.financial_year_reformatted_2())
+        return directory
+    
+    def uploaded_docs(self):
+        directory = self.uploaded_doc_directory()
+        uploaded_docs = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and self.burn_id in f]
+        return uploaded_docs
+        
 
     class Meta:
         verbose_name = 'Prescribed Fire Plan'

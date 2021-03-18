@@ -84,6 +84,7 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
     logger = logging.getLogger('pdf_debugging')
     #for doc in prescription.document_set.all():
      #  logger.info('85 prescription.document_set:' + str(doc.category) + ', ' + str(doc.tag) + ', ' + str(doc.custom_tag))
+        
     logger.info("_________________________ START ____________________________")
     logger.info("Starting a PDF output for {}".format(prescription.burn_id))
     baseurl = baseurl or settings.BASE_URL
@@ -117,7 +118,13 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
             'settings': settings,
             'baseurl': baseurl
         }
+         # Determine if this site is Dev/Test/UAT/Prod - if UAT or DEV then do not embed docs
+        hostenv = settings.ENV_TYPE
+        logger.info('ENV_TYPE: ' + hostenv)
+        if hostenv.lower() in ['dev', 'uat']:
+            context['embed'] = False
         logger.info('Starting render_to_string step')
+        
         err_msg = None
         try:
             output = render_to_string("latex/" + template + ".tex", context)
@@ -129,7 +136,6 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
             return result
 
         directory = tempfile.mkdtemp(prefix="pbs_pdflatex")
-        directory = os.path.join(settings.MEDIA_ROOT, 'test')
         if not os.path.exists(directory):
             os.mkdir(directory)
         result.directory = directory
@@ -137,9 +143,6 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
         with open(texpath, "w") as f:
             logger.info('Writing to {}'.format(texpath))
             f.write(output.encode('utf-8'))
-        #cmd = ['cp', texpath, os.path.join(settings.MEDIA_ROOT, texname)]
-        #subprocess.call(cmd)
-        #logger.info('140 ' + texname + ' copied')
         result.template_file = texpath
 
         logger.info("Starting PDF rendering process ...")
@@ -151,9 +154,6 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
         if os.path.exists(pdffile):
             result.pdf_file = pdffile
             
-            #cmd = ['cp', pdffile, os.path.join(settings.MEDIA_ROOT, filename)]
-            #subprocess.call(cmd)
-            #logger.info('153 ' + filename + ' copied')
         logfile = os.path.join(directory, logfilename)
         if os.path.exists(logfile):
             result.log_file = logfile
