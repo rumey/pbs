@@ -67,7 +67,7 @@
       <th>Burn ID</th>
       <th>Name</th>
       <th><div class="text-center">FMSB review</div></th>
-      <th><div class="text-center">DRFMS review</div></th>
+      <!--th><div class="text-center">DRFMS review</div></th-->
     </tr>
   </thead>
   <tbody>
@@ -87,7 +87,7 @@
         {% endfor %}
         </div>
       </td>
-      <td>
+      <!--td>
         <div class="text-center">
         {% for records in prescription.current_drfms_record %}
           {{ records.record }}
@@ -97,7 +97,7 @@
           <br>
         {% endfor %}
         </div>
-      </td>
+      </td-->
     </tr>
     <tr class="myCollapse row-details expand-child" id="{{prescription.id}}">
         <td colspan="3">

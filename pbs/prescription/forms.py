@@ -282,7 +282,8 @@ class EndorsingRoleForm(forms.ModelForm):
                 list(prescription.endorsing_roles.values_list("pk",
                                                               flat=True)) or
                 initial.get('endorsing_roles')
-            ) or []
+            #) or []
+            ) or [EndorsingRole.objects.get(name__iexact="Fire Management Services Branch")]
 
             maximum_risk = prescription.get_maximum_risk
             """

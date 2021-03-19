@@ -432,7 +432,7 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 if request.REQUEST.get('form_name') == 'add_burn':
                     # Display prescriptions that have a current approval and
                     #have been reviewed since last approval creation date
-                    presc_ids = [a.prescription.pk for a in Approval.objects.filter(valid_to__gte=date.today()) if a.prescription.current_fmsb_record.count() > 0 and a.prescription.current_drfms_record.count() > 0]
+                    presc_ids = [a.prescription.pk for a in Approval.objects.filter(valid_to__gte=date.today()) if a.prescription.current_fmsb_record.count() > 0]  #and a.prescription.current_drfms_record.count() > 0]
                     qs = Prescription.objects.filter(
                         pk__in=presc_ids,
                         planning_status=Prescription.PLANNING_APPROVED,

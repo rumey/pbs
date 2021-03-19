@@ -136,7 +136,7 @@
       {% if report == "approvals" %}
         <th><div class="text-center">District Manager</div></th>
         <th><div class="text-center">Regional Manager</div></th>
-        <th><div class="text-center">FMS Branch Manager</div></th>
+        <!--th><div class="text-center">FMS Branch Manager</div></th-->
       {% else %}
         <th>District Leader PVS</th>
         <th>Regional Leader PVS</th>
@@ -148,6 +148,7 @@
         <th>Regional Fire Coordinator</th>
         <th>District Manager</th>
         <th>Regional Manager</th>
+		<th>FMS Branch</th>
       {% endif %}
     </tr>
   </thead>
@@ -171,6 +172,7 @@
       <td>{% role_required prescription "Regional Fire Coordinator" %}</td>
       <td>{% role_required prescription "District Manager" %}</td>
       <td>{% role_required prescription "Regional Manager" %}</td>
+	  <td>{% role_required prescription "Fire Management Services Branch" %}</td>
       {% endif %}
     </tr>
     {% empty %}
