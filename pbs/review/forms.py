@@ -38,7 +38,7 @@ class PrescribedBurnForm(forms.ModelForm):
         self.fields['region'].required = True
         self.fields['prescription'].required = True
         self.fields['location'].required = True
-        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
+        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms SouthEast of CBD'})
 
         self.fields['planned_area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['planned_distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
@@ -181,7 +181,7 @@ class PrescribedBurnActiveForm(forms.ModelForm):
         self.fields['status'].required = True
 
         self.fields['location'].required = True
-        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 2 kms NorthEast of CBD'})
+        self.fields['location'].widget.attrs.update({'placeholder': 'eg. 3 kms NorthEast of CBD'})
 
         self.fields['area'].widget.attrs.update({'placeholder': 'Enter hectares to 1 dec place'})
         self.fields['distance'].widget.attrs.update({'placeholder': 'Enter kilometres to 1 dec place'})
