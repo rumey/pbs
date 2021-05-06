@@ -432,17 +432,18 @@ class PrescribedBurnAdmin(DetailAdmin, BaseAdmin):
                 if request.REQUEST.get('form_name') == 'add_burn':
                     # Display prescriptions that have a current approval and
                     #have been reviewed since last approval creation date
-                    presc_ids = [a.prescription.pk for a in Approval.objects.filter(valid_to__gte=date.today()) if a.prescription.current_fmsb_record.count() > 0 and a.prescription.current_drfms_record.count() > 0]
+                    presc_ids = [a.prescription.pk for a in Approval.objects.filter(valid_to__gte=date.today()) if a.prescription.current_fmsb_record.count() > 0]  #and a.prescription.current_drfms_record.count() > 0]
                     qs = Prescription.objects.filter(
                         pk__in=presc_ids,
                         planning_status=Prescription.PLANNING_APPROVED,
                         approval_status=Prescription.APPROVAL_APPROVED,
                         status=Prescription.STATUS_OPEN,
                         burnstate__review_type__in=['FMSB'],
-                        ignition_status__in=[Prescription.IGNITION_NOT_STARTED,Prescription.IGNITION_COMMENCED]).filter(
-                        burnstate__review_type__in=['DRFMS']).exclude(Q(non_calm_tenure=True) & ~Q(non_calm_tenure_approved=True)).distinct()
+                        ignition_status__in=[Prescription.IGNITION_NOT_STARTED,Prescription.IGNITION_COMMENCED]).exclude(Q(non_calm_tenure=True) & ~Q(non_calm_tenure_approved=True)).distinct()
+                        #ignition_status__in=[Prescription.IGNITION_NOT_STARTED,Prescription.IGNITION_COMMENCED]).filter(
+                        #burnstate__review_type__in=['DRFMS']).exclude(Q(non_calm_tenure=True) & ~Q(non_calm_tenure_approved=True)).distinct()
                 else:
-                    # Display all prescriptions that have had areaachievement records in past 12 months
+                    # Display all prescriptions that have had area achievement records in past 12 months
                     lastyear = date.today() + timedelta(days=-365)
                     presc_ids = list(set([a.prescription.pk for a in AreaAchievement.objects.filter(ignition__gte=lastyear)]))
                     qs = Prescription.objects.filter(pk__in=presc_ids).exclude(ignition_status=Prescription.IGNITION_NOT_STARTED).distinct()

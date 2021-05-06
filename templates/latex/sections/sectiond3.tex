@@ -16,15 +16,19 @@
 {% endif %}
 {% endfor %}
 \end{longtabu}
+
 {% if embed %}
 \clearpage
 {% for document in documents %}
-  {% if document %}
-    {% include "latex/pdf.tex" %}
-  {% endif %}
+	{% include "latex/pdf.tex" %}
 {% endfor %}
 \clearpage
+{% else %}
+\clearpage
+Not embedded
+\clearpage
 {% endif %}
+
 {% else %}
 No Documents Uploaded
 {% endif %}

@@ -18,6 +18,7 @@ from django.utils.safestring import mark_safe
 
 from pbs.prescription.models import Prescription, Season, FuelType
 from pbs.implementation.utils import field_range
+from pbs.document.utils import get_dimensions       #PWM PDF work
 
 trafficdiagram_storage = FileSystemStorage(
     location=os.path.join(settings.STATIC_ROOT, "pbs",
@@ -76,11 +77,15 @@ class TrafficControlDiagram(models.Model):
 
     @property
     def dimensions(self):
-        width, height = subprocess.check_output([
+        """width, height = subprocess.check_output([
             "identify", "-format", "%Wx%H,",
             self.document.path
         ]).split(",")[0].strip().split("x")
         return {"width": width, "height": height}
+        """
+        dimensions_info = get_dimensions(self.document.path)
+        logger.info(str( {"width": dimensions_info.width, "height": dimensions_info.height}))
+        return {"width": dimensions_info.width, "height": dimensions_info.height}
 
     @property
     def document(self):
