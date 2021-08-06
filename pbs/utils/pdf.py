@@ -81,9 +81,9 @@ class PdflatexResult(object):
         return self._humanize_filesize
 
 def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=True,title="Prescribed Fire Plan",baseurl=None):
+    #return PdflatexResult()   #DELETE AFTER TESTING
     logger = logging.getLogger('pdf_debugging')
     #for doc in prescription.document_set.all():
-     #  logger.info('85 prescription.document_set:' + str(doc.category) + ', ' + str(doc.tag) + ', ' + str(doc.custom_tag))
         
     logger.info("_________________________ START ____________________________")
     logger.info("Starting a PDF output for {}".format(prescription.burn_id))
@@ -99,6 +99,7 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
 
     directory = None
     result = PdflatexResult()
+    return PdflatexResult()   #DELETE AFTER TESTING
     try:
         subtitles = {
             "parta": "Part A - Summary and Approval",
@@ -123,7 +124,6 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
         logger.info('ENV_TYPE: ' + hostenv)
         if hostenv.lower() in ['dev', 'uat']:
             context['embed'] = False
-        logger.info('Starting render_to_string step')
         
         err_msg = None
         try:
@@ -131,7 +131,7 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
         except Exception as e:
             traceback.print_exc()
             err_msg = u"PDF tex template render failed (might be missing attachments)."
-            logger.exception("{0}\n{1}".format(err_msg,e))
+            #logger.exception("{0}\n{1}".format(err_msg,e))
             result.err_msg = "{0}\n\n{1}\n\n{2}".format(err_msg,e, traceback.format_exc())
             return result
 
@@ -161,7 +161,7 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
     except Exception as e:
         traceback.print_exc()
         err_msg = u"PDF generated failed."
-        logger.exception("{0}\n{1}".format(err_msg,e))
+        #logger.exception("{0}\n{1}".format(err_msg,e))
         result.err_msg = "{0}\n\n{1}\n\n{2}".format(err_msg,e, traceback.format_exc())
         return result
 
