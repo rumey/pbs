@@ -99,7 +99,6 @@ def pdflatex(prescription,template="pfp",downloadname=None,embed=True,headers=Tr
 
     directory = None
     result = PdflatexResult()
-    return PdflatexResult()   #DELETE AFTER TESTING
     try:
         subtitles = {
             "parta": "Part A - Summary and Approval",
