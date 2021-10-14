@@ -1725,7 +1725,7 @@ def archive_prescription(sender,instance,created,**kwargs):
     previous_status = status_display_map[changed_status](instance.previous_status[changed_status])
 
     if changed_status_modified:
-        modified = timezone.localtime(getattr(instance,changed_status_modified))
+            modified = timezone.localtime(getattr(instance,changed_status_modified))
     else:
         modified = timezone.localtime(timezone.now())
 
@@ -1739,4 +1739,5 @@ def archive_prescription(sender,instance,created,**kwargs):
                 os.makedirs(directory)
             shutil.move(pdfresult.pdf_file,os.path.join(directory,"{}.pdf".format(archivename)))
         else:
-            raise Exception(pdfresult.errormessage)
+            #raise Exception(pdfresult.errormessage)
+            print("PDF production failed but continuing with task")

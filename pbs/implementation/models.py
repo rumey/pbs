@@ -63,7 +63,7 @@ class TrafficControlDiagramManager(models.Manager):
         return self.get(name=name)
 
     def get_query_set(self):
-        qs = super(TrafficControlDiagramManager, self).get_query_set().order_by('display_order', 'name')
+        qs = super(TrafficControlDiagramManager, self).get_query_set().filter(display_order__gte=0).order_by('display_order', 'name')
         return qs
 
 @python_2_unicode_compatible
