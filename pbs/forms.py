@@ -295,7 +295,7 @@ class UserForm(forms.ModelForm):
                                           "for this user?)")
         instance = getattr(self, 'instance', None)
         if instance and instance.pk and not instance.profile.is_fpc_user():
-            self.fields['username'].widget.attrs['readonly'] = True
+            #self.fields['username'].widget.attrs['readonly'] = True
             self.fields['email'].widget.attrs['readonly'] = True
             self.fields['first_name'].widget.attrs['readonly'] = True
             self.fields['last_name'].widget.attrs['readonly'] = True

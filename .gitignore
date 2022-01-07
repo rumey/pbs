@@ -4,6 +4,7 @@ cronjobs
 *.py[cod]
 *.pyc
 __pycache__
+*.bak
 
 # Pycharm
 .idea
