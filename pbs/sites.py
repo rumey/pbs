@@ -79,12 +79,12 @@ forest_regions = ['Swan', 'South West', 'Warren']
 
 
 class UserAdmin(AuthUserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name',
+    list_display = ('email', 'first_name', 'last_name',
                     'is_active')
     actions = None
     form = UserForm
     fieldsets = (
-        (None, {'fields': ('username', 'email', ('first_name', 'last_name'),
+        (None, {'fields': ('email', ('first_name', 'last_name'),
                            'is_active', 'groups')}),
     )
     list_filter = ("is_active", "groups")
