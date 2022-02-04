@@ -7,6 +7,7 @@ ENV USER_SSO="Docker Build"
 ENV PASS_SSO="ThisIsNotReal"
 ENV EMAIL_HOST="localhost"
 ENV FROM_EMAIL="no-reply@dbca.wa.gov.au"
+ENV KMI_DOWNLOAD_URL="https://localhost/"
 
 RUN apt-get update \
   && apt-get upgrade -y \
