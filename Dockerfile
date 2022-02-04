@@ -2,6 +2,12 @@
 FROM dbcawa/ubuntu:18.04-latexmk as builder_base_pbs
 MAINTAINER asi@dbca.wa.gov.au
 ENV DEBIAN_FRONTEND=noninteractive
+ENV SECRET_KEY="ThisisNotRealKey"
+ENV USER_SSO="Docker Build"
+ENV PASS_SSO="ThisIsNotReal"
+ENV EMAIL_HOST="localhost"
+ENV FROM_EMAIL="no-reply@dbca.wa.gov.au"
+
 RUN apt-get update \
   && apt-get upgrade -y \
   && apt-get install -yq git mercurial gcc gdal-bin libsasl2-dev libpq-dev \
