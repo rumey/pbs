@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 
 import logging
 
-from django.db.models.functions import Length
+#from django.db.models.functions import Length
 
 logger = logging.getLogger(__name__)
 
