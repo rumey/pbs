@@ -20,6 +20,18 @@ class SSOLoginMiddleware(object):
             for key, value in attributemap.iteritems():
                 attributemap[key] = request.META[value]
 
+            # start -- username update to fix issues in SSS
+            email = attributemap['email']
+            email_split = email.split("@")
+            domain_name = email_split[1]
+            domain_name_split = domain_name.split(".")
+            domain_host = domain_name_split[0]
+            username = email_split[0]+"."+domain_host
+            username = username[0:30]          
+            attributemap['username'] = username
+            # end -- username update to fix issues in SSS                
+                
+                
             if hasattr(settings, "ALLOWED_EMAIL_SUFFIXES") and settings.ALLOWED_EMAIL_SUFFIXES:
                 allowed = settings.ALLOWED_EMAIL_SUFFIXES
                 if isinstance(settings.ALLOWED_EMAIL_SUFFIXES, basestring):
