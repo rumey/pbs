@@ -21,8 +21,8 @@ from pbs.implementation.utils import field_range
 from pbs.document.utils import get_dimensions       #PWM PDF work
 
 trafficdiagram_storage = FileSystemStorage(
-    location=os.path.join(settings.STATIC_ROOT, "pbs",
-                          "traffic-control-diagrams"),
+    location=os.path.join(settings.STATIC_ROOT, "pbs", "traffic-control-diagrams"),
+    #location=os.path.join(settings.STATIC_ROOT, "traffic-control-diagrams"),
     base_url=settings.STATIC_URL + "pbs/traffic-control-diagrams/")
 
 
