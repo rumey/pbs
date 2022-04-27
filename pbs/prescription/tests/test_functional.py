@@ -717,6 +717,7 @@ class SummaryAndApprovalSeleniumTestCase(SeleniumTestCase):
             tag=doc_tag,
             custom_tag='Custom Tag',
             document=settings.STATIC_ROOT + 'pbs/docs/org_chart.pdf'
+            #document=settings.STATIC_ROOT + '/docs/org_chart.pdf'
         )
         doc.save()
 

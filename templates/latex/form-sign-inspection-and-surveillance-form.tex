@@ -14,7 +14,7 @@
 \endhead
 \hline
 {% for road in prescription.ways.roads %}
-R{{ forloop.counter }} & {{ road.name|texify|safe }} & {{ road.road_type|texify|safe }} & {{ road.traffic_considerations|texify|safe }} & {{ road.traffic_diagram }} \\
+R{{ forloop.counter }} & {{ road.name|texify|safe }} & {{ road.road_type|texify|safe }} & {{ road.traffic_considerations|texify|safe }} & {{ road.traffic_diagram|texify|safe }} \\
 \hline
 {% endfor %}
 \end{longtabu}
