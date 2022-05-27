@@ -52,3 +52,5 @@ uwsgi.ini
 
 # eofy data for scripts
 pbs/scripts/eofy_data
+pbs/scripts/data/
+

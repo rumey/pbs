@@ -352,7 +352,10 @@ class PrescriptionAdmin(DetailAdmin, BaseAdmin):
                 last_year_burnt = "Unknown"
 
             if item.is_approved:
-                approved_until = date(item.current_approval.valid_to)
+                try:
+                    approved_until = date(item.current_approval.valid_to)
+                except:
+                    approved_until = ""
             else:
                 approved_until = ""
 
