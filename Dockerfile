@@ -14,7 +14,7 @@ RUN apt-get update \
   && apt-get install -yq git mercurial gcc gdal-bin libsasl2-dev libpq-dev \
   python python-setuptools python-dev python-pip \
   fex-utils imagemagick poppler-utils \
-  libldap2-dev libssl-dev wget build-essential
+  libldap2-dev libssl-dev wget build-essential vim
 
 # Install Python libs from requirements.txt.
 FROM builder_base_pbs as python_libs_pbs
@@ -34,6 +34,7 @@ COPY binaries/ffsend /usr/local/bin/
 FROM python_libs_pbs
 COPY gunicorn.ini manage.py ./
 COPY fex.id /root/.fex/id
+COPY .git ./.git
 COPY pbs ./pbs
 COPY pbs_project ./pbs_project
 COPY smart_selects ./smart_selects
