@@ -20,7 +20,6 @@ RUN apt-get update \
 FROM builder_base_pbs as python_libs_pbs
 WORKDIR /app
 COPY requirements.txt ./
-COPY git_history_recent ./
 RUN pip install --no-cache-dir -r requirements.txt \
   # Update the Django <1.11 bug in django/contrib/gis/geos/libgeos.py
   # Reference: https://stackoverflow.com/questions/18643998/geodjango-geosexception-error
@@ -35,6 +34,8 @@ COPY binaries/ffsend /usr/local/bin/
 FROM python_libs_pbs
 COPY gunicorn.ini manage.py ./
 COPY fex.id /root/.fex/id
+COPY .git ./.git
+RUN chown  www-data:www-data /app 
 COPY pbs ./pbs
 COPY pbs_project ./pbs_project
 COPY smart_selects ./smart_selects
