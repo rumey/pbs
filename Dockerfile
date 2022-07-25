@@ -8,6 +8,8 @@ ENV PASS_SSO="ThisIsNotReal"
 ENV EMAIL_HOST="localhost"
 ENV FROM_EMAIL="no-reply@dbca.wa.gov.au"
 ENV KMI_DOWNLOAD_URL="https://localhost/"
+ENV CSV_DOWNLOAD_URL="https://localhost/"
+ENV SHP_DOWNLOAD_URL="https://localhost/"
 
 RUN apt-get update \
   && apt-get upgrade -y \
