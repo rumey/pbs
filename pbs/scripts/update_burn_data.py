@@ -192,6 +192,39 @@ def update_seeking_approval(ids):
         burn_count += 1
     report_text.append('Applied corporate approval and set planning status modified date for {} ePFPs that were seeking approval; expected {} and rejected {}.'.format(updated_count, input_data_count, burn_count - updated_count))
 
+def apply_corp_approval(ids):
+    # Used to apply corporate approval to ePFPs for current year, which have not come 
+    # under 'seeking corporate approval'.
+    # Also updates the date modified of the Planning Status (approval date)
+    report_text.append('\nApplying corporate approval and setting planning status modified date' 
+         'for ePFPs for {} '.format(TARGET_YEAR))
+    report_text.append('Also set valid_to date for approval for Daily Burn Program access')
+    count = 0
+    report_text.append('Total prescriptions in query: {}'.format(Prescription.objects.filter(burn_id__in=ids).count()))
+    for p in Prescription.objects.filter(burn_id__in=ids).order_by('burn_id'):
+        if p.financial_year != TARGET_YEAR:
+            report_text.append('Financial year for {}({}) is not {}.'.format(str(p.burn_id), p.financial_year, TARGET_YEAR))
+        else:
+            #if p.planning_status == 2:  # do not apply if seeking corporate approval
+            #    report_text.append('Planning status for {} is currently seeking corporate approval.'.format(str(p.burn_id)))
+            if p.planning_status == 3:  # do not apply if already has corporate approval
+                report_text.append('Planning status for {} is already set to  corporate approved.'.format(str(p.burn_id)))
+            else:
+                if p.status != 2:  # burn status must not be closed
+                    p.planning_status = 3                       # corporate approved
+                    p.financial_year = TARGET_YEAR              # season
+                    p.planning_status_modified = DATE_APPROVED  # approval date
+                    a = p.approval_set.all()
+                    if len(a) > 0:
+                        a[0].valid_to = DATE_APPROVED_TO        # approved until date
+                        a[0].save()
+                    p.save()
+                    count += 1
+                else:
+                    report_text.append('Burn status for {} is closed'.format(str(p.burn_id)))
+    report_text.append('Applied corporate approval and set planning status modified date '
+          'for {} ePFPs'.format(count))
+
 def update_financial_year(ids):
     # Used to update the financial year of existing ePFPs from previous year
     report_text.append('\nUpdating financial year only selected ePFPs from {}'.format(PREVIOUS_YEAR))
@@ -533,6 +566,12 @@ def run():
                     report_text.append("Approve seeking approvals done")
                 else:
                     report_text.append("Approve seeking approvals file not found")
+                if os.path.isfile('{}/apply_corp_approval.txt'.format(SCRIPT_DATA_FOLDER)):
+                    apply_corp_approval_ids = read_ids('{}/apply_corp_approval.txt'.format(SCRIPT_DATA_FOLDER))
+                    apply_corp_approval(apply_corp_approval_ids)
+                    report_text.append("Apply corporate approvals done")
+                else:
+                    report_text.append("Apply corporate approvals file not found")
                 if os.path.isfile('{}/financial_year_only.txt'.format(SCRIPT_DATA_FOLDER)):
                     update_financial_year_ids = read_ids('{}/financial_year_only.txt'.format(SCRIPT_DATA_FOLDER))
                     update_financial_year(update_financial_year_ids)
