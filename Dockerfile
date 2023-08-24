@@ -44,7 +44,8 @@ COPY smart_selects ./smart_selects
 COPY swingers ./swingers
 COPY templates ./templates
 
-COPY .env ./.env
+#COPY .env ./.env
+RUN touch .env
 RUN python manage.py collectstatic --noinput
 RUN rm .env
 
