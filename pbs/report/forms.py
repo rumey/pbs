@@ -83,7 +83,8 @@ class PostBurnChecklistForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(PostBurnChecklistForm, self).__init__(*args, **kwargs)
-        self.fields['completed_on'].widget.attrs.update({'class': 'vDateField input-small'})
+        if 'completed_on' in self.fields:
+          self.fields['completed_on'].widget.attrs.update({'class': 'vDateField input-small'})
 
     class Meta:
         model = PostBurnChecklist
