@@ -48,6 +48,11 @@ def batch_update_approve_status(burnids_file,signed_file,useremail,financial_yea
         except ObjectDoesNotExist as ex:
             not_existed_burnids.append(burnid)
             continue;
+            
+        if obj.non_calm_tenure_approved:
+            obj.non_calm_tenure_approved = False
+            obj.save()
+        
         if not obj.non_calm_tenure:
             if set_cross_tenure:
                 obj.non_calm_tenure = True
