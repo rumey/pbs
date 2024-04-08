@@ -1,6 +1,6 @@
 # Prepare the base environment.
 FROM dbcawa/pbs:latest as builder_base_pbsdev
-
+USER root
 RUN apt-get update
 RUN apt-get install --no-install-recommends -y patch
 RUN apt-get install --no-install-recommends -y libpq-dev git ssh sudo 
