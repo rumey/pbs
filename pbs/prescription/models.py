@@ -1714,11 +1714,11 @@ def archive_prescription(sender,instance,created,**kwargs):
         return
     
     changed_status = None
-    # for key in status_keys:
-    #     if getattr(instance,key) != instance.previous_status[key]:
-    #         changed_status = key
-    #         break
-    changed_status = 'planning_status'
+    for key in status_keys:
+        if getattr(instance,key) != instance.previous_status[key]:
+            changed_status = key
+            break
+
     if not changed_status:
         return
 
