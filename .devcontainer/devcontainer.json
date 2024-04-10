@@ -1,15 +1,15 @@
 {
-	"name": "PBS Development",
+	"name": "PBSV1 Development",
 	"image": "dbcawa/docker_app_dev:pbs_dev_latest",
 	"remoteUser": "container",
 	"workspaceFolder": "/data/data/projects/pbs",
 	"mounts": ["type=bind,source=/data/,target=/data/",
 	           "type=bind,source=/data/data/containerhome/,target=/home/container/"
 	          ],	
-	"appPort": [ "7006:8080","9051:9051","9052:9052","9053:9053","9054:9054","9055:9055","9056:9056","9057:9057","9058:9058","9059:9059" ],
+	"appPort": [ "7025:8080","9176:9176","9177:9177","9178:9178","9179:9179","9180:9180"],
 	"runArgs": ["--env-file","${localEnv:HOME}/vscode-env/pbs.env",
 		   "--hostname","pbs-dev"
 		   ],
-	"forwardPorts": [9051,9052,9053,9054,9055,9056,9057,9058,9059],
-	// "initializeCommand" : "${localEnv:HOME}/docker-scripts-dev/linux/postgres_docker_load.sh"
+	"forwardPorts": [9176,9177,9178,9179,9180],
+	"initializeCommand" : "${localEnv:HOME}/docker-scripts-dev/windows_vbox/postgres_docker_load.sh"
 }
