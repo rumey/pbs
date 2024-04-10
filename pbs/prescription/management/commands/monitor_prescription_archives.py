@@ -12,6 +12,11 @@
         address(es) specied in the NOTIFICATION_EMAIL environment variable.
         If the environment variable is not set then the issues are logged to the console instead (which would end up in 
         the container logs in rancher/k8s)
+
+    Limitations:
+        The script only checks the most recent status change for each status field.
+        There is no way to know the exact order that statuses were changed in for previous status changes
+        so we can't check for every status change, only the most recent one.
 """
 import csv
 import logging
