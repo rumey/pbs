@@ -10,6 +10,7 @@ import logging
 
 from django.contrib.auth.models import User, Group
 from django.conf import settings
+from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Q, Max, Sum
@@ -1705,6 +1706,7 @@ def prepare_archive_prescription(sender,instance,update_fields=None,**kwargs):
 
 @receiver(post_save,sender=Prescription)
 def archive_prescription(sender,instance,created,**kwargs):
+    logger = logging.getLogger("pdf_debugging")
     from pbs.utils import pdflatex
     if created:
         return
@@ -1731,13 +1733,24 @@ def archive_prescription(sender,instance,created,**kwargs):
 
     timestamp = modified.strftime("%Y-%m-%dT%H%M%S")
     archivename = "{0}_{1}_{2}_{3}_{4}".format(instance.burn_id,changed_status,previous_status,status,timestamp)
-
+    now = timezone.now()
     with pdflatex(instance,template="pfp",downloadname=archivename,embed=True,headers=True,title="Prescribed Fire Plan") as pdfresult:
+        logger.debug(pdfresult.__dict__)
         if pdfresult.succeed:
             directory = os.path.join(settings.MEDIA_ROOT, 'snapshots', instance.financial_year.replace("/","-"), instance.burn_id)
             if not os.path.exists(directory):
                 os.makedirs(directory)
             shutil.move(pdfresult.pdf_file,os.path.join(directory,"{}.pdf".format(archivename)))
         else:
-            #raise Exception(pdfresult.errormessage)
-            print("PDF production failed but continuing with task")
+            title = 'PDF production failed when attempting to archive Prescription: {}'.format(instance)
+            logger.warning(title)
+            if settings.NOTIFICATION_EMAIL:
+                local_time = timezone.localtime(now)
+                email_from = settings.FEX_MAIL
+                message = (
+                    'An attempt was made to create an archive for Prescription: {} at {}. \n\n'
+                    'The archive attempt failed to generate the required pdf.'.format(instance, local_time)
+                )
+                send_mail(title, message, email_from, settings.NOTIFICATION_EMAIL.split(","), fail_silently=True)
+            else:
+                logger.warning('ENV NOTIFICATION_EMAIL is not set. Unable to send notification email.')
