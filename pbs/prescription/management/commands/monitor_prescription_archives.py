@@ -142,10 +142,11 @@ class Command(BaseCommand):
             return
 
         try:
-            mail = EmailMessage(subject=subject, body=body, from_email=settings.FEX_MAIL, to=settings.NOTIFICATION_EMAIL.split(","))
-            mail.attach(issues_csv.name, issues_csv.read(), issues_csv.content_type)
-            mail.send()
-        except SMTPException as e:
+            with open(issues_csv.name, "r") as file:
+                mail = EmailMessage(subject=subject, body=body, from_email=settings.FEX_MAIL, to=settings.NOTIFICATION_EMAIL.split(","))
+                mail.attach(file.name, file.read(), file.content_type)
+                mail.send()
+        except (SMTPException, IOError) as e:
             logger.exception("Failed to send Prescription Archive Monitoring Notification Email: \n{}".format(e))
             # If email sending fails then write the data to the log instead
             self.log_issues(body, issues_csv)
