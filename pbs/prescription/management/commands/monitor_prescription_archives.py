@@ -144,7 +144,7 @@ class Command(BaseCommand):
         try:
             with open(issues_csv.name, "r") as file:
                 mail = EmailMessage(subject=subject, body=body, from_email=settings.FEX_MAIL, to=settings.NOTIFICATION_EMAIL.split(","))
-                mail.attach(file.name, file.read(), file.content_type)
+                mail.attach(file.name, file.read(), "text/csv")
                 mail.send()
         except (SMTPException, IOError) as e:
             logger.exception("Failed to send Prescription Archive Monitoring Notification Email: \n{}".format(e))
